@@ -5,6 +5,8 @@ package main
 //adds tx messages to a pool
 //every 10 tx messages a new block gets created
 
+//Tx, sender receiver
+
 import (
 	"bufio"
 	"crypto/sha256"
@@ -150,34 +152,39 @@ func (e *Endpoint) handleMessages(conn net.Conn) {
 	}
 }
 
-// handleGob handles "GOB" request. decodes the received GOB data into a struct
+// handles "GOB" request. decode the received GOB data into a struct
 func handleGob(rw *bufio.ReadWriter) {
 	log.Print("Receive GOB data:")
-	var data block.Tx
+	var tx block.Tx
 	// Create a decoder that decodes directly into a struct variable.
 	dec := gob.NewDecoder(rw)
-	err := dec.Decode(&data)
+	err := dec.Decode(&tx)
 	if err != nil {
 		log.Println("Error decoding GOB data:", err)
 		return
 	}
-	log.Printf("data: \n%#v\n", data.Nonce)
+	log.Printf("data: \n%#v\n", tx.Nonce)
 
+	//hash of timestamp is same??
 	timestamp := time.Now().Unix()
-	b := []byte(string(timestamp))
-	log.Println(b)
+	//b := []byte(append(string(timestamp)[:], string(tx.Nonce)[:]))
+	b := []byte(string(tx.Nonce)[:])
 	hash := sha256.Sum256(b)
-	//log.Print(fmt.Sprintf("%x", )[:45])
+	log.Println("hash %x time %s", hash, timestamp)
+
 	//hash := sha256.Sum256(xdata)
 
-	data.Id = hash
+	tx.Id = hash
 
-	tx_pool = append(tx_pool, data)
+	tx_pool = append(tx_pool, tx)
 	//blockheight += 1
 
 	//log.Printf("tx_pool_size: \n%d", tx_pool_size)
 
-	log.Printf("tx_pool size: \n%d", len(tx_pool))
+	log.Printf("tx_pool size: %d\n", len(tx_pool))
+
+	//if txpool size > 10
+	//create block
 }
 
 // server listens for incoming requests and dispatches them to
@@ -192,11 +199,33 @@ func server() error {
 	return endpoint.Listen()
 }
 
-/*
-start as a server listening for incoming requests "127.0.0.1"
-*/
+func loadContent() string {
+	//filename := "test.txt"
+	//body, _ := ioutil.ReadFile(filename)
+	content := ""
 
+	content += fmt.Sprintf("TxPool %d<br>", len(tx_pool))
+	for i := 0; i < len(tx_pool); i++ {
+		content += fmt.Sprintf("Nonce %d, Id %x<br>", tx_pool[i].Nonce, tx_pool[i].Id[:])
+	}
+
+	return content
+}
+
+/*
+start server listening for incoming requests
+*/
 func main() {
+
+	data := []byte("hello")
+	hash := sha256.Sum256(data)
+	fmt.Printf("%x", hash[:])
+
+	timestamp := time.Now().Unix()
+	b := []byte(string(timestamp))
+	hash = sha256.Sum256(b)
+
+	fmt.Printf("\n%x", hash[:])
 
 	//node server
 	go server()
@@ -210,7 +239,10 @@ func main() {
 
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		//fmt.Fprintf(w, "Hello, %q", html.EscapeString(r.URL.Path))
-		fmt.Fprintf(w, "tx_pool_size %d\n%b", len(tx_pool), tx_pool[0])
+		//fmt.Fprintf(w, "tx_pool_size %d\n%b", len(tx_pool), tx_pool[0])
+		p := loadContent()
+		log.Print(p)
+		fmt.Fprintf(w, "<h1>Polygon chain</h1><div>%s</div>", p)
 	})
 
 	log.Fatal(http.ListenAndServe(":8081", nil))
