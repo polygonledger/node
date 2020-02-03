@@ -7,6 +7,11 @@ package main
 
 //Tx, sender receiver
 
+//TODO
+//handleNewTx => put in txpool
+//createNewBlock
+//newWallet
+
 import (
 	"bufio"
 	"crypto/sha256"
@@ -31,11 +36,6 @@ import (
 //var latestBlock block.Block
 var blockheight int = 0
 var tx_pool []block.Tx
-
-//TODO
-//handleNewTx => put in txpool
-//createNewBlock
-//newWallet
 
 /*
 Outgoing connections
@@ -65,12 +65,10 @@ create an `Endpoint` object with the following properties:
   name.
 */
 
-// HandleFunc is a function that handles an incoming command
-// It receives the open connection wrapped in a `ReadWriter` interface
+// handles an incoming command. It receives the open connection wrapped in a `ReadWriter` interface
 type HandleFunc func(*bufio.ReadWriter)
 
-// Endpoint provides an endpoint to other processess
-// that they can send data to.
+// provides an endpoint to other processess that they can send data to
 type Endpoint struct {
 	listener net.Listener
 	handler  map[string]HandleFunc
@@ -79,10 +77,9 @@ type Endpoint struct {
 	m sync.RWMutex
 }
 
-// NewEndpoint creates a new endpoint. To keep things simple,
-// the endpoint listens on a fixed port number
+// create new endpoint
 func NewEndpoint() *Endpoint {
-	// Create a new Endpoint with an empty list of handler funcs
+	// empty list of handler funcs
 	return &Endpoint{
 		handler: map[string]HandleFunc{},
 	}
@@ -95,8 +92,7 @@ func (e *Endpoint) AddHandleFunc(name string, f HandleFunc) {
 	e.m.Unlock()
 }
 
-// Listen starts listening on the endpoint port on all interfaces
-
+// starts listening on the endpoint port on all interfaces
 func (e *Endpoint) Listen() error {
 	var err error
 	e.listener, err = net.Listen("tcp", protocol.Port)
@@ -165,9 +161,10 @@ func handleGob(rw *bufio.ReadWriter) {
 	}
 	log.Printf("data: \n%#v\n", tx.Nonce)
 
-	//hash of timestamp is same??
+	//hash of timestamp is same, check lenght of bytes used??
 	timestamp := time.Now().Unix()
 	//b := []byte(append(string(timestamp)[:], string(tx.Nonce)[:]))
+
 	b := []byte(string(tx.Nonce)[:])
 	hash := sha256.Sum256(b)
 	log.Println("hash %x time %s", hash, timestamp)
