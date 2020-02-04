@@ -36,6 +36,7 @@ import (
 //var latestBlock block.Block
 var blockheight int = 0
 var tx_pool []block.Tx
+var blocks []block.Block
 
 /*
 Outgoing connections
@@ -180,8 +181,17 @@ func handleGob(rw *bufio.ReadWriter) {
 
 	log.Printf("tx_pool size: %d\n", len(tx_pool))
 
-	//if txpool size > 10
-	//create block
+	//new block
+	if len(tx_pool) > 5 {
+		//h := blockheight
+		newblock := block.Block{Height: blockheight, Txs: tx_pool}
+		blockheight += 1
+		blocks = append(blocks, newblock)
+		log.Printf("new block %v", newblock)
+		//empty pool
+		tx_pool = []block.Tx{}
+	}
+
 }
 
 // server listens for incoming requests and dispatches them to
@@ -189,22 +199,33 @@ func handleGob(rw *bufio.ReadWriter) {
 func server() error {
 	endpoint := NewEndpoint()
 
-	// Add the handle funcs.
-	//CMD_GOB := "GOB"
+	// Add the handle funcs
 	endpoint.AddHandleFunc(protocol.CMD_GOB, handleGob)
 
 	// Start listening.
 	return endpoint.Listen()
 }
 
+//HTTP
 func loadContent() string {
 	//filename := "test.txt"
 	//body, _ := ioutil.ReadFile(filename)
 	content := ""
 
-	content += fmt.Sprintf("TxPool %d<br>", len(tx_pool))
+	content += fmt.Sprintf("<h2>TxPool</h2>%d<br>", len(tx_pool))
+
 	for i := 0; i < len(tx_pool); i++ {
 		content += fmt.Sprintf("Nonce %d, Id %x<br>", tx_pool[i].Nonce, tx_pool[i].Id[:])
+	}
+
+	content += fmt.Sprintf("<br><h2>Blocks</h2> %d<br>", len(blocks))
+
+	for i := 0; i < len(blocks); i++ {
+		content += fmt.Sprintf("Block %d %x<br>", blocks[i].Height, blocks[i].Hash)
+
+		for j := 0; j < len(blocks[i].Txs); j++ {
+			content += fmt.Sprintf("Tx %x<br>", blocks[i].Txs[j].Id)
+		}
 	}
 
 	return content

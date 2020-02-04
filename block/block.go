@@ -1,7 +1,8 @@
 package block
 
 type Block struct {
-	// Hash     []byte
+	Hash []byte
 	// PrevHash []byte
-	// Tx []tx
+	Height int
+	Txs    []Tx
 }
