@@ -16,7 +16,7 @@ const (
 	// Port is the port number that the server listens to.
 	Server_address string = "127.0.0.1"
 	Port                  = ":8888"
-	CMD_GOB               = "GOB\n"
+	CMD_GOB               = "GOB"
 )
 
 /*
@@ -39,7 +39,7 @@ func SendTx(rw *bufio.ReadWriter) error {
 	enc := gob.NewEncoder(rw)
 	//Command
 
-	n, err := rw.WriteString(CMD_GOB)
+	n, err := rw.WriteString(CMD_GOB + "\n")
 	if err != nil {
 		return errors.Wrap(err, "Could not write GOB data ("+strconv.Itoa(n)+" bytes written)")
 	}

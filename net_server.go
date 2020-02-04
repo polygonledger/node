@@ -190,7 +190,8 @@ func server() error {
 	endpoint := NewEndpoint()
 
 	// Add the handle funcs.
-	endpoint.AddHandleFunc("GOB", handleGob)
+	//CMD_GOB := "GOB"
+	endpoint.AddHandleFunc(protocol.CMD_GOB, handleGob)
 
 	// Start listening.
 	return endpoint.Listen()
