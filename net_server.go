@@ -30,6 +30,7 @@ import (
 
 	block "github.com/polygon/block"
 
+	cryptoutil "github.com/polygon/crypto"
 	protocol "github.com/polygon/net"
 )
 
@@ -181,15 +182,34 @@ func handleGob(rw *bufio.ReadWriter) {
 
 	log.Printf("tx_pool size: %d\n", len(tx_pool))
 
-	//new block
+}
+
+func doEvery(d time.Duration, f func(time.Time)) {
+	for x := range time.Tick(d) {
+		f(x)
+	}
+}
+
+func makeBlock(t time.Time) {
+
+	log.Printf("make block")
+	start := time.Now()
+	//elapsed := time.Since(start)
+	log.Printf("%s", start)
+
+	//create new block
 	if len(tx_pool) > 5 {
 		//h := blockheight
+		//TODO prevblock
 		newblock := block.Block{Height: blockheight, Txs: tx_pool}
 		blockheight += 1
 		blocks = append(blocks, newblock)
 		log.Printf("new block %v", newblock)
 		//empty pool
 		tx_pool = []block.Tx{}
+	} else {
+		log.Printf("no block to make")
+		//handle special case of no tx
 	}
 
 }
@@ -236,15 +256,11 @@ start server listening for incoming requests
 */
 func main() {
 
-	data := []byte("hello")
-	hash := sha256.Sum256(data)
-	fmt.Printf("%x", hash[:])
+	cryptoutil.KeyExample()
 
-	timestamp := time.Now().Unix()
-	b := []byte(string(timestamp))
-	hash = sha256.Sum256(b)
-
-	fmt.Printf("\n%x", hash[:])
+	//5sec
+	blockTime := 5000 * time.Millisecond
+	doEvery(blockTime, makeBlock)
 
 	//node server
 	go server()
