@@ -27,6 +27,7 @@ import (
 	"github.com/pkg/errors"
 
 	"encoding/gob"
+	"encoding/json"
 	"net/http"
 
 	block "github.com/polygon/block"
@@ -36,7 +37,7 @@ import (
 )
 
 //var latestBlock block.Block
-var blockheight int = 0
+//var blockheight int = 0
 var tx_pool []block.Tx
 var blocks []block.Block
 var latest_block block.Block
@@ -152,18 +153,19 @@ func (e *Endpoint) handleMessages(conn net.Conn) {
 	}
 }
 
-// handles "GOB" request. decode the received GOB data into a struct
+// handles "GOB" request
 func handleGob(rw *bufio.ReadWriter) {
-	log.Print("Receive GOB data:")
+	//log.Print("Receive GOB data")
 	var tx block.Tx
-	// Create a decoder that decodes directly into a struct variable.
+	// decodes into a struct
 	dec := gob.NewDecoder(rw)
 	err := dec.Decode(&tx)
 	if err != nil {
 		log.Println("Error decoding GOB data:", err)
 		return
 	}
-	log.Printf("data: \n%#v\n", tx.Nonce)
+	tx_json, _ := json.Marshal(tx)
+	log.Printf("receive data: %s\n", tx_json)
 
 	//hash of timestamp is same, check lenght of bytes used??
 	timestamp := time.Now().Unix()
@@ -203,6 +205,13 @@ func blockHash(block block.Block) block.Block {
 	return block
 }
 
+func makeGenesisBlock() block.Block {
+	emptyhash := [32]byte{}
+	timestamp := time.Now() //.Unix()
+	genesis_block := block.Block{Height: 0, Txs: nil, Prev_Block_Hash: emptyhash, Timestamp: timestamp}
+	return genesis_block
+}
+
 func makeBlock(t time.Time) {
 
 	log.Printf("make block?")
@@ -215,13 +224,15 @@ func makeBlock(t time.Time) {
 		//h := blockheight
 		//TODO prevblock
 
-		new_block := block.Block{Height: blockheight, Txs: tx_pool, Prev_Block_Hash: latest_block.Hash}
+		timestamp := time.Now() //.Unix()
+		new_block := block.Block{Height: len(blocks), Txs: tx_pool, Prev_Block_Hash: latest_block.Hash, Timestamp: timestamp}
 		new_block = blockHash(new_block)
+		appendBlock(new_block)
 		//new_block = blockHash(new_block)
 
 		//TODO hash
-		blockheight += 1
-		blocks = append(blocks, new_block)
+		//blockheight += 1
+
 		log.Printf("new block %v", new_block)
 		emptyPool()
 
@@ -260,14 +271,26 @@ func loadContent() string {
 	content += fmt.Sprintf("<br><h2>Blocks</h2><i>number of blocks %d</i><br>", len(blocks))
 
 	for i := 0; i < len(blocks); i++ {
-		content += fmt.Sprintf("<br><h3>Block %d</h3>hash %x<br>prevhash %x", blocks[i].Height, blocks[i].Hash, blocks[i].Prev_Block_Hash)
+		//ts := blocks[i].Timestamp.Format("2020-02-02 16:06:06")
+		t := blocks[i].Timestamp
+		tsf := fmt.Sprintf("%d-%02d-%02dT%02d:%02d:%02d",
+			t.Year(), t.Month(), t.Day(),
+			t.Hour(), t.Minute(), t.Second())
+		log.Println(">>>>> ?? ", t, tsf)
+		content += fmt.Sprintf("<br><h3>Block %d</h3>timestamp %s<br>hash %x<br>prevhash %x\n", blocks[i].Height, tsf, blocks[i].Hash, blocks[i].Prev_Block_Hash)
 
+		content += fmt.Sprintf("<h4>Number of Tx %d</h4>", len(blocks[i].Txs))
 		for j := 0; j < len(blocks[i].Txs); j++ {
-			content += fmt.Sprintf("Tx %x<br>", blocks[i].Txs[j].Id)
+			content += fmt.Sprintf("%x<br>", blocks[i].Txs[j].Id)
 		}
 	}
 
 	return content
+}
+
+func appendBlock(new_block block.Block) {
+	latest_block = new_block
+	blocks = append(blocks, new_block)
 }
 
 /*
@@ -276,6 +299,8 @@ start server listening for incoming requests
 func main() {
 
 	cryptoutil.KeyExample()
+
+	appendBlock(makeGenesisBlock())
 
 	//5sec
 	blockTime := 5000 * time.Millisecond
