@@ -8,6 +8,7 @@ package main
 //Tx, sender receiver
 
 //TODO
+//genesis block
 //handleNewTx => put in txpool
 //createNewBlock
 //newWallet
@@ -195,14 +196,16 @@ func emptyPool() {
 	tx_pool = []block.Tx{}
 }
 
-func blockHash(block block.Block) {
-	b := []byte(string(block.Timestamp.Format("2020-02-02 16:06:06"))[:])
-	block.Hash = sha256.Sum256(b)
+func blockHash(block block.Block) block.Block {
+	new_hash := []byte(string(block.Timestamp.Format("2020-02-02 16:06:06"))[:])
+	log.Printf("newhash %x", new_hash)
+	block.Hash = sha256.Sum256(new_hash)
+	return block
 }
 
 func makeBlock(t time.Time) {
 
-	log.Printf("make block")
+	log.Printf("make block?")
 	start := time.Now()
 	//elapsed := time.Since(start)
 	log.Printf("%s", start)
@@ -213,7 +216,8 @@ func makeBlock(t time.Time) {
 		//TODO prevblock
 
 		new_block := block.Block{Height: blockheight, Txs: tx_pool, Prev_Block_Hash: latest_block.Hash}
-		blockHash(new_block)
+		new_block = blockHash(new_block)
+		//new_block = blockHash(new_block)
 
 		//TODO hash
 		blockheight += 1
@@ -253,10 +257,10 @@ func loadContent() string {
 		content += fmt.Sprintf("Nonce %d, Id %x<br>", tx_pool[i].Nonce, tx_pool[i].Id[:])
 	}
 
-	content += fmt.Sprintf("<br><h2>Blocks</h2> %d<br>", len(blocks))
+	content += fmt.Sprintf("<br><h2>Blocks</h2><i>number of blocks %d</i><br>", len(blocks))
 
 	for i := 0; i < len(blocks); i++ {
-		content += fmt.Sprintf("Block %d %x<br>", blocks[i].Height, blocks[i].Hash)
+		content += fmt.Sprintf("<br><h3>Block %d</h3>hash %x<br>prevhash %x", blocks[i].Height, blocks[i].Hash, blocks[i].Prev_Block_Hash)
 
 		for j := 0; j < len(blocks[i].Txs); j++ {
 			content += fmt.Sprintf("Tx %x<br>", blocks[i].Txs[j].Id)
