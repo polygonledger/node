@@ -1,10 +1,14 @@
 package crypto
 
 import (
+	"crypto/md5"
 	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
 	"log"
+	"math/rand"
+	"strconv"
+	"time"
 
 	"github.com/btcd/btcec"
 )
@@ -15,14 +19,29 @@ import (
 //type Keypair struct {
 //public, private
 
+func GetMD5Hash(text string) string {
+	hasher := md5.New()
+	hasher.Write([]byte(text))
+	return hex.EncodeToString(hasher.Sum(nil))
+}
+
+func RandomPublicKey() string {
+	rand.Seed(time.Now().UnixNano())
+	randNonce := rand.Intn(10000)
+	someKey := PubFromSecret("secret" + strconv.Itoa(randNonce))
+	//!!needs fixing
+	//return string(hex.EncodeToString(someKey.SerializeCompressed()))
+	return GetMD5Hash(string(hex.EncodeToString(someKey.SerializeCompressed())))
+}
+
 func PubHexFromSecret() string {
-	someKey := PubFromSecret()
+	someKey := PubFromSecret("secret")
 	//!needs checking
 	return string(hex.EncodeToString(someKey.SerializeCompressed()))
 }
 
-func PubFromSecret() btcec.PublicKey {
-	secret := "secret"
+func PubFromSecret(secret string) btcec.PublicKey {
+	//secret := "secret"
 	hasher := sha256.New()
 	hasher.Write([]byte(secret))
 	hashedsecret := hex.EncodeToString(hasher.Sum(nil))

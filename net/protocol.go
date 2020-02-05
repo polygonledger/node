@@ -10,6 +10,7 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/polygon/block"
+	cryptoutil "github.com/polygon/crypto"
 )
 
 const (
@@ -19,6 +20,35 @@ const (
 	CMD_GOB               = "GOB"
 	CMD_TX                = "TX"
 )
+
+//pickRandomAccount
+
+//storeBalance
+
+func GenesisTx() block.Tx {
+	emptySender := "" //sender is empty
+
+	//genesisSender := "" //genesisSender is the bootstrap account
+
+	//log.Printf("%s", s)
+	rand.Seed(time.Now().UnixNano())
+	randNonce := rand.Intn(100)
+	r := cryptoutil.RandomPublicKey()
+	genesisAmount := 20 //just a number for now
+	//TODO id
+	gTx := block.Tx{Nonce: randNonce, Sender: emptySender, Receiver: r, Amount: genesisAmount}
+	return gTx
+}
+
+func RandomTx() block.Tx {
+	s := cryptoutil.RandomPublicKey()
+	log.Printf("%s", s)
+	rand.Seed(time.Now().UnixNano())
+	randNonce := rand.Intn(100)
+	r := cryptoutil.RandomPublicKey()
+	testTx := block.Tx{Nonce: randNonce, Sender: s, Receiver: r}
+	return testTx
+}
 
 /*
 The client function connects to the server and sends GOB requests.
@@ -30,9 +60,7 @@ func SendTx(rw *bufio.ReadWriter) error {
 	// Send the request name.
 	// Send the GOB.
 
-	rand.Seed(time.Now().UnixNano())
-	randNonce := rand.Intn(100)
-	testTx := block.Tx{Nonce: randNonce}
+	testTx := RandomTx()
 
 	log.Println("Send a struct as GOB:")
 	log.Printf("testTx: \n%#v\n", testTx)

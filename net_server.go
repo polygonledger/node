@@ -24,6 +24,7 @@ import (
 	"io"
 	"log"
 	"net"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -45,6 +46,8 @@ import (
 var tx_pool []block.Tx
 var blocks []block.Block
 var latest_block block.Block
+
+var accounts map[string]int
 
 /*
 Outgoing connections
@@ -203,17 +206,35 @@ func emptyPool() {
 }
 
 func blockHash(block block.Block) block.Block {
+	//FIX hash of proper data, merkle and such
 	new_hash := []byte(string(block.Timestamp.Format("2020-02-02 16:06:06"))[:])
+	blockheight_string := []byte(strconv.FormatInt(int64(block.Height), 10))
+	//new_hash = append(new_hash, blockheight_string)
 	log.Printf("newhash %x", new_hash)
-	block.Hash = sha256.Sum256(new_hash)
+	block.Hash = sha256.Sum256(blockheight_string)
 	return block
 }
 
 func makeGenesisBlock() block.Block {
 	emptyhash := [32]byte{}
 	timestamp := time.Now() //.Unix()
-	genesis_block := block.Block{Height: 0, Txs: nil, Prev_Block_Hash: emptyhash, Timestamp: timestamp}
+	b := []byte("banks on brink again")[:]
+	genHash := sha256.Sum256(b)
+
+	//add 10 genesis tx
+	genesisTx := []block.Tx{}
+	for i := 0; i < 10; i++ {
+		someTx := protocol.GenesisTx()
+		genesisTx = append(genesisTx, someTx)
+	}
+
+	genesis_block := block.Block{Height: 0, Txs: genesisTx, Prev_Block_Hash: emptyhash, Hash: genHash, Timestamp: timestamp}
 	return genesis_block
+}
+
+func appendBlock(new_block block.Block) {
+	latest_block = new_block
+	blocks = append(blocks, new_block)
 }
 
 func makeBlock(t time.Time) {
@@ -223,19 +244,13 @@ func makeBlock(t time.Time) {
 	//elapsed := time.Since(start)
 	log.Printf("%s", start)
 
-	//create new block
+	//create new block if there is tx in the pool
 	if len(tx_pool) > 0 {
-		//h := blockheight
-		//TODO prevblock
 
 		timestamp := time.Now() //.Unix()
 		new_block := block.Block{Height: len(blocks), Txs: tx_pool, Prev_Block_Hash: latest_block.Hash, Timestamp: timestamp}
 		new_block = blockHash(new_block)
 		appendBlock(new_block)
-		//new_block = blockHash(new_block)
-
-		//TODO hash
-		//blockheight += 1
 
 		log.Printf("new block %v", new_block)
 		emptyPool()
@@ -244,6 +259,7 @@ func makeBlock(t time.Time) {
 	} else {
 		log.Printf("no block to make")
 		//handle special case of no tx
+		//now we don't add blocks, which means there are empty periods and blocks are not evenly spaced in time
 	}
 
 }
@@ -262,8 +278,6 @@ func server() error {
 
 //HTTP
 func loadContent() string {
-	//filename := "test.txt"
-	//body, _ := ioutil.ReadFile(filename)
 	content := ""
 
 	content += fmt.Sprintf("<h2>TxPool</h2>%d<br>", len(tx_pool))
@@ -275,26 +289,29 @@ func loadContent() string {
 	content += fmt.Sprintf("<br><h2>Blocks</h2><i>number of blocks %d</i><br>", len(blocks))
 
 	for i := 0; i < len(blocks); i++ {
-		//ts := blocks[i].Timestamp.Format("2020-02-02 16:06:06")
 		t := blocks[i].Timestamp
 		tsf := fmt.Sprintf("%d-%02d-%02dT%02d:%02d:%02d",
 			t.Year(), t.Month(), t.Day(),
 			t.Hour(), t.Minute(), t.Second())
-		log.Println(">>>>> ?? ", t, tsf)
+
 		content += fmt.Sprintf("<br><h3>Block %d</h3>timestamp %s<br>hash %x<br>prevhash %x\n", blocks[i].Height, tsf, blocks[i].Hash, blocks[i].Prev_Block_Hash)
 
 		content += fmt.Sprintf("<h4>Number of Tx %d</h4>", len(blocks[i].Txs))
 		for j := 0; j < len(blocks[i].Txs); j++ {
-			content += fmt.Sprintf("%x<br>", blocks[i].Txs[j].Id)
+			ctx := blocks[i].Txs[j]
+			content += fmt.Sprintf("%x, %d from %s to %s<br>", ctx.Id, ctx.Amount, ctx.Sender, ctx.Receiver)
 		}
 	}
 
 	return content
 }
 
-func appendBlock(new_block block.Block) {
-	latest_block = new_block
-	blocks = append(blocks, new_block)
+func setAccount(account string, balance int) {
+	accounts[account] = balance
+}
+
+func showAccount(account string) {
+	log.Printf("%s %d", account, accounts[account])
 }
 
 /*
@@ -302,10 +319,14 @@ start server listening for incoming requests
 */
 func main() {
 
+	accounts = make(map[string]int)
+	setAccount("test", 22)
+	showAccount("test")
+
 	//cryptoutil.KeyExample()
 
 	//btcec.PublicKey
-	s := cryptoutil.PubHexFromSecret()
+	s := cryptoutil.RandomPublicKey()
 	log.Printf("%s", s)
 
 	appendBlock(makeGenesisBlock())
@@ -325,10 +346,8 @@ func main() {
 	log.Println("start webserver")
 
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		//fmt.Fprintf(w, "Hello, %q", html.EscapeString(r.URL.Path))
-		//fmt.Fprintf(w, "tx_pool_size %d\n%b", len(tx_pool), tx_pool[0])
 		p := loadContent()
-		log.Print(p)
+		//log.Print(p)
 		fmt.Fprintf(w, "<h1>Polygon chain</h1><div>%s</div>", p)
 	})
 
