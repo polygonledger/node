@@ -3,14 +3,18 @@ package main
 //basic server based protocol
 //server receives tx messages
 //adds tx messages to a pool
-//every 10 tx messages a new block gets created
-
-//Tx, sender receiver
+//block gets created every 10 secs
 
 //TODO
-//genesis block
-//handleNewTx => put in txpool
-//createNewBlock
+//Tx, sender receiver
+//var hash = sha256("secret")
+//var keypair = MakeKeypair(hash)
+
+//Delegates
+//rounds
+//slotTime = getSlotNumber(currentBlockData.time))
+//if slotTime generate block
+
 //newWallet
 
 import (
@@ -154,7 +158,7 @@ func (e *Endpoint) handleMessages(conn net.Conn) {
 }
 
 // handles "GOB" request
-func handleGob(rw *bufio.ReadWriter) {
+func handleTx(rw *bufio.ReadWriter) {
 	//log.Print("Receive GOB data")
 	var tx block.Tx
 	// decodes into a struct
@@ -250,7 +254,7 @@ func server() error {
 	endpoint := NewEndpoint()
 
 	// Add the handle funcs
-	endpoint.AddHandleFunc(protocol.CMD_GOB, handleGob)
+	endpoint.AddHandleFunc(protocol.CMD_TX, handleTx)
 
 	// Start listening.
 	return endpoint.Listen()
@@ -298,12 +302,16 @@ start server listening for incoming requests
 */
 func main() {
 
-	cryptoutil.KeyExample()
+	//cryptoutil.KeyExample()
+
+	//btcec.PublicKey
+	s := cryptoutil.PubHexFromSecret()
+	log.Printf("%s", s)
 
 	appendBlock(makeGenesisBlock())
 
-	//5sec
-	blockTime := 5000 * time.Millisecond
+	//create block every 10sec
+	blockTime := 10000 * time.Millisecond
 	go doEvery(blockTime, makeBlock)
 
 	//node server

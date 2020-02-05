@@ -1,12 +1,36 @@
 package crypto
 
 import (
+	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
 	"log"
 
 	"github.com/btcd/btcec"
 )
+
+//var hash = sha256("secret")
+//var keypair = MakeKeypair(hash)
+
+//type Keypair struct {
+//public, private
+
+func PubHexFromSecret() string {
+	someKey := PubFromSecret()
+	//!needs checking
+	return string(hex.EncodeToString(someKey.SerializeCompressed()))
+}
+
+func PubFromSecret() btcec.PublicKey {
+	secret := "secret"
+	hasher := sha256.New()
+	hasher.Write([]byte(secret))
+	hashedsecret := hex.EncodeToString(hasher.Sum(nil))
+
+	//hashedsecret := sha256.Sum256([32]byte("secret"))
+	_, pubKey := btcec.PrivKeyFromBytes(btcec.S256(), []byte(hashedsecret))
+	return *pubKey
+}
 
 func RanAddress() *btcec.PublicKey {
 	// Decode a hex-encoded private key.
