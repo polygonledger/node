@@ -38,6 +38,7 @@ import (
 var blockheight int = 0
 var tx_pool []block.Tx
 var blocks []block.Block
+var latest_block block.Block
 
 /*
 Outgoing connections
@@ -190,6 +191,15 @@ func doEvery(d time.Duration, f func(time.Time)) {
 	}
 }
 
+func emptyPool() {
+	tx_pool = []block.Tx{}
+}
+
+func blockHash(block block.Block) {
+	b := []byte(string(block.Timestamp.Format("2020-02-02 16:06:06"))[:])
+	block.Hash = sha256.Sum256(b)
+}
+
 func makeBlock(t time.Time) {
 
 	log.Printf("make block")
@@ -198,15 +208,20 @@ func makeBlock(t time.Time) {
 	log.Printf("%s", start)
 
 	//create new block
-	if len(tx_pool) > 5 {
+	if len(tx_pool) > 0 {
 		//h := blockheight
 		//TODO prevblock
-		newblock := block.Block{Height: blockheight, Txs: tx_pool}
+
+		new_block := block.Block{Height: blockheight, Txs: tx_pool, Prev_Block_Hash: latest_block.Hash}
+		blockHash(new_block)
+
+		//TODO hash
 		blockheight += 1
-		blocks = append(blocks, newblock)
-		log.Printf("new block %v", newblock)
-		//empty pool
-		tx_pool = []block.Tx{}
+		blocks = append(blocks, new_block)
+		log.Printf("new block %v", new_block)
+		emptyPool()
+
+		latest_block = new_block
 	} else {
 		log.Printf("no block to make")
 		//handle special case of no tx
@@ -260,7 +275,7 @@ func main() {
 
 	//5sec
 	blockTime := 5000 * time.Millisecond
-	doEvery(blockTime, makeBlock)
+	go doEvery(blockTime, makeBlock)
 
 	//node server
 	go server()
