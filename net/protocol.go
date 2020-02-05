@@ -10,6 +10,7 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/polygon/block"
+	chain "github.com/polygon/chain"
 	cryptoutil "github.com/polygon/crypto"
 )
 
@@ -26,7 +27,7 @@ const (
 //storeBalance
 
 func GenesisTx() block.Tx {
-	emptySender := "" //sender is empty
+	emptySender := chain.AccountFromString("") //sender is empty
 
 	//genesisSender := "" //genesisSender is the bootstrap account
 
@@ -36,7 +37,7 @@ func GenesisTx() block.Tx {
 	r := cryptoutil.RandomPublicKey()
 	genesisAmount := 20 //just a number for now
 	//TODO id
-	gTx := block.Tx{Nonce: randNonce, Sender: emptySender, Receiver: r, Amount: genesisAmount}
+	gTx := block.Tx{Nonce: randNonce, Sender: emptySender, Receiver: chain.AccountFromString(r), Amount: genesisAmount}
 	return gTx
 }
 
@@ -46,7 +47,9 @@ func RandomTx() block.Tx {
 	rand.Seed(time.Now().UnixNano())
 	randNonce := rand.Intn(100)
 	r := cryptoutil.RandomPublicKey()
-	testTx := block.Tx{Nonce: randNonce, Sender: s, Receiver: r}
+	//TODO make sure the amount is covered by sender
+	randomAmount := rand.Intn(100)
+	testTx := block.Tx{Nonce: randNonce, Sender: chain.AccountFromString(s), Receiver: chain.AccountFromString(r), Amount: randomAmount}
 	return testTx
 }
 

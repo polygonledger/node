@@ -37,17 +37,110 @@ import (
 
 	block "github.com/polygon/block"
 
+	chain "github.com/polygon/chain"
 	cryptoutil "github.com/polygon/crypto"
 	protocol "github.com/polygon/net"
 )
 
-//var latestBlock block.Block
-//var blockheight int = 0
 var tx_pool []block.Tx
 var blocks []block.Block
 var latest_block block.Block
+var accounts map[chain.Account]int
 
-var accounts map[string]int
+//#### blockchain functions
+
+//empty the pool
+func emptyPool() {
+	tx_pool = []block.Tx{}
+}
+
+func blockHash(block block.Block) block.Block {
+	//FIX hash of proper data, merkle and such
+	new_hash := []byte(string(block.Timestamp.Format("2020-02-02 16:06:06"))[:])
+	blockheight_string := []byte(strconv.FormatInt(int64(block.Height), 10))
+	//new_hash = append(new_hash, blockheight_string)
+	log.Printf("newhash %x", new_hash)
+	block.Hash = sha256.Sum256(blockheight_string)
+	return block
+}
+
+func moveCash(SenderAccount chain.Account, ReceiverAccount chain.Account, amount int) {
+	//if accounts[SenderAccount] >= amount { //sufficient balance
+	accounts[SenderAccount] -= amount
+	accounts[ReceiverAccount] += amount
+	//}
+}
+
+func applyTx(tx block.Tx) {
+	//TODO check transaction type, not implemented yet
+	moveCash(tx.Sender, tx.Receiver, tx.Amount)
+}
+
+func setAccount(account chain.Account, balance int) {
+	accounts[account] = balance
+}
+
+func showAccount(account chain.Account) {
+	log.Printf("%s %d", account, accounts[account])
+}
+
+func makeGenesisBlock() block.Block {
+	emptyhash := [32]byte{}
+	timestamp := time.Now() //.Unix()
+	b := []byte("banks on brink again")[:]
+	genHash := sha256.Sum256(b)
+
+	//add 10 genesis tx
+	genesisTx := []block.Tx{}
+	for i := 0; i < 10; i++ {
+		someTx := protocol.GenesisTx()
+		genesisTx = append(genesisTx, someTx)
+	}
+
+	genesis_block := block.Block{Height: 0, Txs: genesisTx, Prev_Block_Hash: emptyhash, Hash: genHash, Timestamp: timestamp}
+	return genesis_block
+}
+
+func appendBlock(new_block block.Block) {
+	latest_block = new_block
+	blocks = append(blocks, new_block)
+}
+
+func applyBlock(block block.Block) {
+	//apply
+	for j := 0; j < len(block.Txs); j++ {
+		applyTx(block.Txs[j])
+	}
+
+}
+
+func makeBlock(t time.Time) {
+
+	log.Printf("make block?")
+	start := time.Now()
+	//elapsed := time.Since(start)
+	log.Printf("%s", start)
+
+	//create new block if there is tx in the pool
+	if len(tx_pool) > 0 {
+
+		timestamp := time.Now() //.Unix()
+		new_block := block.Block{Height: len(blocks), Txs: tx_pool, Prev_Block_Hash: latest_block.Hash, Timestamp: timestamp}
+		new_block = blockHash(new_block)
+		applyBlock(new_block)
+		appendBlock(new_block)
+
+		log.Printf("new block %v", new_block)
+		emptyPool()
+
+		latest_block = new_block
+	} else {
+		log.Printf("no block to make")
+		//handle special case of no tx
+		//now we don't add blocks, which means there are empty periods and blocks are not evenly spaced in time
+	}
+
+}
 
 /*
 Outgoing connections
@@ -174,6 +267,7 @@ func handleTx(rw *bufio.ReadWriter) {
 	tx_json, _ := json.Marshal(tx)
 	log.Printf("receive data: %s\n", tx_json)
 
+	//TODO its own function txhash
 	//hash of timestamp is same, check lenght of bytes used??
 	timestamp := time.Now().Unix()
 	//b := []byte(append(string(timestamp)[:], string(tx.Nonce)[:]))
@@ -186,81 +280,13 @@ func handleTx(rw *bufio.ReadWriter) {
 
 	tx.Id = hash
 
+	//TODO its own function
 	tx_pool = append(tx_pool, tx)
 	//blockheight += 1
 
 	//log.Printf("tx_pool_size: \n%d", tx_pool_size)
 
 	log.Printf("tx_pool size: %d\n", len(tx_pool))
-
-}
-
-func doEvery(d time.Duration, f func(time.Time)) {
-	for x := range time.Tick(d) {
-		f(x)
-	}
-}
-
-func emptyPool() {
-	tx_pool = []block.Tx{}
-}
-
-func blockHash(block block.Block) block.Block {
-	//FIX hash of proper data, merkle and such
-	new_hash := []byte(string(block.Timestamp.Format("2020-02-02 16:06:06"))[:])
-	blockheight_string := []byte(strconv.FormatInt(int64(block.Height), 10))
-	//new_hash = append(new_hash, blockheight_string)
-	log.Printf("newhash %x", new_hash)
-	block.Hash = sha256.Sum256(blockheight_string)
-	return block
-}
-
-func makeGenesisBlock() block.Block {
-	emptyhash := [32]byte{}
-	timestamp := time.Now() //.Unix()
-	b := []byte("banks on brink again")[:]
-	genHash := sha256.Sum256(b)
-
-	//add 10 genesis tx
-	genesisTx := []block.Tx{}
-	for i := 0; i < 10; i++ {
-		someTx := protocol.GenesisTx()
-		genesisTx = append(genesisTx, someTx)
-	}
-
-	genesis_block := block.Block{Height: 0, Txs: genesisTx, Prev_Block_Hash: emptyhash, Hash: genHash, Timestamp: timestamp}
-	return genesis_block
-}
-
-func appendBlock(new_block block.Block) {
-	latest_block = new_block
-	blocks = append(blocks, new_block)
-}
-
-func makeBlock(t time.Time) {
-
-	log.Printf("make block?")
-	start := time.Now()
-	//elapsed := time.Since(start)
-	log.Printf("%s", start)
-
-	//create new block if there is tx in the pool
-	if len(tx_pool) > 0 {
-
-		timestamp := time.Now() //.Unix()
-		new_block := block.Block{Height: len(blocks), Txs: tx_pool, Prev_Block_Hash: latest_block.Hash, Timestamp: timestamp}
-		new_block = blockHash(new_block)
-		appendBlock(new_block)
-
-		log.Printf("new block %v", new_block)
-		emptyPool()
-
-		latest_block = new_block
-	} else {
-		log.Printf("no block to make")
-		//handle special case of no tx
-		//now we don't add blocks, which means there are empty periods and blocks are not evenly spaced in time
-	}
 
 }
 
@@ -274,6 +300,13 @@ func server() error {
 
 	// Start listening.
 	return endpoint.Listen()
+}
+
+//basic threading helper
+func doEvery(d time.Duration, f func(time.Time)) {
+	for x := range time.Tick(d) {
+		f(x)
+	}
 }
 
 //HTTP
@@ -306,22 +339,14 @@ func loadContent() string {
 	return content
 }
 
-func setAccount(account string, balance int) {
-	accounts[account] = balance
-}
-
-func showAccount(account string) {
-	log.Printf("%s %d", account, accounts[account])
-}
-
 /*
 start server listening for incoming requests
 */
 func main() {
 
-	accounts = make(map[string]int)
-	setAccount("test", 22)
-	showAccount("test")
+	accounts = make(map[chain.Account]int)
+	setAccount(chain.AccountFromString("test"), 22)
+	showAccount(chain.AccountFromString("test"))
 
 	//cryptoutil.KeyExample()
 
