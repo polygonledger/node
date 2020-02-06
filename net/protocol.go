@@ -16,10 +16,11 @@ import (
 
 const (
 	// Port is the port number that the server listens to.
-	Server_address string = "127.0.0.1"
-	Port                  = ":8888"
-	CMD_GOB               = "GOB"
-	CMD_TX                = "TX"
+	Server_address  string = "127.0.0.1"
+	Port                   = ":8888"
+	CMD_GOB                = "GOB"
+	CMD_TX                 = "TX"
+	Genesis_Address string = "P0614579c42f2"
 )
 
 //pickRandomAccount
@@ -27,7 +28,8 @@ const (
 //storeBalance
 
 func GenesisTx() block.Tx {
-	emptySender := block.AccountFromString("") //sender is empty
+	Genesis_Account := block.AccountFromString(Genesis_Address)
+	//block.AccountFromString("") //sender is empty
 
 	//genesisSender := "" //genesisSender is the bootstrap account
 
@@ -35,21 +37,29 @@ func GenesisTx() block.Tx {
 	rand.Seed(time.Now().UnixNano())
 	randNonce := rand.Intn(100)
 	r := cryptoutil.RandomPublicKey()
+	address_r := cryptoutil.Address(r)
+	r_account := block.AccountFromString(address_r)
 	genesisAmount := 20 //just a number for now
 	//TODO id
-	gTx := block.Tx{Nonce: randNonce, Sender: emptySender, Receiver: block.AccountFromString(r), Amount: genesisAmount}
+	gTx := block.Tx{Nonce: randNonce, Sender: Genesis_Account, Receiver: r_account, Amount: genesisAmount}
 	return gTx
 }
 
 func RandomTx() block.Tx {
 	s := cryptoutil.RandomPublicKey()
+	address_s := cryptoutil.Address(s)
+	account_s := block.AccountFromString(address_s)
+
 	log.Printf("%s", s)
 	rand.Seed(time.Now().UnixNano())
 	randNonce := rand.Intn(100)
 	r := cryptoutil.RandomPublicKey()
+	address_r := cryptoutil.Address(r)
+	account_r := block.AccountFromString(address_r)
+
 	//TODO make sure the amount is covered by sender
 	randomAmount := rand.Intn(100)
-	testTx := block.Tx{Nonce: randNonce, Sender: block.AccountFromString(s), Receiver: block.AccountFromString(r), Amount: randomAmount}
+	testTx := block.Tx{Nonce: randNonce, Sender: account_s, Receiver: account_r, Amount: randomAmount}
 	return testTx
 }
 

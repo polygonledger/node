@@ -209,6 +209,10 @@ start server listening for incoming requests
 */
 func main() {
 
+	kp := cryptoutil.SomeKeypair()
+	fmt.Println("some key ", kp)
+	cryptoutil.SignExample(kp)
+
 	chain.InitAccounts()
 	chain.SetAccount(block.AccountFromString("test"), 22)
 	chain.ShowAccount(block.AccountFromString("test"))

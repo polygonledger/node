@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/btcd/btcec"
+	"github.com/btcd/chaincfg/chainhash"
 )
 
 //var hash = sha256("secret")
@@ -18,6 +19,11 @@ import (
 
 //type Keypair struct {
 //public, private
+
+type Keypair struct {
+	PrivKey btcec.PrivateKey
+	PubKey  btcec.PublicKey
+}
 
 func Address(pubkey string) string {
 	/*var private = {};
@@ -82,6 +88,37 @@ func RanAddress() *btcec.PublicKey {
 	_, pubKey := btcec.PrivKeyFromBytes(btcec.S256(), pkBytes)
 	return pubKey
 
+}
+
+func SomeKeypair() Keypair {
+	pkBytes, err := hex.DecodeString("22a47fa09a223f2aa079edf85a7c2d4f87" +
+		"20ee63e502ee2869afab7de234b80c")
+	if err != nil {
+		fmt.Println(err)
+		//return nil
+	}
+
+	privKey, pubKey := btcec.PrivKeyFromBytes(btcec.S256(), pkBytes)
+	kp := Keypair{PrivKey: *privKey, PubKey: *pubKey}
+	return kp
+}
+
+func SignExample(keypair Keypair) {
+
+	//privKey, pubKey := btcec.PrivKeyFromBytes(btcec.S256(), pkBytes)
+
+	// Sign a message using the private key.
+	message := "test message"
+	messageHash := chainhash.DoubleHashB([]byte(message))
+	signature, err := keypair.PrivKey.Sign(messageHash)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	fmt.Println("signature ", signature)
+
+	verified := signature.Verify(messageHash, &keypair.PubKey)
+	fmt.Printf("Signature Verified? %v\n", verified)
 }
 
 func KeyExample() {
