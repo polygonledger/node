@@ -1,4 +1,4 @@
-package chain
+package block
 
 type Account struct {
 	AccountKey string
