@@ -6,7 +6,9 @@ package main
 //block gets created every 10 secs
 
 //TODO
-//polygonledger/node
+//package polygonledger/node
+//basic signatures
+
 //Tx, sender receiver
 //var hash = sha256("secret")
 //var keypair = MakeKeypair(hash)
@@ -210,6 +212,10 @@ func main() {
 	chain.InitAccounts()
 	chain.SetAccount(block.AccountFromString("test"), 22)
 	chain.ShowAccount(block.AccountFromString("test"))
+
+	rk := cryptoutil.RandomPublicKey()
+	ra := cryptoutil.Address(rk)
+	log.Printf("random address %s", ra)
 
 	//cryptoutil.KeyExample()
 

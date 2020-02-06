@@ -58,10 +58,10 @@ The client function connects to the server and sends GOB requests.
 */
 func SendTx(rw *bufio.ReadWriter) error {
 
-	// Send a GOB request.
+	// Send a GOB request
 	// Create an encoder that directly transmits to `rw`.
-	// Send the request name.
-	// Send the GOB.
+	// Send the request name
+	// Send the GOB data
 
 	testTx := RandomTx()
 
