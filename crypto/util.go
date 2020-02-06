@@ -12,6 +12,7 @@ import (
 
 	"github.com/btcd/btcec"
 	"github.com/btcd/chaincfg/chainhash"
+	"github.com/polygon/block"
 )
 
 //var hash = sha256("secret")
@@ -26,18 +27,7 @@ type Keypair struct {
 }
 
 func Address(pubkey string) string {
-	/*var private = {};
-	private.getAddressByPublicKey = function (publicKey) {
-		var publicKeyHash = crypto.createHash('sha256').update(publicKey, 'hex').digest();
-		var temp = new Buffer(8);
-		for (var i = 0; i < 8; i++) {
-			temp[i] = publicKeyHash[7 - i];
-		}
-
-		var address = bignum.fromBuffer(temp).toString() + "C";
-		return address;
-	}*/
-	return "P" + GetSHAHash(pubkey)[:12]
+	return "P" + GetSHAHash(pubkey)[:11]
 }
 
 func GetMD5Hash(text string) string {
@@ -89,6 +79,25 @@ func RanAddress() *btcec.PublicKey {
 	return pubKey
 
 }
+
+func SignTx(tx block.Tx, keypair Keypair) btcec.Signature {
+	//message := strconv.Itoa(tx.Id)
+	message := fmt.Sprintf("%d", tx.Id)
+
+	messageHash := chainhash.DoubleHashB([]byte(message))
+	signature, err := keypair.PrivKey.Sign(messageHash)
+	if err != nil {
+		fmt.Println(err)
+		//return
+	}
+	fmt.Println("signature ", signature)
+	return *signature
+
+	//verified := signature.Verify(messageHash, &keypair.PubKey)
+	//fmt.Printf("Signature Verified? %v\n", verified)
+}
+
+////////////////////////
 
 func SomeKeypair() Keypair {
 	pkBytes, err := hex.DecodeString("22a47fa09a223f2aa079edf85a7c2d4f87" +

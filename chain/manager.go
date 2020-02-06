@@ -1,13 +1,21 @@
 package chain
 
+//TODO
+
 import (
 	"crypto/sha256"
 	"log"
+	"math/rand"
 	"strconv"
 	"time"
 
 	"github.com/polygon/block"
-	protocol "github.com/polygon/net"
+	cryptoutil "github.com/polygon/crypto"
+)
+
+//TODO fix circular import
+const (
+	Genesis_Address string = "P0614579c42f2"
 )
 
 var Tx_pool []block.Tx
@@ -18,26 +26,39 @@ var Accounts map[block.Account]int
 //testing
 func InitAccounts() {
 	Accounts = make(map[block.Account]int)
+	log.Println("init accounts %i", len(Accounts))
+	//Genesis_Account := block.AccountFromString(Genesis_Address)
+	//set genesiss account
+	SetAccount(block.AccountFromString(Genesis_Address), 200)
 }
 
 //handlers
+
+func txHash(tx block.Tx) [32]byte {
+	b := []byte(string(tx.Nonce)[:])
+	hash := sha256.Sum256(b)
+	return hash
+}
 
 func HandleTx(tx block.Tx) {
 	//TODO its own function txhash
 	//hash of timestamp is same, check lenght of bytes used??
 	timestamp := time.Now().Unix()
 	//b := []byte(append(string(timestamp)[:], string(tx.Nonce)[:]))
+	tx.Id = txHash(tx)
 
-	b := []byte(string(tx.Nonce)[:])
-	hash := sha256.Sum256(b)
-	log.Println("hash %x time %s", hash, timestamp)
+	log.Println("tx id %x time %s", tx.Id, timestamp)
 
 	//hash := sha256.Sum256(xdata)
 
-	tx.Id = hash
+	//tx.Id = hash
 
 	//TODO its own function
-	Tx_pool = append(Tx_pool, tx)
+	if txValid(tx) {
+		Tx_pool = append(Tx_pool, tx)
+	} else {
+		log.Println("invalid tx")
+	}
 	//blockheight += 1
 
 	//log.Printf("tx_pool_size: \n%d", tx_pool_size)
@@ -63,15 +84,23 @@ func blockHash(block block.Block) block.Block {
 	return block
 }
 
+func txValid(tx block.Tx) bool {
+	sufficientBalance := Accounts[tx.Sender] >= tx.Amount
+	log.Println("sufficientBalance ", sufficientBalance, tx.Sender, Accounts[tx.Sender], tx.Amount)
+	valid := sufficientBalance //and signature
+	return valid
+}
+
 func moveCash(SenderAccount block.Account, ReceiverAccount block.Account, amount int) {
-	//if accounts[SenderAccount] >= amount { //sufficient balance
+	log.Printf("move cash %v %v %v %v %d", SenderAccount, ReceiverAccount, Accounts[SenderAccount], Accounts[ReceiverAccount], amount)
 	Accounts[SenderAccount] -= amount
 	Accounts[ReceiverAccount] += amount
-	//}
+
 }
 
 func applyTx(tx block.Tx) {
 	//TODO check transaction type, not implemented yet
+
 	moveCash(tx.Sender, tx.Receiver, tx.Amount)
 }
 
@@ -83,6 +112,42 @@ func ShowAccount(account block.Account) {
 	log.Printf("%s %d", account, Accounts[account])
 }
 
+// pick a random account in the ledger
+func RandomAccount() block.Account {
+	lenk := len(Accounts)
+
+	keys := make([]block.Account, 0, len(Accounts))
+	for k := range Accounts {
+		keys = append(keys, k)
+	}
+
+	rand.Seed(time.Now().UnixNano())
+	ran := rand.Intn(lenk)
+
+	randomAccount := keys[ran]
+	log.Println("random account ", randomAccount)
+	return randomAccount
+}
+
+func GenesisTx() block.Tx {
+	Genesis_Account := block.AccountFromString(Genesis_Address)
+	//block.AccountFromString("") //sender is empty
+
+	//genesisSender := "" //genesisSender is the bootstrap account
+
+	//log.Printf("%s", s)
+	rand.Seed(time.Now().UnixNano())
+	randNonce := rand.Intn(100)
+	r := cryptoutil.RandomPublicKey()
+	address_r := cryptoutil.Address(r)
+	r_account := block.AccountFromString(address_r)
+	genesisAmount := 20 //just a number for now
+	//TODO id
+
+	gTx := block.Tx{Nonce: randNonce, Sender: Genesis_Account, Receiver: r_account, Amount: genesisAmount}
+	return gTx
+}
+
 func MakeGenesisBlock() block.Block {
 	emptyhash := [32]byte{}
 	timestamp := time.Now() //.Unix()
@@ -92,7 +157,7 @@ func MakeGenesisBlock() block.Block {
 	//add 10 genesis tx
 	genesisTx := []block.Tx{}
 	for i := 0; i < 10; i++ {
-		someTx := protocol.GenesisTx()
+		someTx := GenesisTx()
 		genesisTx = append(genesisTx, someTx)
 	}
 
@@ -111,7 +176,10 @@ func ApplyBlock(block block.Block) {
 	//apply
 	for j := 0; j < len(block.Txs); j++ {
 		applyTx(block.Txs[j])
+		//apply id
+		block.Txs[j].Id = txHash(block.Txs[j])
 	}
+	//TODO add block hash now
 }
 
 // function to create blocks, called periodically

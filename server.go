@@ -184,6 +184,16 @@ func loadContent() string {
 		content += fmt.Sprintf("Nonce %d, Id %x<br>", chain.Tx_pool[i].Nonce, chain.Tx_pool[i].Id[:])
 	}
 
+	content += fmt.Sprintf("<h2>Accounts</h2>%d<br>", len(chain.Accounts))
+
+	//for i := 0; i < len(chain.Accounts); i++ {
+	//	content += fmt.Sprintf("%d, Id %x<br>", chain.Accounts[i].Nonce, chain.Tx_pool[i].Id[:])
+	//}
+
+	for k, v := range chain.Accounts {
+		content += fmt.Sprintf("%s %d<br>", k, v)
+	}
+
 	content += fmt.Sprintf("<br><h2>Blocks</h2><i>number of blocks %d</i><br>", len(chain.Blocks))
 
 	for i := 0; i < len(chain.Blocks); i++ {
@@ -214,8 +224,8 @@ func main() {
 	cryptoutil.SignExample(kp)
 
 	chain.InitAccounts()
-	chain.SetAccount(block.AccountFromString("test"), 22)
-	chain.ShowAccount(block.AccountFromString("test"))
+	//chain.SetAccount(block.AccountFromString("test"), 22)
+	//chain.ShowAccount(block.AccountFromString("test"))
 
 	rk := cryptoutil.RandomPublicKey()
 	ra := cryptoutil.Address(rk)
@@ -227,7 +237,12 @@ func main() {
 	s := cryptoutil.RandomPublicKey()
 	log.Printf("%s", s)
 
-	chain.AppendBlock(chain.MakeGenesisBlock())
+	genBlock := chain.MakeGenesisBlock()
+	chain.ApplyBlock(genBlock)
+	chain.AppendBlock(genBlock)
+
+	acc := chain.RandomAccount()
+	log.Printf("random account %s %d", acc, chain.Accounts[acc])
 
 	//create block every 10sec
 	blockTime := 10000 * time.Millisecond
