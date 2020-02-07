@@ -1,6 +1,6 @@
 package block
 
-//chain "github.com/polygonledger/chain"
+//chain "github.com/polygonledger/node/chain"
 
 type Tx struct {
 	Id       [32]byte `json:"id"` //gets assigned when verified in a block

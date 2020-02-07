@@ -36,10 +36,10 @@ import (
 	"encoding/json"
 	"net/http"
 
-	block "github.com/polygonledger/block"
-	chain "github.com/polygonledger/chain"
-	cryptoutil "github.com/polygonledger/crypto"
-	protocol "github.com/polygonledger/net"
+	block "github.com/polygonledger/node/block"
+	chain "github.com/polygonledger/node/chain"
+	cryptoutil "github.com/polygonledger/node/crypto"
+	protocol "github.com/polygonledger/node/net"
 )
 
 /*
