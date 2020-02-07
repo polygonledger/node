@@ -7,7 +7,7 @@ import (
 
 	"github.com/pkg/errors"
 
-	protocol "github.com/polygon/net"
+	protocol "github.com/polygonledger/net"
 )
 
 /*

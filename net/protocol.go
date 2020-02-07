@@ -9,9 +9,9 @@ import (
 	"time"
 
 	"github.com/pkg/errors"
-	block "github.com/polygon/block"
-	//chain "github.com/polygon/chain"
-	cryptoutil "github.com/polygon/crypto"
+	block "github.com/polygonledger/block"
+	//chain "github.com/polygonledger/chain"
+	cryptoutil "github.com/polygonledger/crypto"
 )
 
 const (

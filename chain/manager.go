@@ -6,8 +6,8 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/polygon/block"
-	protocol "github.com/polygon/net"
+	"github.com/polygonledger/block"
+	protocol "github.com/polygonledger/net"
 )
 
 var Tx_pool []block.Tx
