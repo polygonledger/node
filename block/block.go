@@ -1,6 +1,10 @@
 package block
 
-import "time"
+import (
+	"time"
+
+	"github.com/btcd/btcec"
+)
 
 type Block struct {
 	Hash            [32]byte
@@ -8,4 +12,5 @@ type Block struct {
 	Height          int
 	Txs             []Tx
 	Timestamp       time.Time
+	Signature       btcec.Signature
 }

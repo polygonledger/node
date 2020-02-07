@@ -34,7 +34,10 @@ func client(ip string) error {
 		return errors.Wrap(err, "Client: Failed to open connection to "+ip+protocol.Port)
 	}
 
-	protocol.SendTx(rw)
+	//get random account address
+	protocol.RequestAccount(rw)
+
+	//protocol.SendTx(rw)
 
 	return nil
 }

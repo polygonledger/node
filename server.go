@@ -109,7 +109,7 @@ func (e *Endpoint) handleMessages(conn net.Conn) {
 	// Read from the connection until EOF. Expect a command name as the
 	// next input. Call the handler that is registered for this command.
 	for {
-		log.Print("Receive command '")
+		log.Print("Receive command")
 		cmd, err := rw.ReadString('\n')
 		switch {
 		case err == io.EOF:
@@ -135,7 +135,12 @@ func (e *Endpoint) handleMessages(conn net.Conn) {
 	}
 }
 
-// handles tx request
+// handle ranaccount request
+func handleRandomAccountRequest(rw *bufio.ReadWriter) {
+	protocol.SendAccount(rw)
+}
+
+// handle tx request
 func handleTxRequest(rw *bufio.ReadWriter) {
 	//log.Print("Receive GOB data")
 
@@ -162,6 +167,7 @@ func server() error {
 
 	// Add the handle funcs
 	endpoint.AddHandleFunc(protocol.CMD_TX, handleTxRequest)
+	endpoint.AddHandleFunc(protocol.CMD_RANDOM_ACCOUNT, handleRandomAccountRequest)
 
 	// Start listening.
 	return endpoint.Listen()
@@ -182,6 +188,12 @@ func loadContent() string {
 
 	for i := 0; i < len(chain.Tx_pool); i++ {
 		content += fmt.Sprintf("Nonce %d, Id %x<br>", chain.Tx_pool[i].Nonce, chain.Tx_pool[i].Id[:])
+	}
+
+	content += fmt.Sprintf("<h2>Accounts</h2>%d<br>", len(chain.Accounts))
+
+	for k, v := range chain.Accounts {
+		content += fmt.Sprintf("%s %d<br>", k, v)
 	}
 
 	content += fmt.Sprintf("<br><h2>Blocks</h2><i>number of blocks %d</i><br>", len(chain.Blocks))
@@ -209,13 +221,15 @@ start server listening for incoming requests
 */
 func main() {
 
-	kp := cryptoutil.SomeKeypair()
-	fmt.Println("some key ", kp)
-	cryptoutil.SignExample(kp)
+	//demo
+	// kp := cryptoutil.SomeKeypair()
+	// fmt.Println("some key ", kp)
+	// cryptoutil.SignExample(kp)
 
 	chain.InitAccounts()
-	chain.SetAccount(block.AccountFromString("test"), 22)
-	chain.ShowAccount(block.AccountFromString("test"))
+	//demo
+	//chain.SetAccount(block.AccountFromString("test"), 22)
+	//chain.ShowAccount(block.AccountFromString("test"))
 
 	rk := cryptoutil.RandomPublicKey()
 	ra := cryptoutil.Address(rk)
@@ -227,7 +241,9 @@ func main() {
 	s := cryptoutil.RandomPublicKey()
 	log.Printf("%s", s)
 
-	chain.AppendBlock(chain.MakeGenesisBlock())
+	genBlock := chain.MakeGenesisBlock()
+	chain.ApplyBlock(genBlock)
+	chain.AppendBlock(genBlock)
 
 	//create block every 10sec
 	blockTime := 10000 * time.Millisecond

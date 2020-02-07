@@ -12,6 +12,7 @@ import (
 
 	"github.com/btcd/btcec"
 	"github.com/btcd/chaincfg/chainhash"
+	"github.com/polygonledger/node/block"
 )
 
 //var hash = sha256("secret")
@@ -38,6 +39,23 @@ func Address(pubkey string) string {
 		return address;
 	}*/
 	return "P" + GetSHAHash(pubkey)[:12]
+}
+
+func SignTx(tx block.Tx, keypair Keypair) btcec.Signature {
+	//message := strconv.Itoa(tx.Id)
+	message := fmt.Sprintf("%d", tx.Id)
+
+	messageHash := chainhash.DoubleHashB([]byte(message))
+	signature, err := keypair.PrivKey.Sign(messageHash)
+	if err != nil {
+		fmt.Println(err)
+		//return
+	}
+	fmt.Println("signature ", signature)
+	return *signature
+
+	//verified := signature.Verify(messageHash, &keypair.PubKey)
+	//fmt.Printf("Signature Verified? %v\n", verified)
 }
 
 func GetMD5Hash(text string) string {
