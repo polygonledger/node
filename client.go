@@ -2,8 +2,10 @@ package main
 
 import (
 	"bufio"
+	"encoding/json"
 	"log"
 	"net"
+	"strconv"
 
 	"github.com/pkg/errors"
 
@@ -30,15 +32,35 @@ func client(ip string) error {
 
 	// Open a connection to the server.
 	rw, err := Open(ip + protocol.Port)
+	log.Println(rw)
 	if err != nil {
 		return errors.Wrap(err, "Client: Failed to open connection to "+ip+protocol.Port)
 	}
 
 	//get random account address
 	//protocol.RequestAccount(rw)
-	protocol.RequestTest(rw)
+	//protocol.RequestTest(rw)
 
 	//protocol.SendTx(rw)
+	testTx := protocol.RandomTx()
+	txJson, _ := json.Marshal(testTx)
+	log.Println("txJson ", txJson)
+
+	msg := "REQ#TX#" + string(txJson) + string(protocol.DELIM)
+	n, err := rw.WriteString(msg)
+	if err != nil {
+		return errors.Wrap(err, "Could not write JSON data ("+strconv.Itoa(n)+" bytes written)")
+	}
+
+	err = rw.Flush()
+
+	msg2, err2 := rw.ReadString(protocol.DELIM)
+	log.Print("reply msg ", msg2)
+	if err != nil {
+		log.Println("Failed ", err2)
+		//log.Println(err.)
+		//break
+	}
 
 	return nil
 }
@@ -46,13 +68,13 @@ func client(ip string) error {
 /*
 start client and connect to the host
 */
-// func main() {
+func main() {
 
-// 	err := client(protocol.Server_address)
-// 	if err != nil {
-// 		log.Println("Error:", errors.WithStack(err))
-// 	}
-// 	log.Println("Client done.")
-// 	return
+	err := client(protocol.Server_address)
+	if err != nil {
+		log.Println("Error:", errors.WithStack(err))
+	}
+	log.Println("Client done")
+	return
 
-// }
+}

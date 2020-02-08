@@ -23,12 +23,11 @@ package main
 import (
 	"bufio"
 	"fmt"
-	"io"
 	"log"
 	"net"
 	"net/http"
+	"strconv"
 	"strings"
-	"sync"
 	"time"
 
 	"github.com/pkg/errors"
@@ -43,49 +42,19 @@ import (
 
 /*
 Incoming connections
-receive the name of a command terminated by `\n`, followed by data.
-create an `Endpoint` object with the following properties:
-* It allows to register one or more handler functions, where each can handle a
-  particular command.
-* It dispatches incoming commands to the associated handler based on the commands
-  name.
 */
-
-// handles an incoming command. It receives the open connection wrapped in a `ReadWriter` interface
-type HandleFunc func(*bufio.ReadWriter)
-
-// provides an endpoint to other processess that they can send data to
-type Endpoint struct {
-	listener net.Listener
-	handler  map[string]HandleFunc
-
-	// Maps are not threadsafe, so we need a mutex to control access
-	m sync.RWMutex
-}
-
-// create new endpoint
-func NewEndpoint() *Endpoint {
-	// empty list of handler funcs
-	return &Endpoint{
-		handler: map[string]HandleFunc{},
-	}
-}
-
-// AddHandleFunc adds a new function for handling incoming data
-func (e *Endpoint) AddHandleFunc(name string, f HandleFunc) {
-	e.m.Lock()
-	e.handler[name] = f
-	e.m.Unlock()
-}
 
 // starts listening
 func ListenAll() error {
+	log.Println("listen all")
 	var err error
 	var listener net.Listener
 	listener, err = net.Listen("tcp", protocol.Port)
 	if err != nil {
+		log.Println(err)
 		return errors.Wrapf(err, "Unable to listen on port %s\n", protocol.Port)
 	}
+
 	log.Println("Listen on", listener.Addr().String())
 	for {
 		log.Println("Accept a connection request")
@@ -106,16 +75,22 @@ func handleMessagesChan(conn net.Conn) {
 	//conn.SetReadDeadline(time.Now().Add(timeoutDuration))
 	defer conn.Close()
 	for {
+
+		msg, err := rw.ReadString(protocol.DELIM)
+		if err != nil {
+			if len(msg) == 0 {
+				break
+			} else {
+				log.Println("Failed ", err)
+				//log.Println(err.)
+				break
+			}
+		}
+
 		// read
 		log.Print("Receive message")
 
-		msg, err := rw.ReadString(protocol.DELIM)
-		log.Print("msg ", msg)
-		if err != nil {
-			log.Println("Failed ", err)
-			//log.Println(err.)
-			continue
-		}
+		log.Print("msg ", msg, len(msg))
 
 		msg = strings.Trim(msg, string(protocol.DELIM))
 		//msg = strings.Trim(msg, string("\n"))
@@ -124,108 +99,39 @@ func handleMessagesChan(conn net.Conn) {
 		cmd := s[1]
 		fmt.Println(mtype, cmd)
 
-		fmt.Println(protocol.IsValidMsgType(mtype))
-	}
-}
+		fmt.Println("valid msg type ", protocol.IsValidMsgType(mtype))
 
-// starts listening on the endpoint port
-func (e *Endpoint) ListenCmd() error {
-	var err error
-	e.listener, err = net.Listen("tcp", protocol.Port)
-	if err != nil {
-		return errors.Wrapf(err, "Unable to listen on port %s\n", protocol.Port)
-	}
-	log.Println("Listen on", e.listener.Addr().String())
-	for {
-		log.Println("Accept a connection request")
-		conn, err := e.listener.Accept()
-		if err != nil {
-			log.Println("Failed accepting a connection request:", err)
-			continue
+		// Add the handle funcs
+		//	protocol.CMD_TX, handleTxRequest)
+		//	protocol.CMD_RANDOM_ACCOUNT, handleRandomAccountRequest)
+
+		if mtype == protocol.REQ {
+			log.Println("Request type")
+			if cmd == protocol.CMD_TX {
+				log.Println("Handle tx")
+				dataJson := s[2]
+				//dataBytes := byte[](dataJson)
+				dataBytes := []byte(dataJson)
+
+				log.Println("data ", dataJson)
+
+				var tx block.Tx
+
+				if err := json.Unmarshal(dataBytes, &tx); err != nil {
+					panic(err)
+				}
+				log.Println(tx, tx.Amount, tx.Nonce)
+				//protocol.CMD_TX, handleTxRequest)
+
+				log.Println("amount ", tx.Amount)
+				n, err := rw.WriteString("response " + strconv.Itoa(tx.Amount) + string(protocol.DELIM))
+				if err != nil {
+					log.Println(err, n)
+					//err:= errors.Wrap(err, "Could not write GOB data ("+strconv.Itoa(n)+" bytes written)")
+				}
+				rw.Flush()
+			}
 		}
-		log.Println("Handle incoming messages")
-		go e.handleMessagesProt(conn)
-	}
-}
-
-// handleMessages reads the connection up to the first newline
-// based on the command, it calls the appropriate HandleFunc
-func (e *Endpoint) handleMessagesProt(conn net.Conn) {
-	// Wrap the connection into a buffered reader for easier reading.
-	rw := bufio.NewReadWriter(bufio.NewReader(conn), bufio.NewWriter(conn))
-	defer conn.Close()
-
-	// Read from the connection until EOF. Expect a command name as the
-	// next input. Call the handler that is registered for this command.
-	for {
-		// read
-		log.Print("Receive message")
-
-		msg, err := rw.ReadString(protocol.DELIM)
-		switch {
-		case err == io.EOF:
-			log.Println("Reached EOF - no delim?")
-			log.Println(msg)
-			return
-		case err != nil:
-			log.Println("\nError reading command. Got: '"+msg+"'\n", err)
-			return
-		}
-		// Trim the request string - ReadString does not strip any newlines.
-		log.Println("msg: ", msg)
-		msg = strings.Trim(msg, string(protocol.DELIM))
-		log.Println("msg: ", msg)
-
-		var msgStruct protocol.Message
-		dec := gob.NewDecoder(rw)
-		errDecode := dec.Decode(&msgStruct)
-
-		if errDecode != nil {
-			log.Println("Error decoding GOB data:", errDecode)
-			return
-		} else {
-			log.Println("decoded ", msgStruct)
-		}
-
-		//cmd = strings.Trim(cmd, "\n")
-
-	}
-}
-
-// handleMessages reads the connection up to the first newline
-// based on the command, it calls the appropriate HandleFunc
-func (e *Endpoint) handleMessagesCmd(conn net.Conn) {
-	// Wrap the connection into a buffered reader for easier reading.
-	rw := bufio.NewReadWriter(bufio.NewReader(conn), bufio.NewWriter(conn))
-	defer conn.Close()
-
-	// Read from the connection until EOF. Expect a command name as the
-	// next input. Call the handler that is registered for this command.
-	for {
-		// read
-		log.Print("Receive command")
-		cmd, err := rw.ReadString('\n')
-		switch {
-		case err == io.EOF:
-			log.Println("Reached EOF - close this connection.\n   ---")
-			return
-		case err != nil:
-			log.Println("\nError reading command. Got: '"+cmd+"'\n", err)
-			return
-		}
-		// Trim the request string - ReadString does not strip any newlines.
-		cmd = strings.Trim(cmd, "\n ")
-		log.Println("cmd: ", cmd)
-
-		// Fetch the appropriate handler function from the 'handler' map and call it.
-		e.m.RLock()
-		handleCommand, ok := e.handler[cmd]
-		e.m.RUnlock()
-		if !ok {
-			log.Println("Command '" + cmd + "' is not registered.")
-			return
-		}
-		handleCommand(rw)
 	}
 }
 
@@ -254,22 +160,9 @@ func handleTxRequest(rw *bufio.ReadWriter) {
 
 }
 
-// server listens for incoming requests and dispatches them to
-// registered handler functions
-func serverCmd() error {
-	endpoint := NewEndpoint()
-
-	// Add the handle funcs
-	endpoint.AddHandleFunc(protocol.CMD_TX, handleTxRequest)
-	endpoint.AddHandleFunc(protocol.CMD_RANDOM_ACCOUNT, handleRandomAccountRequest)
-
+func serverNode() {
 	// Start listening
-	return endpoint.ListenCmd()
-}
-
-func serverNode() error {
-	// Start listening
-	return ListenAll()
+	ListenAll()
 }
 
 //basic threading helper
@@ -335,18 +228,7 @@ start server listening for incoming requests
 */
 func main() {
 
-	serverNode()
-
-	//demo
-	// kp := cryptoutil.SomeKeypair()
-	// fmt.Println("some key ", kp)
-	// cryptoutil.SignExample(kp)
-
-	//cryptoutil.KeyExample()
-
-	//btcec.PublicKey
-	// s := cryptoutil.RandomPublicKey()
-	// log.Printf("%s", s)
+	log.Println("run server")
 
 	//account := block.Account{AccountKey: "test"}
 	//accountJson, _ := json.Marshal(account)
@@ -355,13 +237,6 @@ func main() {
 	/////
 
 	// chain.InitAccounts()
-	//demo
-	//chain.SetAccount(block.AccountFromString("test"), 22)
-	//chain.ShowAccount(block.AccountFromString("test"))
-
-	// rk := cryptoutil.RandomPublicKey()
-	// ra := cryptoutil.Address(rk)
-	// log.Printf("random address %s", ra)
 
 	// genBlock := chain.MakeGenesisBlock()
 	// chain.ApplyBlock(genBlock)
@@ -372,10 +247,13 @@ func main() {
 	// go doEvery(blockTime, chain.MakeBlock)
 
 	// //node server
-	// go serverCmd()
-	// // if err != nil {
-	// // 	log.Println("Error:", errors.WithStack(err))
-	// // }
+	//go serverNode()
+	err := ListenAll()
+	log.Println("error ", err)
+
+	// if err != nil {
+	// 	log.Println("Error:", errors.WithStack(err))
+	// }
 
 	// log.Println("Server running")
 

@@ -18,4 +18,10 @@ func TestBasicSign(t *testing.T) {
 		t.Error("msg failed")
 	}
 
+	//cryptoutil.KeyExample()
+
+	//btcec.PublicKey
+	// s := cryptoutil.RandomPublicKey()
+	// log.Printf("%s", s)
+
 }
