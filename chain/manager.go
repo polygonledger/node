@@ -55,7 +55,7 @@ func txValid(tx block.Tx) bool {
 
 //handlers
 
-func HandleTx(tx block.Tx) {
+func HandleTx(tx block.Tx) string {
 	//hash of timestamp is same, check lenght of bytes used??
 	timestamp := time.Now().Unix()
 	//b := []byte(append(string(timestamp)[:], string(tx.Nonce)[:]))
@@ -67,13 +67,17 @@ func HandleTx(tx block.Tx) {
 	//TODO its own function
 	if txValid(tx) {
 		Tx_pool = append(Tx_pool, tx)
+		return "ok"
 	} else {
 		log.Println("invalid tx")
+		return "error"
 	}
 
 	//log.Printf("tx_pool_size: \n%d", tx_pool_size)
 
-	log.Printf("tx_pool size: %d\n", len(Tx_pool))
+	//log.Printf("tx_pool size: %d\n", len(Tx_pool))
+	return "ok"
+
 }
 
 //#### blockchain functions

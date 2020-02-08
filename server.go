@@ -26,13 +26,11 @@ import (
 	"log"
 	"net"
 	"net/http"
-	"strconv"
 	"strings"
 	"time"
 
 	"github.com/pkg/errors"
 
-	"encoding/gob"
 	"encoding/json"
 
 	block "github.com/polygonledger/node/block"
@@ -122,9 +120,11 @@ func handleMessagesChan(conn net.Conn) {
 				}
 				log.Println(tx, tx.Amount, tx.Nonce)
 				//protocol.CMD_TX, handleTxRequest)
+				resp := chain.HandleTx(tx)
 
-				log.Println("amount ", tx.Amount)
-				n, err := rw.WriteString("response " + strconv.Itoa(tx.Amount) + string(protocol.DELIM))
+				//log.Println("amount ", tx.Amount)
+				//n, err := rw.WriteString("response " + strconv.Itoa(tx.Amount) + string(protocol.DELIM))
+				n, err := rw.WriteString("response " + resp + string(protocol.DELIM))
 				if err != nil {
 					log.Println(err, n)
 					//err:= errors.Wrap(err, "Could not write GOB data ("+strconv.Itoa(n)+" bytes written)")
@@ -138,26 +138,6 @@ func handleMessagesChan(conn net.Conn) {
 // handle ranaccount request
 func handleRandomAccountRequest(rw *bufio.ReadWriter) {
 	protocol.SendAccount(rw)
-}
-
-// handle tx request
-func handleTxRequest(rw *bufio.ReadWriter) {
-	//log.Print("Receive GOB data")
-
-	//GOB basics
-	// decodes into a struct
-	var tx block.Tx
-	dec := gob.NewDecoder(rw)
-	err := dec.Decode(&tx)
-	if err != nil {
-		log.Println("Error decoding GOB data:", err)
-		return
-	}
-	//json example, not used
-	tx_json, _ := json.Marshal(tx)
-	log.Printf("receive data: %s\n", tx_json)
-	chain.HandleTx(tx)
-
 }
 
 func serverNode() {
@@ -236,27 +216,26 @@ func main() {
 
 	/////
 
-	// chain.InitAccounts()
+	chain.InitAccounts()
 
-	// genBlock := chain.MakeGenesisBlock()
-	// chain.ApplyBlock(genBlock)
-	// chain.AppendBlock(genBlock)
+	genBlock := chain.MakeGenesisBlock()
+	chain.ApplyBlock(genBlock)
+	chain.AppendBlock(genBlock)
 
 	// //create block every 10sec
-	// blockTime := 10000 * time.Millisecond
-	// go doEvery(blockTime, chain.MakeBlock)
+	blockTime := 10000 * time.Millisecond
+	go doEvery(blockTime, chain.MakeBlock)
 
 	// //node server
 	//go serverNode()
-	err := ListenAll()
-	log.Println("error ", err)
+	go ListenAll()
+	//log.Println("error ", err)
 
 	// if err != nil {
 	// 	log.Println("Error:", errors.WithStack(err))
 	// }
 
-	// log.Println("Server running")
-
-	//go runweb()
+	go runweb()
+	log.Println("Server running")
 
 }
