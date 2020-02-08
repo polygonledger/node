@@ -6,6 +6,9 @@ import (
 	block "github.com/polygonledger/node/block"
 )
 
+//any message is defined through the delimters, no size restrictions as of now
+//MSG TYPE # CMD # DATA |
+
 //Message Types
 //Request <--> Reply
 const (

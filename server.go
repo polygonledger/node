@@ -26,6 +26,7 @@ import (
 	"io"
 	"log"
 	"net"
+	"net/http"
 	"strings"
 	"sync"
 	"time"
@@ -314,6 +315,21 @@ func loadContent() string {
 	return content
 }
 
+func runweb() {
+	//webserver to access node state through browser
+	// HTTP
+	log.Println("start webserver")
+
+	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		p := loadContent()
+		//log.Print(p)
+		fmt.Fprintf(w, "<h1>Polygon chain</h1><div>%s</div>", p)
+	})
+
+	log.Fatal(http.ListenAndServe(":8081", nil))
+
+}
+
 /*
 start server listening for incoming requests
 */
@@ -326,9 +342,6 @@ func main() {
 	// fmt.Println("some key ", kp)
 	// cryptoutil.SignExample(kp)
 
-	//demo
-	//chain.SetAccount(block.AccountFromString("test"), 22)
-	//chain.ShowAccount(block.AccountFromString("test"))
 	//cryptoutil.KeyExample()
 
 	//btcec.PublicKey
@@ -342,6 +355,10 @@ func main() {
 	/////
 
 	// chain.InitAccounts()
+	//demo
+	//chain.SetAccount(block.AccountFromString("test"), 22)
+	//chain.ShowAccount(block.AccountFromString("test"))
+
 	// rk := cryptoutil.RandomPublicKey()
 	// ra := cryptoutil.Address(rk)
 	// log.Printf("random address %s", ra)
@@ -360,18 +377,8 @@ func main() {
 	// // 	log.Println("Error:", errors.WithStack(err))
 	// // }
 
-	// //webserver to access node state through browser
-	// // HTTP
-	// log.Println("start webserver")
-
-	// http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-	// 	p := loadContent()
-	// 	//log.Print(p)
-	// 	fmt.Fprintf(w, "<h1>Polygon chain</h1><div>%s</div>", p)
-	// })
-
-	// log.Fatal(http.ListenAndServe(":8081", nil))
-
 	// log.Println("Server running")
+
+	//go runweb()
 
 }

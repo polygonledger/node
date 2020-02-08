@@ -121,20 +121,32 @@ func SomeKeypair() Keypair {
 	return kp
 }
 
+func MsgHash(message string) []byte {
+	messageHash := chainhash.DoubleHashB([]byte(message))
+	return messageHash
+}
+
+func Sign(keypair Keypair, message string) btcec.Signature {
+	messageHash := MsgHash(message)
+	signature, err := keypair.PrivKey.Sign(messageHash)
+	if err != nil {
+		fmt.Println(err)
+		//return nil
+	}
+	fmt.Println("signature ", signature)
+	return *signature
+
+}
+
 func SignExample(keypair Keypair) {
 
 	//privKey, pubKey := btcec.PrivKeyFromBytes(btcec.S256(), pkBytes)
 
-	// Sign a message using the private key.
+	// Sign a message using the private key
 	message := "test message"
-	messageHash := chainhash.DoubleHashB([]byte(message))
-	signature, err := keypair.PrivKey.Sign(messageHash)
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-	fmt.Println("signature ", signature)
+	signature := Sign(keypair, message)
 
+	messageHash := MsgHash(message)
 	verified := signature.Verify(messageHash, &keypair.PubKey)
 	fmt.Printf("Signature Verified? %v\n", verified)
 }
