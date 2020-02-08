@@ -29,15 +29,14 @@ const (
 
 //storeBalance
 
-func RandomTx() block.Tx {
-	s := cryptoutil.RandomPublicKey()
-	address_s := cryptoutil.Address(s)
-	account_s := block.AccountFromString(address_s)
-	log.Printf("%s", s)
+func RandomTx(account_s block.Account) block.Tx {
+	// s := cryptoutil.RandomPublicKey()
+	// address_s := cryptoutil.Address(s)
+	// account_s := block.AccountFromString(address_s)
+	// log.Printf("%s", s)
 
 	//FIX
 	//doesn't work on client side
-	//account_s := chain.RandomAccount()
 	//account_r := chain.RandomAccount()
 
 	rand.Seed(time.Now().UnixNano())
@@ -166,33 +165,32 @@ func SendAccount(rw *bufio.ReadWriter) error {
 }
 
 /*
-sends GOB requests (client to server)
-*/
-func SendTx(rw *bufio.ReadWriter) error {
+ */
+// func SendTx(rw *bufio.ReadWriter) error {
 
-	// Send a GOB request
-	// Create an encoder that directly transmits to `rw`.
-	// Send the request name
-	// Send the GOB data
+// 	// Send a GOB request
+// 	// Create an encoder that directly transmits to `rw`.
+// 	// Send the request name
+// 	// Send the GOB data
 
-	testTx := RandomTx()
+// 	testTx := RandomTx()
 
-	log.Printf("testTx: \n%#v\n", testTx)
+// 	log.Printf("testTx: \n%#v\n", testTx)
 
-	enc := gob.NewEncoder(rw)
-	//Command
+// 	enc := gob.NewEncoder(rw)
+// 	//Command
 
-	n, err := rw.WriteString(CMD_TX + "\n")
-	if err != nil {
-		return errors.Wrap(err, "Could not write GOB data ("+strconv.Itoa(n)+" bytes written)")
-	}
-	err = enc.Encode(testTx)
-	if err != nil {
-		return errors.Wrapf(err, "Encode failed for struct: %#v", testTx)
-	}
-	err = rw.Flush()
-	if err != nil {
-		return errors.Wrap(err, "Flush failed")
-	}
-	return nil
-}
+// 	n, err := rw.WriteString(CMD_TX + "\n")
+// 	if err != nil {
+// 		return errors.Wrap(err, "Could not write GOB data ("+strconv.Itoa(n)+" bytes written)")
+// 	}
+// 	err = enc.Encode(testTx)
+// 	if err != nil {
+// 		return errors.Wrapf(err, "Encode failed for struct: %#v", testTx)
+// 	}
+// 	err = rw.Flush()
+// 	if err != nil {
+// 		return errors.Wrap(err, "Flush failed")
+// 	}
+// 	return nil
+// }

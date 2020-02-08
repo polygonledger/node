@@ -47,10 +47,11 @@ func txHash(tx block.Tx) [32]byte {
 //speed of evaluation should be way less than 1 msec
 //TODO check nonce
 func txValid(tx block.Tx) bool {
-	sufficientBalance := Accounts[tx.Sender] >= tx.Amount
-	log.Println("sufficientBalance ", sufficientBalance, tx.Sender, Accounts[tx.Sender], tx.Amount)
-	btxValid := sufficientBalance //TODO and signature
-	return btxValid
+	// sufficientBalance := Accounts[tx.Sender] >= tx.Amount
+	// log.Println("sufficientBalance ", sufficientBalance, tx.Sender, Accounts[tx.Sender], tx.Amount)
+	// btxValid := sufficientBalance //TODO and signature
+	// return btxValid
+	return true
 }
 
 //handlers
@@ -88,7 +89,7 @@ func EmptyPool() {
 }
 
 func blockHash(block block.Block) block.Block {
-	//FIX hash of proper data, merkle and such
+	//FIX hash of data, merkle tree
 	timeFormat := "2020-02-02 16:06:06"
 	new_hash := []byte(string(block.Timestamp.Format(timeFormat))[:])
 	blockheight_string := []byte(strconv.FormatInt(int64(block.Height), 10))

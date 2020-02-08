@@ -66,6 +66,17 @@ func ListenAll() error {
 	}
 }
 
+func Reply(rw *bufio.ReadWriter, resp string) {
+	response := resp + string(protocol.DELIM)
+	log.Println(">> ", response)
+	n, err := rw.WriteString(response)
+	if err != nil {
+		log.Println(err, n)
+		//err:= errors.Wrap(err, "Could not write GOB data ("+strconv.Itoa(n)+" bytes written)")
+	}
+	rw.Flush()
+}
+
 func handleMessagesChan(conn net.Conn) {
 	rw := bufio.NewReadWriter(bufio.NewReader(conn), bufio.NewWriter(conn))
 	//could add max listen
@@ -104,7 +115,7 @@ func handleMessagesChan(conn net.Conn) {
 		//	protocol.CMD_RANDOM_ACCOUNT, handleRandomAccountRequest)
 
 		if mtype == protocol.REQ {
-			log.Println("Request type")
+			log.Println("Request")
 			if cmd == protocol.CMD_TX {
 				log.Println("Handle tx")
 				dataJson := s[2]
@@ -119,17 +130,20 @@ func handleMessagesChan(conn net.Conn) {
 					panic(err)
 				}
 				log.Println(tx, tx.Amount, tx.Nonce)
-				//protocol.CMD_TX, handleTxRequest)
 				resp := chain.HandleTx(tx)
+				Reply(rw, resp)
+				//log.Println("amount ", tx.Amount)
+				//n, err := rw.WriteString("response " + strconv.Itoa(tx.Amount) + string(protocol.DELIM))
+
+			} else if cmd == protocol.CMD_RANDOM_ACCOUNT {
+				log.Println("Handle random account")
+
+				txJson, _ := json.Marshal(chain.RandomAccount())
+				Reply(rw, string(txJson))
 
 				//log.Println("amount ", tx.Amount)
 				//n, err := rw.WriteString("response " + strconv.Itoa(tx.Amount) + string(protocol.DELIM))
-				n, err := rw.WriteString("response " + resp + string(protocol.DELIM))
-				if err != nil {
-					log.Println(err, n)
-					//err:= errors.Wrap(err, "Could not write GOB data ("+strconv.Itoa(n)+" bytes written)")
-				}
-				rw.Flush()
+
 			}
 		}
 	}
