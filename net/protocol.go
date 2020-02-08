@@ -21,6 +21,8 @@ const (
 	CMD_TX                    = "TX"
 	CMD_RANDOM_ACCOUNT        = "RANACC"
 	Genesis_Address    string = "P0614579c42f2"
+	DELIM              byte   = '|'
+	//DELM_HEAD          byte   = '#'
 )
 
 //pickRandomAccount
@@ -55,12 +57,12 @@ func RandomTx() block.Tx {
 	return testTx
 }
 
-/*
-request account address
-*/
-func RequestAccount(rw *bufio.ReadWriter) error {
-	log.Println("RequestAccount ", CMD_RANDOM_ACCOUNT)
-	n, err := rw.WriteString(CMD_RANDOM_ACCOUNT + "\n")
+func ReadPipe(rw *bufio.ReadWriter) {
+
+}
+
+func WritePipe(rw *bufio.ReadWriter, message string) error {
+	n, err := rw.WriteString(message)
 	if err != nil {
 		return errors.Wrap(err, "Could not write GOB data ("+strconv.Itoa(n)+" bytes written)")
 	} else {
@@ -73,6 +75,47 @@ func RequestAccount(rw *bufio.ReadWriter) error {
 	return nil
 }
 
+func ConstructMessage(cmd string) string {
+	//delim := "\n"
+	msg := cmd + string(DELIM)
+	return msg
+}
+
+/*
+request account address
+*/
+func RequestTest(rw *bufio.ReadWriter) error {
+	log.Println("RequestTest")
+	a := Message{Command: "test"}
+	log.Printf("msg: \n%#v\n", a)
+	enc := gob.NewEncoder(rw)
+	err := enc.Encode(a)
+	rw.WriteString(string(DELIM))
+	err = rw.Flush()
+	if err != nil {
+		return errors.Wrap(err, "Flush failed")
+	}
+	return err
+}
+
+/*
+request account address
+*/
+func RequestAccount(rw *bufio.ReadWriter) error {
+	log.Println("RequestAccount ", CMD_RANDOM_ACCOUNT)
+	msg := ConstructMessage(CMD_RANDOM_ACCOUNT)
+	error := WritePipe(rw, msg)
+	return error
+}
+
+/*
+request account address
+*/
+func ReceiveAccount(rw *bufio.ReadWriter) error {
+	log.Println("RequestAccount ", CMD_RANDOM_ACCOUNT)
+	return nil
+}
+
 /*
 sends account address
 */
@@ -80,13 +123,14 @@ func SendAccount(rw *bufio.ReadWriter) error {
 
 	a := block.Account{AccountKey: "test"}
 
-	log.Println("Send a struct as GOB:")
 	log.Printf("account: \n%#v\n", a)
 
 	enc := gob.NewEncoder(rw)
 	//Command
 
-	n, err := rw.WriteString(CMD_RANDOM_ACCOUNT + "\n")
+	msg := CMD_RANDOM_ACCOUNT + string(DELIM)
+	log.Println("?? ", msg)
+	n, err := rw.WriteString(msg)
 	if err != nil {
 		return errors.Wrap(err, "Could not write GOB data ("+strconv.Itoa(n)+" bytes written)")
 	}
@@ -96,7 +140,7 @@ func SendAccount(rw *bufio.ReadWriter) error {
 	}
 	err = rw.Flush()
 	if err != nil {
-		return errors.Wrap(err, "Flush failed.")
+		return errors.Wrap(err, "Flush failed")
 	}
 	return nil
 }
@@ -113,7 +157,6 @@ func SendTx(rw *bufio.ReadWriter) error {
 
 	testTx := RandomTx()
 
-	log.Println("Send a struct as GOB:")
 	log.Printf("testTx: \n%#v\n", testTx)
 
 	enc := gob.NewEncoder(rw)
@@ -129,7 +172,7 @@ func SendTx(rw *bufio.ReadWriter) error {
 	}
 	err = rw.Flush()
 	if err != nil {
-		return errors.Wrap(err, "Flush failed.")
+		return errors.Wrap(err, "Flush failed")
 	}
 	return nil
 }

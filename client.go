@@ -35,7 +35,8 @@ func client(ip string) error {
 	}
 
 	//get random account address
-	protocol.RequestAccount(rw)
+	//protocol.RequestAccount(rw)
+	protocol.RequestTest(rw)
 
 	//protocol.SendTx(rw)
 
@@ -45,13 +46,13 @@ func client(ip string) error {
 /*
 start client and connect to the host
 */
-func main() {
+// func main() {
 
-	err := client(protocol.Server_address)
-	if err != nil {
-		log.Println("Error:", errors.WithStack(err))
-	}
-	log.Println("Client done.")
-	return
+// 	err := client(protocol.Server_address)
+// 	if err != nil {
+// 		log.Println("Error:", errors.WithStack(err))
+// 	}
+// 	log.Println("Client done.")
+// 	return
 
-}
+// }

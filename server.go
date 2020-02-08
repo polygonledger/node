@@ -34,11 +34,9 @@ import (
 
 	"encoding/gob"
 	"encoding/json"
-	"net/http"
 
 	block "github.com/polygonledger/node/block"
 	chain "github.com/polygonledger/node/chain"
-	cryptoutil "github.com/polygonledger/node/crypto"
 	protocol "github.com/polygonledger/node/net"
 )
 
@@ -88,20 +86,20 @@ func (e *Endpoint) Listen() error {
 	}
 	log.Println("Listen on", e.listener.Addr().String())
 	for {
-		log.Println("Accept a connection request.")
+		log.Println("Accept a connection request")
 		conn, err := e.listener.Accept()
 		if err != nil {
 			log.Println("Failed accepting a connection request:", err)
 			continue
 		}
-		log.Println("Handle incoming messages.")
-		go e.handleMessages(conn)
+		log.Println("Handle incoming messages")
+		go e.handleMessagesProt(conn)
 	}
 }
 
 // handleMessages reads the connection up to the first newline
 // based on the command, it calls the appropriate HandleFunc
-func (e *Endpoint) handleMessages(conn net.Conn) {
+func (e *Endpoint) handleMessagesProt(conn net.Conn) {
 	// Wrap the connection into a buffered reader for easier reading.
 	rw := bufio.NewReadWriter(bufio.NewReader(conn), bufio.NewWriter(conn))
 	defer conn.Close()
@@ -109,6 +107,51 @@ func (e *Endpoint) handleMessages(conn net.Conn) {
 	// Read from the connection until EOF. Expect a command name as the
 	// next input. Call the handler that is registered for this command.
 	for {
+		// read
+		log.Print("Receive message")
+
+		msg, err := rw.ReadString(protocol.DELIM)
+		switch {
+		case err == io.EOF:
+			log.Println("Reached EOF - no delim?")
+			log.Println(msg)
+			return
+		case err != nil:
+			log.Println("\nError reading command. Got: '"+msg+"'\n", err)
+			return
+		}
+		// Trim the request string - ReadString does not strip any newlines.
+		log.Println("msg: ", msg)
+		msg = strings.Trim(msg, string(protocol.DELIM))
+		log.Println("msg: ", msg)
+
+		var msgStruct protocol.Message
+		dec := gob.NewDecoder(rw)
+		errDecode := dec.Decode(&msgStruct)
+
+		if errDecode != nil {
+			log.Println("Error decoding GOB data:", errDecode)
+			return
+		} else {
+			log.Println("decoded ", msgStruct)
+		}
+
+		//cmd = strings.Trim(cmd, "\n")
+
+	}
+}
+
+// handleMessages reads the connection up to the first newline
+// based on the command, it calls the appropriate HandleFunc
+func (e *Endpoint) handleMessagesCmd(conn net.Conn) {
+	// Wrap the connection into a buffered reader for easier reading.
+	rw := bufio.NewReadWriter(bufio.NewReader(conn), bufio.NewWriter(conn))
+	defer conn.Close()
+
+	// Read from the connection until EOF. Expect a command name as the
+	// next input. Call the handler that is registered for this command.
+	for {
+		// read
 		log.Print("Receive command")
 		cmd, err := rw.ReadString('\n')
 		switch {
@@ -226,46 +269,62 @@ func main() {
 	// fmt.Println("some key ", kp)
 	// cryptoutil.SignExample(kp)
 
-	chain.InitAccounts()
 	//demo
 	//chain.SetAccount(block.AccountFromString("test"), 22)
 	//chain.ShowAccount(block.AccountFromString("test"))
-
-	rk := cryptoutil.RandomPublicKey()
-	ra := cryptoutil.Address(rk)
-	log.Printf("random address %s", ra)
-
 	//cryptoutil.KeyExample()
 
 	//btcec.PublicKey
-	s := cryptoutil.RandomPublicKey()
-	log.Printf("%s", s)
+	// s := cryptoutil.RandomPublicKey()
+	// log.Printf("%s", s)
 
-	genBlock := chain.MakeGenesisBlock()
-	chain.ApplyBlock(genBlock)
-	chain.AppendBlock(genBlock)
+	account := block.Account{AccountKey: "test"}
+	accountJson, _ := json.Marshal(account)
+	fmt.Println(string(accountJson))
 
-	//create block every 10sec
-	blockTime := 10000 * time.Millisecond
-	go doEvery(blockTime, chain.MakeBlock)
+	msg := protocol.Message{MessageType: "msg", Command: "CMD"}
+	msgJson, _ := json.Marshal(msg)
+	fmt.Println(string(msgJson))
 
-	//node server
-	go server()
-	// if err != nil {
-	// 	log.Println("Error:", errors.WithStack(err))
-	// }
+	var msgUn protocol.Message
+	if err := json.Unmarshal(msgJson, &msgUn); err != nil {
+		panic(err)
+	}
+	fmt.Println(msgUn.Command, msgUn.MessageType)
 
-	//webserver to access node state through browser
-	// HTTP
-	log.Println("start webserver")
+	/////
 
-	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		p := loadContent()
-		//log.Print(p)
-		fmt.Fprintf(w, "<h1>Polygon chain</h1><div>%s</div>", p)
-	})
+	// chain.InitAccounts()
+	// rk := cryptoutil.RandomPublicKey()
+	// ra := cryptoutil.Address(rk)
+	// log.Printf("random address %s", ra)
 
-	log.Fatal(http.ListenAndServe(":8081", nil))
+	// genBlock := chain.MakeGenesisBlock()
+	// chain.ApplyBlock(genBlock)
+	// chain.AppendBlock(genBlock)
 
-	log.Println("Server running")
+	// //create block every 10sec
+	// blockTime := 10000 * time.Millisecond
+	// go doEvery(blockTime, chain.MakeBlock)
+
+	// //node server
+	// go server()
+	// // if err != nil {
+	// // 	log.Println("Error:", errors.WithStack(err))
+	// // }
+
+	// //webserver to access node state through browser
+	// // HTTP
+	// log.Println("start webserver")
+
+	// http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+	// 	p := loadContent()
+	// 	//log.Print(p)
+	// 	fmt.Fprintf(w, "<h1>Polygon chain</h1><div>%s</div>", p)
+	// })
+
+	// log.Fatal(http.ListenAndServe(":8081", nil))
+
+	// log.Println("Server running")
+
 }
