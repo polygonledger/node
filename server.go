@@ -235,7 +235,7 @@ func main() {
 	// 	log.Println("Error:", errors.WithStack(err))
 	// }
 
-	go runweb()
+	runweb()
 	log.Println("Server running")
 
 }
