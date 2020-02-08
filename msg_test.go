@@ -60,4 +60,7 @@ func TestMessageAccount(t *testing.T) {
 		t.Error("JSON marshal failed")
 	}
 
+	//var genericmsg protocol.Message
+	//genericmsg = protocol.Message(msgUn)
+
 }

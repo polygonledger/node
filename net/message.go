@@ -1,13 +1,40 @@
 package net
 
-import block "github.com/polygonledger/node/block"
+import (
+	"fmt"
+
+	block "github.com/polygonledger/node/block"
+)
 
 //Message Types
 //Request <--> Reply
 const (
 	REQ = "REQ"
 	REP = "REP"
+	CMD = "RANDOM_ACCOUNT"
 )
+
+func IsValidMsgType(msgType string) bool {
+	fmt.Println("test ", msgType)
+	switch msgType {
+	case
+		REQ,
+		REP:
+		return true
+	}
+	return false
+}
+
+func IsValidCmd(cmd string) bool {
+	fmt.Println("test cmd ", cmd)
+	switch cmd {
+	case
+		REQ,
+		REP:
+		return true
+	}
+	return false
+}
 
 //generic message
 type Message struct {

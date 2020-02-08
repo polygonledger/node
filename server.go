@@ -77,8 +77,58 @@ func (e *Endpoint) AddHandleFunc(name string, f HandleFunc) {
 	e.m.Unlock()
 }
 
+// starts listening
+func ListenAll() error {
+	var err error
+	var listener net.Listener
+	listener, err = net.Listen("tcp", protocol.Port)
+	if err != nil {
+		return errors.Wrapf(err, "Unable to listen on port %s\n", protocol.Port)
+	}
+	log.Println("Listen on", listener.Addr().String())
+	for {
+		log.Println("Accept a connection request")
+		conn, err := listener.Accept()
+		if err != nil {
+			log.Println("Failed accepting a connection request:", err)
+			continue
+		}
+		log.Println("Handle incoming messages")
+		go handleMessagesChan(conn)
+	}
+}
+
+func handleMessagesChan(conn net.Conn) {
+	rw := bufio.NewReadWriter(bufio.NewReader(conn), bufio.NewWriter(conn))
+	//could add max listen
+	//timeoutDuration := 5 * time.Second
+	//conn.SetReadDeadline(time.Now().Add(timeoutDuration))
+	defer conn.Close()
+	for {
+		// read
+		log.Print("Receive message")
+
+		msg, err := rw.ReadString(protocol.DELIM)
+		log.Print("msg ", msg)
+		if err != nil {
+			log.Println("Failed ", err)
+			//log.Println(err.)
+			continue
+		}
+
+		msg = strings.Trim(msg, string(protocol.DELIM))
+		//msg = strings.Trim(msg, string("\n"))
+		s := strings.Split(msg, "#")
+		mtype := s[0]
+		cmd := s[1]
+		fmt.Println(mtype, cmd)
+
+		fmt.Println(protocol.IsValidMsgType(mtype))
+	}
+}
+
 // starts listening on the endpoint port
-func (e *Endpoint) Listen() error {
+func (e *Endpoint) ListenCmd() error {
 	var err error
 	e.listener, err = net.Listen("tcp", protocol.Port)
 	if err != nil {
@@ -205,15 +255,20 @@ func handleTxRequest(rw *bufio.ReadWriter) {
 
 // server listens for incoming requests and dispatches them to
 // registered handler functions
-func server() error {
+func serverCmd() error {
 	endpoint := NewEndpoint()
 
 	// Add the handle funcs
 	endpoint.AddHandleFunc(protocol.CMD_TX, handleTxRequest)
 	endpoint.AddHandleFunc(protocol.CMD_RANDOM_ACCOUNT, handleRandomAccountRequest)
 
-	// Start listening.
-	return endpoint.Listen()
+	// Start listening
+	return endpoint.ListenCmd()
+}
+
+func serverNode() error {
+	// Start listening
+	return ListenAll()
 }
 
 //basic threading helper
@@ -264,6 +319,8 @@ start server listening for incoming requests
 */
 func main() {
 
+	serverNode()
+
 	//demo
 	// kp := cryptoutil.SomeKeypair()
 	// fmt.Println("some key ", kp)
@@ -278,19 +335,9 @@ func main() {
 	// s := cryptoutil.RandomPublicKey()
 	// log.Printf("%s", s)
 
-	account := block.Account{AccountKey: "test"}
-	accountJson, _ := json.Marshal(account)
-	fmt.Println(string(accountJson))
-
-	msg := protocol.Message{MessageType: "msg", Command: "CMD"}
-	msgJson, _ := json.Marshal(msg)
-	fmt.Println(string(msgJson))
-
-	var msgUn protocol.Message
-	if err := json.Unmarshal(msgJson, &msgUn); err != nil {
-		panic(err)
-	}
-	fmt.Println(msgUn.Command, msgUn.MessageType)
+	//account := block.Account{AccountKey: "test"}
+	//accountJson, _ := json.Marshal(account)
+	//fmt.Println(string(accountJson))
 
 	/////
 
@@ -308,7 +355,7 @@ func main() {
 	// go doEvery(blockTime, chain.MakeBlock)
 
 	// //node server
-	// go server()
+	// go serverCmd()
 	// // if err != nil {
 	// // 	log.Println("Error:", errors.WithStack(err))
 	// // }

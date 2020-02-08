@@ -117,6 +117,26 @@ func ReceiveAccount(rw *bufio.ReadWriter) error {
 }
 
 /*
+send message
+*/
+func SendMessage(rw *bufio.ReadWriter) error {
+
+	//Command
+	msg := "data" + string(DELIM)
+	log.Println("?? ", msg)
+	n, err := rw.WriteString(msg)
+	if err != nil {
+		return errors.Wrap(err, "Could not write data ("+strconv.Itoa(n)+" bytes written)")
+	}
+
+	err = rw.Flush()
+	if err != nil {
+		return errors.Wrap(err, "Flush failed")
+	}
+	return nil
+}
+
+/*
 sends account address
 */
 func SendAccount(rw *bufio.ReadWriter) error {
