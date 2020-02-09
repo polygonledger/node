@@ -218,34 +218,3 @@ func SendAccount(rw *bufio.ReadWriter) error {
 	}
 	return nil
 }
-
-/*
- */
-// func SendTx(rw *bufio.ReadWriter) error {
-
-// 	// Send a GOB request
-// 	// Create an encoder that directly transmits to `rw`.
-// 	// Send the request name
-// 	// Send the GOB data
-
-// 	testTx := RandomTx()
-
-// 	log.Printf("testTx: \n%#v\n", testTx)
-
-// 	enc := gob.NewEncoder(rw)
-// 	//Command
-
-// 	n, err := rw.WriteString(CMD_TX + "\n")
-// 	if err != nil {
-// 		return errors.Wrap(err, "Could not write GOB data ("+strconv.Itoa(n)+" bytes written)")
-// 	}
-// 	err = enc.Encode(testTx)
-// 	if err != nil {
-// 		return errors.Wrapf(err, "Encode failed for struct: %#v", testTx)
-// 	}
-// 	err = rw.Flush()
-// 	if err != nil {
-// 		return errors.Wrap(err, "Flush failed")
-// 	}
-// 	return nil
-// }

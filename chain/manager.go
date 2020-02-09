@@ -47,11 +47,11 @@ func txHash(tx block.Tx) [32]byte {
 //speed of evaluation should be way less than 1 msec
 //TODO check nonce
 func txValid(tx block.Tx) bool {
-	// sufficientBalance := Accounts[tx.Sender] >= tx.Amount
+	sufficientBalance := Accounts[tx.Sender] >= tx.Amount
 	// log.Println("sufficientBalance ", sufficientBalance, tx.Sender, Accounts[tx.Sender], tx.Amount)
-	// btxValid := sufficientBalance //TODO and signature
-	// return btxValid
-	return true
+	btxValid := sufficientBalance //TODO and signature
+	return btxValid
+	//return true
 }
 
 //handlers
@@ -144,9 +144,6 @@ func RandomAccount() block.Account {
 
 func GenesisTx() block.Tx {
 	Genesis_Account := block.AccountFromString(Genesis_Address)
-	//block.AccountFromString("") //sender is empty
-
-	//genesisSender := "" //genesisSender is the bootstrap account
 
 	//log.Printf("%s", s)
 	rand.Seed(time.Now().UnixNano())
@@ -155,7 +152,7 @@ func GenesisTx() block.Tx {
 	address_r := cryptoutil.Address(r)
 	r_account := block.AccountFromString(address_r)
 	genesisAmount := 20 //just a number for now
-	//TODO id
+
 	gTx := block.Tx{Nonce: randNonce, Sender: Genesis_Account, Receiver: r_account, Amount: genesisAmount}
 	return gTx
 }
@@ -187,6 +184,10 @@ func ApplyBlock(block block.Block) {
 	//apply
 	for j := 0; j < len(block.Txs); j++ {
 		applyTx(block.Txs[j])
+		//if success
+		//assign id
+		block.Txs[j].Id = txHash(block.Txs[j])
+		log.Println("hash ", block.Txs[j].Id)
 	}
 }
 
@@ -219,11 +220,3 @@ func MakeBlock(t time.Time) {
 	}
 
 }
-
-/*func randomAccount() block.Account {
-	/*rand.Seed(time.Now().UnixNano())
-	keys := reflect.ValueOf(accounts).MapKeys()
-	rkey := rand.Intn(len(keys))
-	raccount := keys[rkey]
-	return raccount
-}*/

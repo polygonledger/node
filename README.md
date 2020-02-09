@@ -6,9 +6,11 @@ current status: experimental server protocol
 
 ## run
 
-go run server.go
+server:
+```go run server.go```
 
-go run client.go
+client:
+```cd client && go run client.go```
 
 the client will send transactions to the server, and the server adds the transaction to the tx pool
 

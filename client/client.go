@@ -34,15 +34,9 @@ func Open(addr string) (*bufio.ReadWriter, error) {
 // 	//TODO
 // }
 
-func client(ip string) error {
-
-	// Open a connection to the server.
-	rw, err := Open(ip + protocol.Port)
-	log.Println(rw)
-	if err != nil {
-		return errors.Wrap(err, "Client: Failed to open connection to "+ip+protocol.Port)
-	}
-
+//
+func MakeRandomTx(rw *bufio.ReadWriter) error {
+	//make a random transaction by requesting random account from node
 	//get random account
 
 	msg := protocol.REQ + string(protocol.DELIM_HEAD) + protocol.CMD_RANDOM_ACCOUNT + string(protocol.DELIM_HEAD) + "emptydata" + string(protocol.DELIM)
@@ -93,6 +87,19 @@ func client(ip string) error {
 	}
 
 	return nil
+}
+
+func client(ip string) error {
+
+	// Open a connection to the server.
+	rw, err := Open(ip + protocol.Port)
+	log.Println(rw)
+	if err != nil {
+		return errors.Wrap(err, "Client: Failed to open connection to "+ip+protocol.Port)
+	}
+
+	err = MakeRandomTx(rw)
+	return err
 }
 
 /*

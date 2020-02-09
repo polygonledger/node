@@ -67,7 +67,7 @@ func ListenAll() error {
 
 func Reply(rw *bufio.ReadWriter, resp string) {
 	response := resp + string(protocol.DELIM)
-	log.Println(">> ", response)
+	//log.Println(">> ", response)
 	n, err := rw.WriteString(response)
 	if err != nil {
 		log.Println(err, n)
@@ -101,12 +101,9 @@ func handleMessagesChan(conn net.Conn) {
 			log.Println("Request")
 			if msg.Command == protocol.CMD_TX {
 				log.Println("Handle tx")
-				//dataJson := msg.Data
-				//dataBytes := byte[](dataJson)
+
 				dataBytes := msg.Data
-
 				log.Println("data ", dataBytes)
-
 				var tx block.Tx
 
 				if err := json.Unmarshal(dataBytes, &tx); err != nil {
@@ -127,11 +124,20 @@ func handleMessagesChan(conn net.Conn) {
 				//log.Println("amount ", tx.Amount)
 				//n, err := rw.WriteString("response " + strconv.Itoa(tx.Amount) + string(protocol.DELIM))
 
-			} else if msg.Command == protocol.CMD_RANDOM_ACCOUNT {
-				log.Println("Handle random account")
+			} else if msg.Command == protocol.CMD_BALANCE {
+				log.Println("Handle balance")
 
-				txJson, _ := json.Marshal(chain.RandomAccount())
-				Reply(rw, string(txJson))
+				dataBytes := msg.Data
+				log.Println("data ", dataBytes)
+				var account block.Account
+
+				if err := json.Unmarshal(dataBytes, &account); err != nil {
+					panic(err)
+				}
+				log.Println(account)
+
+				balance := chain.Accounts[account]
+				Reply(rw, string(balance))
 
 				//log.Println("amount ", tx.Amount)
 				//n, err := rw.WriteString("response " + strconv.Itoa(tx.Amount) + string(protocol.DELIM))
@@ -166,10 +172,12 @@ func loadContent() string {
 	content += fmt.Sprintf("<h2>TxPool</h2>%d<br>", len(chain.Tx_pool))
 
 	for i := 0; i < len(chain.Tx_pool); i++ {
-		content += fmt.Sprintf("Nonce %d, Id %x<br>", chain.Tx_pool[i].Nonce, chain.Tx_pool[i].Id[:])
+		//content += fmt.Sprintf("Nonce %d, Id %x<br>", chain.Tx_pool[i].Nonce, chain.Tx_pool[i].Id[:])
+		ctx := chain.Tx_pool[i]
+		content += fmt.Sprintf("%x, %d from %s to %s<br>", ctx.Id, ctx.Amount, ctx.Sender, ctx.Receiver)
 	}
 
-	content += fmt.Sprintf("<h2>Accounts</h2>%d<br>", len(chain.Accounts))
+	content += fmt.Sprintf("<h2>Accounts</h2>number of accounts: %d<br><br>", len(chain.Accounts))
 
 	for k, v := range chain.Accounts {
 		content += fmt.Sprintf("%s %d<br>", k, v)
@@ -183,6 +191,7 @@ func loadContent() string {
 			t.Year(), t.Month(), t.Day(),
 			t.Hour(), t.Minute(), t.Second())
 
+		//summary
 		content += fmt.Sprintf("<br><h3>Block %d</h3>timestamp %s<br>hash %x<br>prevhash %x\n", chain.Blocks[i].Height, tsf, chain.Blocks[i].Hash, chain.Blocks[i].Prev_Block_Hash)
 
 		content += fmt.Sprintf("<h4>Number of Tx %d</h4>", len(chain.Blocks[i].Txs))
