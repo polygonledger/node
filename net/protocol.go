@@ -3,9 +3,11 @@ package net
 import (
 	"bufio"
 	"encoding/gob"
+	"fmt"
 	"log"
 	"math/rand"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/pkg/errors"
@@ -17,17 +19,54 @@ const (
 	// Port is the port number that the server listens to.
 	Server_address     string = "127.0.0.1"
 	Port                      = ":8888"
-	CMD_GOB                   = "GOB"
 	CMD_TX                    = "TX"
 	CMD_RANDOM_ACCOUNT        = "RANACC"
+	CMD_BALANCE               = "BALANCE"
 	Genesis_Address    string = "P0614579c42f2"
 	DELIM              byte   = '|'
-	//DELM_HEAD          byte   = '#'
+	DELM_HEAD          byte   = '#'
+	EMPTY_MSG                 = ""
+	ERROR_READ                = "error_read"
 )
+
+//---- protocol layer ------
+//given a sream read from it
+//TODO proper error handling
+func ReadStream(rw *bufio.ReadWriter) string {
+	msg, err := rw.ReadString(DELIM)
+	if err != nil {
+		//issue
+		//special case is empty message if client disconnects?
+		if len(msg) == 0 {
+			return EMPTY_MSG
+		} else {
+			log.Println("Failed ", err)
+			//log.Println(err.)
+			return ERROR_READ
+		}
+	}
+	return msg
+}
+
+func ParseMessage(msgString string) Message {
+	msgString = strings.Trim(msgString, string(DELIM))
+	s := strings.Split(msgString, "#")
+
+	var msg Message
+	msg.MessageType = s[0]
+	msg.Command = s[1]
+	dataJson := s[2]
+
+	msg.Data = []byte(dataJson)
+	fmt.Println(msg)
+	return msg
+}
 
 //pickRandomAccount
 
 //storeBalance
+
+//handlers TODO this is higher level and should be somewhere else
 
 func RandomTx(account_s block.Account) block.Tx {
 	// s := cryptoutil.RandomPublicKey()

@@ -30,6 +30,10 @@ func Open(addr string) (*bufio.ReadWriter, error) {
 	return bufio.NewReadWriter(bufio.NewReader(conn), bufio.NewWriter(conn)), nil
 }
 
+// func getRandomAccount() block.Account {
+// 	//TODO
+// }
+
 func client(ip string) error {
 
 	// Open a connection to the server.
@@ -41,7 +45,8 @@ func client(ip string) error {
 
 	//get random account
 
-	msg := protocol.REQ + "#" + protocol.CMD_RANDOM_ACCOUNT + string(protocol.DELIM)
+	DELIM_HEAD := "#" //TODO from protocol
+	msg := protocol.REQ + string(DELIM_HEAD) + protocol.CMD_RANDOM_ACCOUNT + string(DELIM_HEAD) + "emptydata" + string(protocol.DELIM)
 	n, err := rw.WriteString(msg)
 	if err != nil {
 		return errors.Wrap(err, "Could not write JSON data ("+strconv.Itoa(n)+" bytes written)")
@@ -50,7 +55,6 @@ func client(ip string) error {
 	err = rw.Flush()
 
 	msg2, err2 := rw.ReadString(protocol.DELIM)
-	log.Println("?? ", msg2)
 	msg2 = strings.Trim(msg2, string(protocol.DELIM))
 	var a block.Account
 	dataBytes := []byte(msg2)
@@ -64,12 +68,14 @@ func client(ip string) error {
 		//break
 	}
 
+	//use this random account to send coins from
+
 	//send Tx
 	testTx := protocol.RandomTx(a)
 	txJson, _ := json.Marshal(testTx)
 	log.Println("txJson ", txJson)
 
-	msg3 := protocol.REQ + "#" + "TX#" + string(txJson) + string(protocol.DELIM)
+	msg3 := protocol.REQ + DELIM_HEAD + "TX" + DELIM_HEAD + string(txJson) + string(protocol.DELIM)
 	n3, err3 := rw.WriteString(msg3)
 	if err3 != nil {
 		return errors.Wrap(err, "Could not write JSON data ("+strconv.Itoa(n3)+" bytes written)")

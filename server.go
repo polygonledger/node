@@ -26,7 +26,6 @@ import (
 	"log"
 	"net"
 	"net/http"
-	"strings"
 	"time"
 
 	"github.com/pkg/errors"
@@ -85,44 +84,28 @@ func handleMessagesChan(conn net.Conn) {
 	defer conn.Close()
 	for {
 
-		msg, err := rw.ReadString(protocol.DELIM)
-		if err != nil {
-			if len(msg) == 0 {
-				break
-			} else {
-				log.Println("Failed ", err)
-				//log.Println(err.)
-				break
-			}
-		}
-
 		// read
 		log.Print("Receive message")
+		var msg protocol.Message
+		msgString := protocol.ReadStream(rw)
+		if msgString == protocol.EMPTY_MSG {
+			break
+		}
+		msg = protocol.ParseMessage(msgString)
 
-		log.Print("msg ", msg, len(msg))
+		log.Print("msg ", msg)
 
-		msg = strings.Trim(msg, string(protocol.DELIM))
-		//msg = strings.Trim(msg, string("\n"))
-		s := strings.Split(msg, "#")
-		mtype := s[0]
-		cmd := s[1]
-		fmt.Println(mtype, cmd)
+		fmt.Println("valid msg type ", protocol.IsValidMsgType(msg.MessageType))
 
-		fmt.Println("valid msg type ", protocol.IsValidMsgType(mtype))
-
-		// Add the handle funcs
-		//	protocol.CMD_TX, handleTxRequest)
-		//	protocol.CMD_RANDOM_ACCOUNT, handleRandomAccountRequest)
-
-		if mtype == protocol.REQ {
+		if msg.MessageType == protocol.REQ {
 			log.Println("Request")
-			if cmd == protocol.CMD_TX {
+			if msg.Command == protocol.CMD_TX {
 				log.Println("Handle tx")
-				dataJson := s[2]
+				//dataJson := msg.Data
 				//dataBytes := byte[](dataJson)
-				dataBytes := []byte(dataJson)
+				dataBytes := msg.Data
 
-				log.Println("data ", dataJson)
+				log.Println("data ", dataBytes)
 
 				var tx block.Tx
 
@@ -135,7 +118,16 @@ func handleMessagesChan(conn net.Conn) {
 				//log.Println("amount ", tx.Amount)
 				//n, err := rw.WriteString("response " + strconv.Itoa(tx.Amount) + string(protocol.DELIM))
 
-			} else if cmd == protocol.CMD_RANDOM_ACCOUNT {
+			} else if msg.Command == protocol.CMD_RANDOM_ACCOUNT {
+				log.Println("Handle random account")
+
+				txJson, _ := json.Marshal(chain.RandomAccount())
+				Reply(rw, string(txJson))
+
+				//log.Println("amount ", tx.Amount)
+				//n, err := rw.WriteString("response " + strconv.Itoa(tx.Amount) + string(protocol.DELIM))
+
+			} else if msg.Command == protocol.CMD_RANDOM_ACCOUNT {
 				log.Println("Handle random account")
 
 				txJson, _ := json.Marshal(chain.RandomAccount())
@@ -145,6 +137,7 @@ func handleMessagesChan(conn net.Conn) {
 				//n, err := rw.WriteString("response " + strconv.Itoa(tx.Amount) + string(protocol.DELIM))
 
 			}
+
 		}
 	}
 }

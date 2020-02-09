@@ -10,12 +10,26 @@ import (
 //MSG TYPE # CMD # DATA |
 
 //Message Types
+//Message Types exist in a context of communication
+//i.e. is this message an intial request or a reply or part of a stream of events etc
 //Request <--> Reply
+
 const (
 	REQ = "REQ"
 	REP = "REP"
 	CMD = "RANDOM_ACCOUNT"
+	//PUB
+	//SUB
+	//HANDSHAKE
 )
+
+//generic message
+type Message struct {
+	MessageType string //type of message i.e. the communications protocol
+	Command     string //Specific message command
+	Data        []byte
+	//Signature       btcec.Signature
+}
 
 func IsValidMsgType(msgType string) bool {
 	fmt.Println("test ", msgType)
@@ -37,14 +51,6 @@ func IsValidCmd(cmd string) bool {
 		return true
 	}
 	return false
-}
-
-//generic message
-type Message struct {
-	MessageType string
-	Command     string //Specific message command
-	//Data        []byte
-	//Signature       btcec.Signature
 }
 
 func RequestMessage() Message {
