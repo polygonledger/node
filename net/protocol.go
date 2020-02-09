@@ -24,7 +24,7 @@ const (
 	CMD_BALANCE               = "BALANCE"
 	Genesis_Address    string = "P0614579c42f2"
 	DELIM              byte   = '|'
-	DELM_HEAD          byte   = '#'
+	DELIM_HEAD         byte   = '#'
 	EMPTY_MSG                 = ""
 	ERROR_READ                = "error_read"
 )
@@ -38,6 +38,7 @@ func ReadStream(rw *bufio.ReadWriter) string {
 		//issue
 		//special case is empty message if client disconnects?
 		if len(msg) == 0 {
+			log.Println("empty message")
 			return EMPTY_MSG
 		} else {
 			log.Println("Failed ", err)
@@ -48,17 +49,32 @@ func ReadStream(rw *bufio.ReadWriter) string {
 	return msg
 }
 
+//we have a message string and will parse it to a message struct
+//delimiters of two kind:
+//* DELIM for delimiting the entire message
+//* DELIM_
+//currently we employ delimiters instead of byte encoding, so the size of messages is unlimited
+//can however easily fix by adding size to header and reject messages larger than maximum size
 func ParseMessage(msgString string) Message {
 	msgString = strings.Trim(msgString, string(DELIM))
-	s := strings.Split(msgString, "#")
+	s := strings.Split(msgString, string(DELIM_HEAD))
+
+	//ERROR handling of malformed messages
 
 	var msg Message
 	msg.MessageType = s[0]
 	msg.Command = s[1]
-	dataJson := s[2]
+	dataJson := s[2] //data can empty but still we expect the delim to be there
 
 	msg.Data = []byte(dataJson)
 	fmt.Println(msg)
+	return msg
+}
+
+func EncodeMessageTx(txJson []byte) string {
+	emptyData := ""
+	msgCmd := "TX"
+	msg := REQ + string(DELIM_HEAD) + msgCmd + string(DELIM_HEAD) + string(txJson) + string(DELIM_HEAD) + emptyData + string(DELIM)
 	return msg
 }
 

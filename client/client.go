@@ -45,9 +45,8 @@ func client(ip string) error {
 
 	//get random account
 
-	//DELIM_HEAD := "#" //TODO from protocol
-	//msg := protocol.REQ + string(protocol.DELIM_HEAD) + protocol.CMD_RANDOM_ACCOUNT + string(DELIM_HEAD) + "emptydata" + string(protocol.DELIM)
-	msg := ""
+	msg := protocol.REQ + string(protocol.DELIM_HEAD) + protocol.CMD_RANDOM_ACCOUNT + string(protocol.DELIM_HEAD) + "emptydata" + string(protocol.DELIM)
+
 	n, err := rw.WriteString(msg)
 	if err != nil {
 		return errors.Wrap(err, "Could not write JSON data ("+strconv.Itoa(n)+" bytes written)")
@@ -76,10 +75,8 @@ func client(ip string) error {
 	txJson, _ := json.Marshal(testTx)
 	log.Println("txJson ", txJson)
 
-	//msg3 := protocol.REQ + protocol.DELIM_HEAD + "TX" + protocol.DELIM_HEAD + string(txJson) + string(protocol.DELIM)
-	//msg3 := protocol.REQ + string(protocol.DELIM_HEAD) + "TX" + string(protocol.DELIM_HEAD) + string(txJSon)
-	var msg3 string
-	msg3 = string(protocol.DELIM)
+	msg3 := protocol.EncodeMessageTx(txJson)
+
 	n3, err3 := rw.WriteString(msg3)
 	if err3 != nil {
 		return errors.Wrap(err, "Could not write JSON data ("+strconv.Itoa(n3)+" bytes written)")
