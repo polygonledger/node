@@ -3,6 +3,8 @@ package main
 import (
 	"bufio"
 	"encoding/json"
+	"flag"
+	"fmt"
 	"log"
 	"net"
 	"strconv"
@@ -11,6 +13,7 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/polygonledger/node/block"
+	cryptoutil "github.com/polygonledger/node/crypto"
 	protocol "github.com/polygonledger/node/net"
 )
 
@@ -39,6 +42,7 @@ func MakeRandomTx(rw *bufio.ReadWriter) error {
 	//make a random transaction by requesting random account from node
 	//get random account
 
+	//TODO use messageencoder
 	msg := protocol.REQ + string(protocol.DELIM_HEAD) + protocol.CMD_RANDOM_ACCOUNT + string(protocol.DELIM_HEAD) + "emptydata" + string(protocol.DELIM)
 
 	n, err := rw.WriteString(msg)
@@ -107,11 +111,22 @@ start client and connect to the host
 */
 func main() {
 
-	err := client(protocol.Server_address)
-	if err != nil {
-		log.Println("Error:", errors.WithStack(err))
+	optionPtr := flag.String("option", "createkeypair", "a string")
+	flag.Parse()
+	fmt.Println("option:", *optionPtr)
+
+	if *optionPtr == "createkeypair" {
+		kp := cryptoutil.PairFromSecret("test")
+		log.Println("keypair ", kp)
+	} else if *optionPtr == "getbalance" {
+		log.Println("getbalance")
 	}
-	log.Println("Client done")
-	return
+
+	// err := client(protocol.Server_address)
+	// if err != nil {
+	// 	log.Println("Error:", errors.WithStack(err))
+	// }
+	// log.Println("Client done")
+	// return
 
 }

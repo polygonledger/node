@@ -21,7 +21,7 @@ const (
 	Port                      = ":8888"
 	CMD_TX                    = "TX"
 	CMD_RANDOM_ACCOUNT        = "RANACC"
-	CMD_BALANCE               = "BALANCE"
+	CMD_BALANCE               = "BALANCE" //get balance of account
 	Genesis_Address    string = "P0614579c42f2"
 	DELIM              byte   = '|'
 	DELIM_HEAD         byte   = '#'
@@ -77,6 +77,11 @@ func EncodeMessageTx(txJson []byte) string {
 	msg := REQ + string(DELIM_HEAD) + msgCmd + string(DELIM_HEAD) + string(txJson) + string(DELIM_HEAD) + emptyData + string(DELIM)
 	return msg
 }
+
+//Faucet => send fixed number of coins to specified address
+
+//getBlocks
+//registerPeer
 
 //pickRandomAccount
 

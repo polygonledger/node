@@ -108,6 +108,17 @@ func RanAddress() *btcec.PublicKey {
 
 }
 
+func PairFromSecret(secret string) Keypair {
+	hasher := sha256.New()
+	hasher.Write([]byte(secret))
+	hashedsecret := hex.EncodeToString(hasher.Sum(nil))
+
+	//hashedsecret := sha256.Sum256([32]byte("secret"))
+	privKey, pubKey := btcec.PrivKeyFromBytes(btcec.S256(), []byte(hashedsecret))
+	kp := Keypair{PrivKey: *privKey, PubKey: *pubKey}
+	return kp
+}
+
 func SomeKeypair() Keypair {
 	pkBytes, err := hex.DecodeString("22a47fa09a223f2aa079edf85a7c2d4f87" +
 		"20ee63e502ee2869afab7de234b80c")

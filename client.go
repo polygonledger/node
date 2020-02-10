@@ -11,6 +11,7 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/polygonledger/node/block"
+	cryptoutil "github.com/polygonledger/node/crypto"
 	protocol "github.com/polygonledger/node/net"
 )
 
@@ -103,11 +104,13 @@ start client and connect to the host
 */
 func main() {
 
-	err := client(protocol.Server_address)
-	if err != nil {
-		log.Println("Error:", errors.WithStack(err))
-	}
-	log.Println("Client done")
-	return
+	// err := client(protocol.Server_address)
+	// if err != nil {
+	// 	log.Println("Error:", errors.WithStack(err))
+	// }
+	// log.Println("Client done")
+	// return
+	kp := cryptoutil.PairFromSecret("test")
+	log.Println("keypair ", kp)
 
 }
