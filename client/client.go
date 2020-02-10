@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"log"
 	"net"
+	"os"
 	"strconv"
 	"strings"
 
@@ -127,10 +128,24 @@ func client(ip string) (*bufio.ReadWriter, error) {
 	return rw, err
 }
 
+type Configuration struct {
+	ServerAddress string
+}
+
 /*
 start client and connect to the host
 */
 func main() {
+
+	file, _ := os.Open("conf.json")
+	defer file.Close()
+	decoder := json.NewDecoder(file)
+	configuration := Configuration{}
+	err := decoder.Decode(&configuration)
+	if err != nil {
+		fmt.Println("error:", err)
+	}
+	fmt.Println("ServerAddress: ", configuration.ServerAddress)
 
 	optionPtr := flag.String("option", "createkeypair", "the command to be performed")
 	flag.Parse()
@@ -143,7 +158,8 @@ func main() {
 
 	} else if *optionPtr == "getbalance" {
 		log.Println("getbalance")
-		rw, err := client(protocol.Server_address)
+		//protocol.Server_address
+		rw, err := client(configuration.ServerAddress)
 		if err != nil {
 			log.Println("Error:", errors.WithStack(err))
 		}
