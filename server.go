@@ -26,6 +26,7 @@ import (
 	"log"
 	"net"
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/pkg/errors"
@@ -67,7 +68,7 @@ func ListenAll() error {
 
 func Reply(rw *bufio.ReadWriter, resp string) {
 	response := resp + string(protocol.DELIM)
-	//log.Println(">> ", response)
+	log.Println(">> ", response)
 	n, err := rw.WriteString(response)
 	if err != nil {
 		log.Println(err, n)
@@ -134,10 +135,12 @@ func handleMessagesChan(conn net.Conn) {
 				if err := json.Unmarshal(dataBytes, &account); err != nil {
 					panic(err)
 				}
-				log.Println(account)
+				log.Println("balance for account ", account)
 
 				balance := chain.Accounts[account]
-				Reply(rw, string(balance))
+				s := strconv.Itoa(balance)
+				//log.Println(s)
+				Reply(rw, s)
 
 				//log.Println("amount ", tx.Amount)
 				//n, err := rw.WriteString("response " + strconv.Itoa(tx.Amount) + string(protocol.DELIM))
