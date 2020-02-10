@@ -18,8 +18,16 @@ type Keypair struct {
 	PubKey  btcec.PublicKey
 }
 
+//TODO only from pubkey type
 func Address(pubkey string) string {
 	return "P" + GetSHAHash(pubkey)[:12]
+}
+
+func PairFromHex(hexString string) Keypair {
+	pkBytes, _ := hex.DecodeString(hexString)
+	privKey, pubKey := btcec.PrivKeyFromBytes(btcec.S256(), pkBytes)
+	kp := Keypair{PrivKey: *privKey, PubKey: *pubKey}
+	return kp
 }
 
 func PairFromSecret(secret string) Keypair {
@@ -37,6 +45,7 @@ func PrivKeyToHex(privkey btcec.PrivateKey) string {
 }
 
 func PrivKeyFromHex(hexString string) btcec.PrivateKey {
+	//TODO handle errors
 	pkBytes, _ := hex.DecodeString(hexString)
 	privKey, _ := btcec.PrivKeyFromBytes(btcec.S256(), pkBytes)
 	return *privKey
@@ -58,7 +67,7 @@ func PubKeyFromHex(hexString string) btcec.PublicKey {
 
 // Decode hex-encoded serialized signature
 func SignatureFromHex(hexString string) btcec.Signature {
-
+	//TODO handle errors
 	sigBytes, err := hex.DecodeString(hexString)
 
 	if err != nil {

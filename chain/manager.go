@@ -158,7 +158,9 @@ func GenesisTx() block.Tx {
 	//log.Printf("%s", s)
 	rand.Seed(time.Now().UnixNano())
 	randNonce := rand.Intn(100)
-	r := cryptoutil.RandomPublicKey()
+	//TODO fix
+	//r := cryptoutil.RandomPublicKey()
+	kp := cryptoutil.PairFromSecret("basic")
 	address_r := cryptoutil.Address(r)
 	r_account := block.AccountFromString(address_r)
 	genesisAmount := 20 //just a number for now
