@@ -12,7 +12,6 @@ import (
 
 	"github.com/btcd/btcec"
 	"github.com/btcd/chaincfg/chainhash"
-	"github.com/polygonledger/node/block"
 )
 
 //var hash = sha256("secret")
@@ -20,48 +19,6 @@ import (
 
 //type Keypair struct {
 //public, private
-
-type Keypair struct {
-	PrivKey btcec.PrivateKey
-	PubKey  btcec.PublicKey
-}
-
-func Address(pubkey string) string {
-	return "P" + GetSHAHash(pubkey)[:12]
-}
-
-func SignTx(tx block.Tx, keypair Keypair) btcec.Signature {
-	//TODO sign tx not just id
-	//message := strconv.Itoa(tx.Id)
-	message := fmt.Sprintf("%d", tx.Id)
-
-	messageHash := chainhash.DoubleHashB([]byte(message))
-	signature, err := keypair.PrivKey.Sign(messageHash)
-	if err != nil {
-		fmt.Println(err)
-		//return
-	}
-	fmt.Println("signature ", signature)
-	return *signature
-
-	//verified := signature.Verify(messageHash, &keypair.PubKey)
-	//fmt.Printf("Signature Verified? %v\n", verified)
-}
-
-func CheckSignTxServer(tx block.Tx, keypair Keypair) bool {
-	//message := strconv.Itoa(tx.Id)
-	// message := fmt.Sprintf("%d", tx.Id)
-	// messageHash := chainhash.DoubleHashB([]byte(message))
-
-	//TODO parse signature from bytes
-	//signature, err := btcec.ParseSignature(sigBytes, btcec.S256())
-	fmt.Println("SERVER PUBKEY ", keypair.PubKey)
-
-	//verify := signature.Verify(messageHash, &keypair.PubKey)
-	//fmt.Println("??? ", verify)
-	return true //verify
-
-}
 
 func GetMD5Hash(text string) string {
 	hasher := md5.New()
@@ -111,17 +68,6 @@ func RanAddress() *btcec.PublicKey {
 	_, pubKey := btcec.PrivKeyFromBytes(btcec.S256(), pkBytes)
 	return pubKey
 
-}
-
-func PairFromSecret(secret string) Keypair {
-	hasher := sha256.New()
-	hasher.Write([]byte(secret))
-	hashedsecret := hex.EncodeToString(hasher.Sum(nil))
-
-	//hashedsecret := sha256.Sum256([32]byte("secret"))
-	privKey, pubKey := btcec.PrivKeyFromBytes(btcec.S256(), []byte(hashedsecret))
-	kp := Keypair{PrivKey: *privKey, PubKey: *pubKey}
-	return kp
 }
 
 func SomeKeypair() Keypair {
