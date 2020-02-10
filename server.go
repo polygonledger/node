@@ -1,5 +1,8 @@
 package main
 
+//server should run via DNS
+//nodexample.com
+
 //basic server based protocol
 //server receives tx messages
 //adds tx messages to a pool

@@ -27,21 +27,11 @@ type Keypair struct {
 }
 
 func Address(pubkey string) string {
-	/*var private = {};
-	private.getAddressByPublicKey = function (publicKey) {
-		var publicKeyHash = crypto.createHash('sha256').update(publicKey, 'hex').digest();
-		var temp = new Buffer(8);
-		for (var i = 0; i < 8; i++) {
-			temp[i] = publicKeyHash[7 - i];
-		}
-
-		var address = bignum.fromBuffer(temp).toString() + "C";
-		return address;
-	}*/
 	return "P" + GetSHAHash(pubkey)[:12]
 }
 
 func SignTx(tx block.Tx, keypair Keypair) btcec.Signature {
+	//TODO sign tx not just id
 	//message := strconv.Itoa(tx.Id)
 	message := fmt.Sprintf("%d", tx.Id)
 
@@ -56,6 +46,21 @@ func SignTx(tx block.Tx, keypair Keypair) btcec.Signature {
 
 	//verified := signature.Verify(messageHash, &keypair.PubKey)
 	//fmt.Printf("Signature Verified? %v\n", verified)
+}
+
+func CheckSignTxServer(tx block.Tx, keypair Keypair) bool {
+	//message := strconv.Itoa(tx.Id)
+	// message := fmt.Sprintf("%d", tx.Id)
+	// messageHash := chainhash.DoubleHashB([]byte(message))
+
+	//TODO parse signature from bytes
+	//signature, err := btcec.ParseSignature(sigBytes, btcec.S256())
+	fmt.Println("SERVER PUBKEY ", keypair.PubKey)
+
+	//verify := signature.Verify(messageHash, &keypair.PubKey)
+	//fmt.Println("??? ", verify)
+	return true //verify
+
 }
 
 func GetMD5Hash(text string) string {
@@ -155,9 +160,9 @@ func SignExample(keypair Keypair) {
 
 	// Sign a message using the private key
 	message := "test message"
+	messageHash := MsgHash(message)
 	signature := Sign(keypair, message)
 
-	messageHash := MsgHash(message)
 	verified := signature.Verify(messageHash, &keypair.PubKey)
 	fmt.Printf("Signature Verified? %v\n", verified)
 }

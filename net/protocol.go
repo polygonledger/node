@@ -102,6 +102,9 @@ func RandomTx(account_s block.Account) block.Tx {
 	rand.Seed(time.Now().UnixNano())
 	randNonce := rand.Intn(100)
 
+	kp := cryptoutil.PairFromSecret("test111??")
+	log.Println("PUBKEY ", kp.PubKey)
+
 	r := cryptoutil.RandomPublicKey()
 	address_r := cryptoutil.Address(r)
 	account_r := block.AccountFromString(address_r)
@@ -113,6 +116,8 @@ func RandomTx(account_s block.Account) block.Tx {
 	log.Printf("randomAmount ", randomAmount)
 	log.Printf("randNonce ", randNonce)
 	testTx := block.Tx{Nonce: randNonce, Sender: account_s, Receiver: account_r, Amount: randomAmount}
+	testTx.Signature = cryptoutil.SignTx(testTx, kp)
+	log.Println(">> ran tx", testTx.Signature)
 	return testTx
 }
 

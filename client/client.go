@@ -137,6 +137,20 @@ start client and connect to the host
 */
 func main() {
 
+	//prepare to run client
+
+	// domain := "google.com"
+	// ips, err1 := net.LookupIP(domain)
+	// if err1 != nil {
+	// 	fmt.Fprintf(os.Stderr, "Could not get IPs: %v\n", err1)
+	// 	os.Exit(1)
+	// }
+	// for _, ip := range ips {
+	// 	fmt.Printf(domain+". IN A %s\n", ip.String())
+	// }
+
+	//read config
+
 	file, _ := os.Open("conf.json")
 	defer file.Close()
 	decoder := json.NewDecoder(file)

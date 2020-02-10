@@ -2,6 +2,7 @@ package chain
 
 import (
 	"crypto/sha256"
+	"fmt"
 	"log"
 	"math/rand"
 	"strconv"
@@ -49,7 +50,13 @@ func txHash(tx block.Tx) [32]byte {
 func txValid(tx block.Tx) bool {
 	sufficientBalance := Accounts[tx.Sender] >= tx.Amount
 	// log.Println("sufficientBalance ", sufficientBalance, tx.Sender, Accounts[tx.Sender], tx.Amount)
-	btxValid := sufficientBalance //TODO and signature
+	btxValid := sufficientBalance
+	//TODO and signature
+	//the transaction is signed by the sender
+	//TODO fix this is only for testing
+	kp := cryptoutil.PairFromSecret("test1")
+	sigvalid := cryptoutil.CheckSignTxServer(tx, kp)
+	fmt.Println("sigvalid ", sigvalid)
 	return btxValid
 	//return true
 }
@@ -63,7 +70,10 @@ func HandleTx(tx block.Tx) string {
 
 	tx.Id = txHash(tx)
 	//check timestamp
-	log.Println("hash %x time %s", tx.Id, timestamp)
+	log.Println("hash %x time %s sign %x", tx.Id, timestamp, tx.Signature)
+
+	//verify signature
+	//verified := signature.Verify(messageHash, &keypair.PubKey)
 
 	//TODO its own function
 	if txValid(tx) {
