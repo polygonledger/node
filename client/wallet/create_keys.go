@@ -10,6 +10,18 @@ import (
 	cryptoutil "github.com/polygonledger/node/crypto"
 )
 
+func writeKeys(kp cryptoutil.Keypair, keysfile string) {
+
+	pubkeyHex := cryptoutil.PubKeyToHex(kp.PubKey)
+	log.Println("pub ", pubkeyHex)
+
+	privHex := cryptoutil.PrivKeyToHex(kp.PrivKey)
+	log.Println("privHex ", privHex)
+
+	t := pubkeyHex + "\n" + privHex
+	ioutil.WriteFile(keysfile, []byte(t), 0644)
+}
+
 func main() {
 
 	log.Println("create keypair")
@@ -19,7 +31,7 @@ func main() {
 	pw, _ := reader.ReadString('\n')
 	fmt.Println(pw)
 
-	//if exists
+	//check if exists
 	//dat, _ := ioutil.ReadFile("keys.txt")
 	//check(err)
 	//fmt.Print("keys ", string(dat))
@@ -27,12 +39,6 @@ func main() {
 	kp := cryptoutil.PairFromSecret(pw)
 	log.Println("keypair ", kp)
 
-	pubkeyHex := cryptoutil.PubKeyToHex(kp.PubKey)
-	log.Println("pub ", pubkeyHex)
+	writeKeys(kp, "keys.txt")
 
-	privHex := cryptoutil.PrivKeyToHex(kp.PrivKey)
-	log.Println("privHex ", privHex)
-
-	t := pubkeyHex + "\n" + privHex
-	ioutil.WriteFile("keys.txt", []byte(t), 0644)
 }
