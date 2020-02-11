@@ -122,6 +122,17 @@ func TestAddress(t *testing.T) {
 	}
 }
 
+func TestSignHardcoded(t *testing.T) {
+	pub := "66326361316262366337653930376430366461666534363837653537396663653736623337653465393362373630353032326461353265366363633236666432"
+	pubkey := cryptoutil.PubKeyFromHex(pub)
+
+	keypair := cryptoutil.PairFromSecret("test")
+	if keypair.PubKey != pubkey {
+		t.Error("hardcoded pubkey wrong")
+	}
+
+}
+
 func TestGenkeys(t *testing.T) {
 	// Decode a hex-encoded private key.
 	h := "22a47fa09a223f2aa079edf85a7c2d4f87" +

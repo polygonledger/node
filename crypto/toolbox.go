@@ -82,6 +82,14 @@ func SignatureFromHex(hexString string) btcec.Signature {
 	return *signature
 }
 
+func VerifyMessageSignPub(signature btcec.Signature, pubkey btcec.PublicKey, message string) bool {
+
+	messageHash := MsgHash(message)
+	verified := signature.Verify(messageHash, &pubkey)
+	//log.Println("?? ", message, verified)
+	return verified
+}
+
 func VerifyMessageSign(signature btcec.Signature, keypair Keypair, message string) bool {
 
 	messageHash := MsgHash(message)

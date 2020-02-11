@@ -84,6 +84,31 @@ func main() {
 
 		sighex := hex.EncodeToString(signature.Serialize())
 		log.Println("sighex ", sighex)
+	} else if *optionPtr == "verify" {
+		reader := bufio.NewReader(os.Stdin)
+		fmt.Print("Enter message to verify: ")
+		msg, _ := reader.ReadString('\n')
+		fmt.Println(msg)
+
+		fmt.Print("Enter signature to verify: ")
+		msgsig, _ := reader.ReadString('\n')
+		msgsig = strings.Trim(msgsig, string('\n'))
+		//x := "3045022100dd2781cc37edb84c5ed21b3d8fc03d49ebddf5647d23a9132eeea8bd2b951bd1022041519c47b77803d528d1b428ccb4d84a90ce3b67a22662d5feaa84c4521e5759"
+		//fmt.Println("??", msgsig[0], len(msgsig), len(x))
+
+		sign := cryptoutil.SignatureFromHex(msgsig)
+
+		fmt.Print("Enter pubkey to verify: ")
+		msgpub, _ := reader.ReadString('\n')
+		fmt.Println(msgpub)
+		msgpub = strings.Trim(msgpub, string('\n'))
+
+		//msgpub = "039f6095ba1afa34c437a88fceb444bf177326eb9222d4938336387ecb4cbe7234"
+
+		pubkey := cryptoutil.PubKeyFromHex(msgpub)
+
+		verified := cryptoutil.VerifyMessageSignPub(sign, pubkey, msg)
+		log.Println("verified ", verified)
 
 	}
 
