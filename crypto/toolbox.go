@@ -35,6 +35,7 @@ func PairFromSecret(secret string) Keypair {
 	hasher.Write([]byte(secret))
 	hashedsecret := hex.EncodeToString(hasher.Sum(nil))
 
+	//??
 	privKey, pubKey := btcec.PrivKeyFromBytes(btcec.S256(), []byte(hashedsecret))
 	kp := Keypair{PrivKey: *privKey, PubKey: *pubKey}
 	return kp
