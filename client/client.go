@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"net"
 	"os"
@@ -160,6 +161,11 @@ func main() {
 		fmt.Println("error:", err)
 	}
 	fmt.Println("ServerAddress: ", configuration.ServerAddress)
+
+	//if exists
+	dat, _ := ioutil.ReadFile("keys.txt")
+	//check(err)
+	fmt.Print("keys ", string(dat))
 
 	optionPtr := flag.String("option", "createkeypair", "the command to be performed")
 	flag.Parse()

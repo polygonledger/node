@@ -1,5 +1,9 @@
 package main
 
+//TODO
+
+//https://github.com/alash3al/go-pubsub/blob/master/example/example.go
+
 //server should run via DNS
 //nodexample.com
 
@@ -8,13 +12,8 @@ package main
 //adds tx messages to a pool
 //block gets created every 10 secs
 
-//TODO
 //package polygonledger/node
 //basic signatures
-
-//Tx, sender receiver
-//var hash = sha256("secret")
-//var keypair = MakeKeypair(hash)
 
 //Delegates
 //rounds
@@ -80,6 +79,18 @@ func Reply(rw *bufio.ReadWriter, resp string) {
 	rw.Flush()
 }
 
+func ReadMessage(rw *bufio.ReadWriter) protocol.Message {
+	var msg protocol.Message
+	//TODO use channels
+	//msg := make(chan protocol.Message, 1)
+	msgString := protocol.ReadStream(rw)
+	if msgString == protocol.EMPTY_MSG {
+		return protocol.EmptyMsg()
+	}
+	msg = protocol.ParseMessage(msgString)
+	return msg
+}
+
 func handleMessagesChan(conn net.Conn) {
 	rw := bufio.NewReadWriter(bufio.NewReader(conn), bufio.NewWriter(conn))
 	//could add max listen
@@ -90,12 +101,13 @@ func handleMessagesChan(conn net.Conn) {
 
 		// read
 		log.Print("Receive message")
-		var msg protocol.Message
-		msgString := protocol.ReadStream(rw)
-		if msgString == protocol.EMPTY_MSG {
+		msg := ReadMessage(rw)
+		if msg.MessageType == "" {
 			break
 		}
-		msg = protocol.ParseMessage(msgString)
+		// if msg == protocol.EmptyMsg {
+		// 	break
+		// }
 
 		log.Print("msg ", msg)
 

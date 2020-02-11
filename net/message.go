@@ -31,6 +31,10 @@ type Message struct {
 	//Signature       btcec.Signature
 }
 
+func EmptyMsg() Message {
+	return Message{}
+}
+
 func IsValidMsgType(msgType string) bool {
 	fmt.Println("test ", msgType)
 	switch msgType {
