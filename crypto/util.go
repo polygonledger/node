@@ -59,7 +59,7 @@ func Sign(keypair Keypair, message string) btcec.Signature {
 		fmt.Println(err)
 		//return nil
 	}
-	fmt.Println("signature ", signature)
+	//fmt.Println("signature ", signature)
 	return *signature
 
 }

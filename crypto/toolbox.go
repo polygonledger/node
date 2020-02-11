@@ -82,6 +82,26 @@ func SignatureFromHex(hexString string) btcec.Signature {
 	return *signature
 }
 
+func VerifyMessageSign(signature btcec.Signature, keypair Keypair, message string) bool {
+
+	messageHash := MsgHash(message)
+	verified := signature.Verify(messageHash, &keypair.PubKey)
+	//log.Println("?? ", message, verified)
+	return verified
+}
+
+func SignMsgHash(keypair Keypair, message string) btcec.Signature {
+	messageHash := chainhash.DoubleHashB([]byte(message))
+	signature, err := keypair.PrivKey.Sign(messageHash)
+	if err != nil {
+		fmt.Println(err)
+		//return
+	}
+	//fmt.Println("signature ", signature)
+	return *signature
+
+}
+
 func SignTx(tx block.Tx, keypair Keypair) btcec.Signature {
 	//TODO sign tx not just id
 	//message := strconv.Itoa(tx.Id)
@@ -93,7 +113,7 @@ func SignTx(tx block.Tx, keypair Keypair) btcec.Signature {
 		fmt.Println(err)
 		//return
 	}
-	fmt.Println("signature ", signature)
+	//fmt.Println("signature ", signature)
 	return *signature
 
 	//verified := signature.Verify(messageHash, &keypair.PubKey)

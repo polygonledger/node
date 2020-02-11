@@ -13,13 +13,23 @@ func TestBasicSign(t *testing.T) {
 	keypair := cryptoutil.PairFromSecret("test")
 	message := "test"
 
-	signature := cryptoutil.Sign(keypair, message)
-
-	messageHash := cryptoutil.MsgHash(message)
-	verified := signature.Verify(messageHash, &keypair.PubKey)
-
+	signature := cryptoutil.SignMsgHash(keypair, message)
+	verified := cryptoutil.VerifyMessageSign(signature, keypair, message)
 	if !verified {
 		t.Error("msg failed")
+	}
+
+	messagefalse := "testshouldbefalse"
+	verifiedfalse := cryptoutil.VerifyMessageSign(signature, keypair, messagefalse)
+
+	if verifiedfalse {
+		t.Error("sign verify should fail")
+	}
+
+	otherkeypair := cryptoutil.PairFromSecret("testother")
+	verifiedother := cryptoutil.VerifyMessageSign(signature, otherkeypair, message)
+	if verifiedother {
+		t.Error("sign other should fail")
 	}
 
 }

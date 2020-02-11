@@ -187,7 +187,7 @@ func SendMessage(rw *bufio.ReadWriter) error {
 
 	//Command
 	msg := "data" + string(DELIM)
-	log.Println("?? ", msg)
+	//log.Println("?? ", msg)
 	n, err := rw.WriteString(msg)
 	if err != nil {
 		return errors.Wrap(err, "Could not write data ("+strconv.Itoa(n)+" bytes written)")
@@ -213,7 +213,7 @@ func SendAccount(rw *bufio.ReadWriter) error {
 	//Command
 
 	msg := CMD_RANDOM_ACCOUNT + string(DELIM)
-	log.Println("?? ", msg)
+	//log.Println("?? ", msg)
 	n, err := rw.WriteString(msg)
 	if err != nil {
 		return errors.Wrap(err, "Could not write GOB data ("+strconv.Itoa(n)+" bytes written)")
