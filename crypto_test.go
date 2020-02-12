@@ -1,9 +1,12 @@
 package main
 
 import (
+	"encoding/hex"
+	"log"
 	"testing"
 
 	"github.com/btcd/chaincfg/chainhash"
+	block "github.com/polygonledger/node/block"
 	cryptoutil "github.com/polygonledger/node/crypto"
 )
 
@@ -32,35 +35,6 @@ func TestBasicSign(t *testing.T) {
 		t.Error("sign other should fail")
 	}
 
-}
-
-func TestRecordPrivkey(t *testing.T) {
-	// Decode the hex-encoded pubkey of the recipient.
-	// pubKeyBytes, err := hex.DecodeString("04115c42e757b2efb7671c578530ec191a1" +
-	// 	"359381e6a71127a9d37c486fd30dae57e76dc58f693bd7e7010358ce6b165e483a29" +
-	// 	"21010db67ac11b1b51b651953d2") // uncompressed pubkey
-
-	// pubKey, err := btcec.ParsePubKey(pubKeyBytes, btcec.S256())
-
-	// // Encrypt a message decryptable by the private key corresponding to pubKey
-	// // message := "test message"
-	// // ciphertext, err := btcec.Encrypt(pubKey, []byte(message))
-
-	// // Decode the hex-encoded private key
-	// pkBytes, err := hex.DecodeString("a11b0a4e1a132305652ee7a8eb7848f6ad" +
-	// 	"5ea381e3ce20a2c086a2e388230811")
-
-	// note that we already have corresponding pubKey
-	//privKey, _ := btcec.PrivKeyFromBytes(btcec.S256(), pkBytes)
-
-	// Try decrypting and verify if it's the same message
-	// plaintext, err := btcec.Decrypt(privKey, ciphertext)
-	// if err != nil {
-	// 	fmt.Println(err)
-	// 	return
-	// }
-
-	// fmt.Println(string(plaintext))
 }
 
 func TestDecode(t *testing.T) {
@@ -95,23 +69,6 @@ func TestAddress(t *testing.T) {
 		t.Error("privkey encoding")
 	}
 
-	// pubKeyBytes, err := hex.DecodeString(pubkey_string)
-	// if err != nil {
-	// 	fmt.Println(err)
-	// 	return
-	// }
-	// pubKey, err := btcec.ParsePubKey(pubKeyBytes, btcec.S256())
-	// if err != nil {
-	// 	fmt.Println(err)
-	// 	return
-	// }
-
-	//FAIL
-	// if *pubKey != keypair.PubKey {
-	// 	log.Println(*pubKey, keypair.PubKey)
-	// 	t.Error("error recoding pubkey")
-	// }
-
 	addr := cryptoutil.Address(pubkey_string)
 	if addr[0] != 'P' {
 		t.Error("address should start with P ", addr[0])
@@ -144,9 +101,7 @@ func TestSignHardcoded(t *testing.T) {
 }
 
 func TestGenkeys(t *testing.T) {
-	// Decode a hex-encoded private key.
-	h := "22a47fa09a223f2aa079edf85a7c2d4f87" +
-		"20ee63e502ee2869afab7de234b80c"
+	h := "22a47fa09a223f2aa079edf85a7c2d4f8720ee63e502ee2869afab7de234b80c"
 
 	keypair := cryptoutil.PairFromHex(h)
 
@@ -154,34 +109,35 @@ func TestGenkeys(t *testing.T) {
 		t.Error("keypair is nil")
 	}
 
-	//log.Println("pubkey example %v", keypair.PubKey)
-	//log.Println(keypair.PrivKey)
+}
 
-	//hash := sha256.Sum256(pubKey.Serialize())
+func TestSignTx(t *testing.T) {
+	keypair := cryptoutil.PairFromSecret("test")
+	//message := "test"
+	var tx block.Tx
+	s := block.AccountFromString("")
+	tx = block.Tx{Nonce: 0, Amount: 0, Sender: s, Receiver: s}
+	signature := cryptoutil.SignTx(tx, keypair)
+	//log.Println("> ", signature)
 
-	// Sign a message using the private key.
-	// message := "test message"
-	// messageHash := chainhash.DoubleHashB([]byte(message))
-	// signature, err := privKey.Sign(messageHash)
-	// if err != nil {
-	// 	fmt.Println(err)
-	// 	return
-	// }
+	sighex := hex.EncodeToString(signature.Serialize())
+	log.Println("> ", sighex)
+}
 
-	// Serialize and display the signature.
-	// fmt.Printf("Serialized Signature: %x\n", signature.Serialize())
-	// // Verify the signature for the message using the public key.
-	// verified := signature.Verify(messageHash, pubKey)
-	// fmt.Printf("Signature Verified? %v\n", verified)
+func TestAdress(t *testing.T) {
+	//Pa033f6528cc1
+	keypair := cryptoutil.PairFromSecret("test")
+	pub := cryptoutil.PubKeyToHex(keypair.PubKey)
 
-	// data := []byte("hello")
-	// hash := sha256.Sum256(data)
-	// fmt.Printf("%x", hash[:])
+	//pub := "03dab2d148f103cd4761df382d993942808c1866a166f27cafba3289e228384a31"
+	a := cryptoutil.Address(pub)
+	log.Println(a)
+	if a != "Pa033f6528cc1" {
+		t.Error("hardcoded wrong")
+	}
 
-	// timestamp := time.Now().Unix()
-	// b := []byte(string(timestamp))
-	// hash = sha256.Sum256(b)
-
-	// fmt.Printf("\n%x", hash[:])
+	if a[0] != 'P' {
+		t.Error("adress stars with P")
+	}
 
 }

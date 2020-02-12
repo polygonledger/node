@@ -38,8 +38,6 @@ func TestMessageType(t *testing.T) {
 		t.Error("msg failed")
 	}
 
-	//msgJson, _ := json.Marshal(msg)
-
 }
 
 func TestMessageAccount(t *testing.T) {
