@@ -49,6 +49,7 @@ func createKeys() {
 	reader := bufio.NewReader(os.Stdin)
 	fmt.Print("Enter password: ")
 	pw, _ := reader.ReadString('\n')
+	pw = strings.Trim(pw, string('\n'))
 	fmt.Println(pw)
 
 	//check if exists
@@ -77,6 +78,7 @@ func main() {
 		reader := bufio.NewReader(os.Stdin)
 		fmt.Print("Enter message to sign: ")
 		msg, _ := reader.ReadString('\n')
+		msg = strings.Trim(msg, string('\n'))
 		fmt.Println(msg)
 		kp := readKeys("keys.txt")
 		signature := cryptoutil.SignMsgHash(kp, msg)
@@ -88,6 +90,7 @@ func main() {
 		reader := bufio.NewReader(os.Stdin)
 		fmt.Print("Enter message to verify: ")
 		msg, _ := reader.ReadString('\n')
+		msg = strings.Trim(msg, string('\n'))
 		fmt.Println(msg)
 
 		fmt.Print("Enter signature to verify: ")

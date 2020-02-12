@@ -1,7 +1,6 @@
 package main
 
 import (
-	"log"
 	"testing"
 
 	"github.com/btcd/chaincfg/chainhash"
@@ -124,23 +123,22 @@ func TestAddress(t *testing.T) {
 }
 
 func TestSignHardcoded(t *testing.T) {
-	pub := "039f6095ba1afa34c437a88fceb444bf177326eb9222d4938336387ecb4cbe7234"
+	pub := "03dab2d148f103cd4761df382d993942808c1866a166f27cafba3289e228384a31"
 	pubkey := cryptoutil.PubKeyFromHex(pub)
 
-	//BUG
 	keypair := cryptoutil.PairFromSecret("test")
 	h := cryptoutil.PubKeyToHex(keypair.PubKey)
-	log.Println("? ", h) //03dab2d148f103cd4761df382d993942808c1866a166f27cafba3289e228384a31
+
 	if h != pub {
 		t.Error("hardcoded pubkey wrong")
 	}
 
-	sig := "3045022100dd2781cc37edb84c5ed21b3d8fc03d49ebddf5647d23a9132eeea8bd2b951bd1022041519c47b77803d528d1b428ccb4d84a90ce3b67a22662d5feaa84c4521e5759"
+	sig := "3045022100b6789781f032512fc9ae06e9621ca4ce40d317a83a6b6f4ee1ad35942a3c928602204d8f03b330efc416b822447862333140d0acb3323d4575f1efba6e5418a036f7"
 	sign := cryptoutil.SignatureFromHex(sig)
 	msg := "test"
 	verified := cryptoutil.VerifyMessageSignPub(sign, pubkey, msg)
 	if !verified {
-		t.Error("should verify standard")
+		t.Error("should verify standard ", verified)
 	}
 
 }
