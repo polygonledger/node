@@ -2,7 +2,6 @@ package main
 
 import (
 	"encoding/hex"
-	"log"
 	"testing"
 
 	"github.com/btcd/chaincfg/chainhash"
@@ -118,8 +117,12 @@ func TestSignTx(t *testing.T) {
 	tx = block.Tx{Nonce: 0, Amount: 0, Sender: s, Receiver: s}
 	signature := crypto.SignTx(tx, keypair)
 
+	//TODO
 	sighex := hex.EncodeToString(signature.Serialize())
-	log.Println("> ", sighex)
+	if sighex == "" {
+		t.Error("hex empty")
+	}
+
 }
 
 func TestAdress(t *testing.T) {
@@ -129,7 +132,7 @@ func TestAdress(t *testing.T) {
 
 	//pub := "03dab2d148f103cd4761df382d993942808c1866a166f27cafba3289e228384a31"
 	a := crypto.Address(pub)
-	log.Println(a)
+
 	if a != "Pa033f6528cc1" {
 		t.Error("hardcoded wrong")
 	}

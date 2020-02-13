@@ -8,7 +8,6 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
-	"log"
 
 	"github.com/btcd/btcec"
 	"github.com/btcd/chaincfg/chainhash"
@@ -112,7 +111,7 @@ func SignMsgHash(keypair Keypair, message string) btcec.Signature {
 func SignTx(tx block.Tx, keypair Keypair) btcec.Signature {
 	//TODO sign tx not just id
 	txJson, _ := json.Marshal(tx)
-	log.Println(string(txJson))
+	//log.Println(string(txJson))
 	//message := fmt.Sprintf("%d", tx.Id)
 
 	messageHash := chainhash.DoubleHashB([]byte(txJson))
