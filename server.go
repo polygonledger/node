@@ -1,9 +1,5 @@
 package main
 
-//TODO
-
-//https://github.com/alash3al/go-pubsub/blob/master/example/example.go
-
 //server should run via DNS
 //nodexample.com
 
@@ -11,9 +7,6 @@ package main
 //server receives tx messages
 //adds tx messages to a pool
 //block gets created every 10 secs
-
-//package polygonledger/node
-//basic signatures
 
 //Delegates
 //rounds

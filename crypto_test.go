@@ -113,12 +113,10 @@ func TestGenkeys(t *testing.T) {
 
 func TestSignTx(t *testing.T) {
 	keypair := cryptoutil.PairFromSecret("test")
-	//message := "test"
 	var tx block.Tx
 	s := block.AccountFromString("")
 	tx = block.Tx{Nonce: 0, Amount: 0, Sender: s, Receiver: s}
 	signature := cryptoutil.SignTx(tx, keypair)
-	//log.Println("> ", signature)
 
 	sighex := hex.EncodeToString(signature.Serialize())
 	log.Println("> ", sighex)
