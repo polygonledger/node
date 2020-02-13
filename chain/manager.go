@@ -20,6 +20,7 @@ var Accounts map[block.Account]int
 //TODO fix circular import
 const (
 	Genesis_Address string = "P0614579c42f2"
+	//Treasury_Address string = "PXXXXX"
 )
 
 //testing

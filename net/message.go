@@ -23,6 +23,20 @@ const (
 	//HANDSHAKE
 )
 
+// type Direction int
+
+// const (
+//     North Direction = iota
+//     East
+//     South
+//     West
+// )
+
+// func (d Direction) String() string {
+//     return [...]string{"North", "East", "South", "West"}[d]
+// }
+
+//TODO proper enums
 //generic message
 type Message struct {
 	MessageType string //type of message i.e. the communications protocol

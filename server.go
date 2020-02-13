@@ -1,5 +1,6 @@
 package main
 
+//
 //server should run via DNS
 //nodexample.com
 
@@ -249,7 +250,7 @@ func main() {
 	chain.ApplyBlock(genBlock)
 	chain.AppendBlock(genBlock)
 
-	// //create block every 10sec
+	// create block every 10sec
 	blockTime := 10000 * time.Millisecond
 	go doEvery(blockTime, chain.MakeBlock)
 
