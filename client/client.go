@@ -15,7 +15,7 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/polygonledger/node/block"
-	cryptoutil "github.com/polygonledger/node/crypto"
+	crypto "github.com/polygonledger/node/crypto"
 	protocol "github.com/polygonledger/node/net"
 )
 
@@ -95,23 +95,27 @@ func MakeRandomTx(rw *bufio.ReadWriter) error {
 	return nil
 }
 
+func readMsg(rw *bufio.ReadWriter) string {
+	msg, _ := rw.ReadString(protocol.DELIM)
+	msg = strings.Trim(msg, string(protocol.DELIM))
+	return msg
+}
+
 func Getbalance(rw *bufio.ReadWriter) error {
 	//TODO use messageencoder
-	//data := "P0614579c42f2"
-	data := "P4e968b02dd42"
+	data := "P0614579c42f2"
+	//data := "P4e968b02dd42"
 	txJson, _ := json.Marshal(block.Account{AccountKey: data})
-	msg := protocol.REQ + string(protocol.DELIM_HEAD) + protocol.CMD_BALANCE + string(protocol.DELIM_HEAD) + string(txJson) + string(protocol.DELIM)
-
+	msg := protocol.EncodeMsg(protocol.REQ, protocol.CMD_BALANCE, string(txJson))
 	n, err := rw.WriteString(msg)
 	if err != nil {
 		return errors.Wrap(err, "Could not write JSON data ("+strconv.Itoa(n)+" bytes written)")
 	}
 
 	err = rw.Flush()
+	rcvmsg := readMsg(rw)
 
-	msg, _ = rw.ReadString(protocol.DELIM)
-	msg = strings.Trim(msg, string(protocol.DELIM))
-	x, _ := strconv.Atoi(msg)
+	x, _ := strconv.Atoi(rcvmsg)
 	log.Println("balance of account ", x)
 
 	return nil
@@ -173,7 +177,7 @@ func main() {
 
 	if *optionPtr == "createkeypair" {
 		//TODO read secret from cmd
-		kp := cryptoutil.PairFromSecret("test")
+		kp := crypto.PairFromSecret("test")
 		log.Println("keypair ", kp)
 
 	} else if *optionPtr == "getbalance" {

@@ -95,3 +95,10 @@ func AccountMessage(account block.Account) MessageAccount {
 	msg := MessageAccount{MessageType: REP, Command: "REP_ACCOUNT", Account: account}
 	return msg
 }
+
+//encode a message
+func EncodeMsg(msgType string, cmd string, data string) string {
+	//TODO types
+	msg := msgType + string(DELIM_HEAD) + CMD_BALANCE + string(DELIM_HEAD) + data + string(DELIM)
+	return msg
+}

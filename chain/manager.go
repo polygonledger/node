@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"github.com/polygonledger/node/block"
-	cryptoutil "github.com/polygonledger/node/crypto"
+	crypto "github.com/polygonledger/node/crypto"
 )
 
 var Tx_pool []block.Tx
@@ -55,8 +55,8 @@ func txValid(tx block.Tx) bool {
 	//TODO and signature
 	//the transaction is signed by the sender
 	//TODO fix this is only for testing
-	kp := cryptoutil.PairFromSecret("test1")
-	sigvalid := cryptoutil.CheckSignTxServer(tx, kp)
+	kp := crypto.PairFromSecret("test1")
+	sigvalid := crypto.CheckSignTxServer(tx, kp)
 	fmt.Println("sigvalid ", sigvalid)
 	return btxValid
 	//return true
@@ -160,9 +160,9 @@ func GenesisTx() block.Tx {
 	rand.Seed(time.Now().UnixNano())
 	randNonce := rand.Intn(100)
 	//TODO fix
-	r := cryptoutil.RandomPublicKey()
-	//kp := cryptoutil.PairFromSecret("basic")
-	address_r := cryptoutil.Address(r)
+	r := crypto.RandomPublicKey()
+	//kp := crypto.PairFromSecret("basic")
+	address_r := crypto.Address(r)
 	r_account := block.AccountFromString(address_r)
 	genesisAmount := 20 //just a number for now
 

@@ -20,6 +20,7 @@ const (
 	Server_address string = "127.0.0.1"
 	Port                  = ":8888"
 	//TODO move to message type
+	CMD_PING                  = "PING"
 	CMD_TX                    = "TX"
 	CMD_RANDOM_ACCOUNT        = "RANACC"
 	CMD_BALANCE               = "BALANCE" //get balance of account

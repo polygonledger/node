@@ -109,7 +109,14 @@ func handleMessagesChan(conn net.Conn) {
 
 		if msg.MessageType == protocol.REQ {
 			log.Println("Request")
-			if msg.Command == protocol.CMD_TX {
+			log.Println("Handle ", msg.Command)
+
+			switch msg.Command {
+
+			case protocol.CMD_PING:
+				log.Println("PING PONG")
+
+			case protocol.CMD_TX:
 				log.Println("Handle tx")
 
 				dataBytes := msg.Data
@@ -125,7 +132,7 @@ func handleMessagesChan(conn net.Conn) {
 				//log.Println("amount ", tx.Amount)
 				//n, err := rw.WriteString("response " + strconv.Itoa(tx.Amount) + string(protocol.DELIM))
 
-			} else if msg.Command == protocol.CMD_RANDOM_ACCOUNT {
+			case protocol.CMD_RANDOM_ACCOUNT:
 				log.Println("Handle random account")
 
 				txJson, _ := json.Marshal(chain.RandomAccount())
@@ -134,7 +141,7 @@ func handleMessagesChan(conn net.Conn) {
 				//log.Println("amount ", tx.Amount)
 				//n, err := rw.WriteString("response " + strconv.Itoa(tx.Amount) + string(protocol.DELIM))
 
-			} else if msg.Command == protocol.CMD_BALANCE {
+			case protocol.CMD_BALANCE:
 				log.Println("Handle balance")
 
 				dataBytes := msg.Data

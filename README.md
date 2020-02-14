@@ -1,5 +1,7 @@
 # polygon
 
+new blockchain. delegated proof-of-asset algorithm
+
 architecture: accounts, not UTXO. transaction types, scripting through transaction multiplexing
 
 current status: experimental client-server protocol. once finalized move to peer-to-peer
