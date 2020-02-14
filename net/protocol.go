@@ -136,8 +136,18 @@ func RandomTx(account_s block.Account) block.Tx {
 	return testTx
 }
 
-func ReadPipe(rw *bufio.ReadWriter) {
+// func ReadPipe(rw *bufio.ReadWriter) {
 
+// }
+
+func RequestReply(rw *bufio.ReadWriter, req_msg string) string {
+	//REQUEST
+	WritePipe(rw, req_msg)
+
+	//REPLY
+	resp_msg := ReadMsg(rw)
+
+	return resp_msg
 }
 
 func WritePipe(rw *bufio.ReadWriter, message string) error {
