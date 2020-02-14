@@ -23,20 +23,18 @@ const (
 	//HANDSHAKE
 )
 
-// type Direction int
+//TODO proper enums
+// type MsgType int
 
 // const (
-//     North Direction = iota
-//     East
-//     South
-//     West
+// 	REQ = iota
+// 	REP
 // )
 
-// func (d Direction) String() string {
-//     return [...]string{"North", "East", "South", "West"}[d]
+// func (m MsgType) String() string {
+// 	return [...]string{"REQ", "REP"}
 // }
 
-//TODO proper enums
 //generic message
 type Message struct {
 	MessageType string //type of message i.e. the communications protocol
@@ -50,7 +48,7 @@ func EmptyMsg() Message {
 }
 
 func IsValidMsgType(msgType string) bool {
-	fmt.Println("test ", msgType)
+	//fmt.Println("test ", msgType)
 	switch msgType {
 	case
 		REQ,
@@ -99,6 +97,6 @@ func AccountMessage(account block.Account) MessageAccount {
 //encode a message
 func EncodeMsg(msgType string, cmd string, data string) string {
 	//TODO types
-	msg := msgType + string(DELIM_HEAD) + CMD_BALANCE + string(DELIM_HEAD) + data + string(DELIM)
+	msg := msgType + string(DELIM_HEAD) + cmd + string(DELIM_HEAD) + data + string(DELIM)
 	return msg
 }

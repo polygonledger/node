@@ -73,6 +73,18 @@ func ParseMessage(msgString string) Message {
 	return msg
 }
 
+func ReadMsg(rw *bufio.ReadWriter) string {
+	msg, _ := rw.ReadString(DELIM)
+	msg = strings.Trim(msg, string(DELIM))
+	return msg
+}
+
+func EncodeReply(resp string) string {
+	//TODO! header missing
+	response := resp + string(DELIM)
+	return response
+}
+
 func EncodeMessageTx(txJson []byte) string {
 	emptyData := ""
 	msgCmd := "TX"

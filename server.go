@@ -63,7 +63,7 @@ func ListenAll() error {
 }
 
 func Reply(rw *bufio.ReadWriter, resp string) {
-	response := resp + string(protocol.DELIM)
+	response := protocol.EncodeReply(resp)
 	log.Println(">> ", response)
 	n, err := rw.WriteString(response)
 	if err != nil {
@@ -115,6 +115,7 @@ func handleMessagesChan(conn net.Conn) {
 
 			case protocol.CMD_PING:
 				log.Println("PING PONG")
+				Reply(rw, "PONG")
 
 			case protocol.CMD_TX:
 				log.Println("Handle tx")

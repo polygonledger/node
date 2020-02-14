@@ -5,15 +5,23 @@ import (
 	"testing"
 
 	block "github.com/polygonledger/node/block"
-	protocol "github.com/polygonledger/node/net"
+	net "github.com/polygonledger/node/net"
 )
+
+func TestMessageBasic(t *testing.T) {
+
+	msg := net.Message{MessageType: net.REQ, Command: "CMD"}
+	if !net.IsValidMsgType(msg.MessageType) {
+		t.Error("msg type invalid")
+	}
+}
 
 func TestMessageJson(t *testing.T) {
 
-	msg := protocol.Message{MessageType: "msg", Command: "CMD"}
+	msg := net.Message{MessageType: net.REQ, Command: "CMD"}
 	msgJson, _ := json.Marshal(msg)
 
-	var msgUn protocol.Message
+	var msgUn net.Message
 	if err := json.Unmarshal(msgJson, &msgUn); err != nil {
 		panic(err)
 	}
@@ -22,19 +30,19 @@ func TestMessageJson(t *testing.T) {
 		t.Error("JSON marshal failed")
 	}
 
-	if msgUn.MessageType != "msg" {
+	if msgUn.MessageType != net.REQ {
 		t.Error("JSON marshal failed")
 	}
 }
 
 func TestMessageType(t *testing.T) {
-	msg := protocol.RequestMessage()
-	if msg.MessageType != protocol.REQ {
+	msg := net.RequestMessage()
+	if msg.MessageType != net.REQ {
 		t.Error("msg failed")
 	}
 
-	msg = protocol.ReplyMessage()
-	if msg.MessageType != protocol.REP {
+	msg = net.ReplyMessage()
+	if msg.MessageType != net.REP {
 		t.Error("msg failed")
 	}
 
@@ -42,14 +50,14 @@ func TestMessageType(t *testing.T) {
 
 func TestMessageAccount(t *testing.T) {
 	a := block.Account{AccountKey: "test"}
-	msg := protocol.AccountMessage(a)
+	msg := net.AccountMessage(a)
 	if msg.Account != a {
 		t.Error("msg failed")
 	}
 
 	msgJson, _ := json.Marshal(msg)
 
-	var msgUn protocol.MessageAccount
+	var msgUn net.MessageAccount
 	if err := json.Unmarshal(msgJson, &msgUn); err != nil {
 		panic(err)
 	}

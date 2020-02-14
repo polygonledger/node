@@ -15,7 +15,7 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/polygonledger/node/block"
-	crypto "github.com/polygonledger/node/crypto"
+	"github.com/polygonledger/node/crypto"
 	protocol "github.com/polygonledger/node/net"
 )
 
@@ -95,12 +95,6 @@ func MakeRandomTx(rw *bufio.ReadWriter) error {
 	return nil
 }
 
-func readMsg(rw *bufio.ReadWriter) string {
-	msg, _ := rw.ReadString(protocol.DELIM)
-	msg = strings.Trim(msg, string(protocol.DELIM))
-	return msg
-}
-
 func Getbalance(rw *bufio.ReadWriter) error {
 	//TODO use messageencoder
 	data := "P0614579c42f2"
@@ -113,10 +107,27 @@ func Getbalance(rw *bufio.ReadWriter) error {
 	}
 
 	err = rw.Flush()
-	rcvmsg := readMsg(rw)
+	rcvmsg := protocol.ReadMsg(rw)
 
 	x, _ := strconv.Atoi(rcvmsg)
 	log.Println("balance of account ", x)
+
+	return nil
+}
+
+func MakePing(rw *bufio.ReadWriter) error {
+	//TODO use messageencoder
+	msg := protocol.EncodeMsg(protocol.REQ, protocol.CMD_PING, "")
+	fmt.Println("send ", msg)
+	n, err := rw.WriteString(msg)
+	if err != nil {
+		return errors.Wrap(err, "Could not write data ("+strconv.Itoa(n)+" bytes written)")
+	}
+
+	err = rw.Flush()
+	rcvmsg := protocol.ReadMsg(rw)
+
+	log.Println("reply ", rcvmsg)
 
 	return nil
 }
@@ -179,6 +190,15 @@ func main() {
 		//TODO read secret from cmd
 		kp := crypto.PairFromSecret("test")
 		log.Println("keypair ", kp)
+
+	} else if *optionPtr == "ping" {
+		log.Println("ping")
+		//protocol.Server_address
+		rw, err := client(configuration.ServerAddress)
+		if err != nil {
+			log.Println("Error:", errors.WithStack(err))
+		}
+		MakePing(rw)
 
 	} else if *optionPtr == "getbalance" {
 		log.Println("getbalance")
