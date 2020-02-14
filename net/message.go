@@ -17,10 +17,16 @@ import (
 const (
 	REQ = "REQ"
 	REP = "REP"
-	//CMD = "RANDOM_ACCOUNT"
 	//PUB
 	//SUB
 	//HANDSHAKE
+)
+
+const (
+	CMD_PING           = "PING"    //ping
+	CMD_TX             = "TX"      //send transaction
+	CMD_BALANCE        = "BALANCE" //get balance of account
+	CMD_RANDOM_ACCOUNT = "RANACC"  //get some random account
 )
 
 //TODO proper enums

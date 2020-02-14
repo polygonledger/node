@@ -94,12 +94,10 @@ func Getbalance(rw *bufio.ReadWriter) error {
 }
 
 func MakePing(rw *bufio.ReadWriter) error {
-	//TODO use messageencoder
-	req_msg := protocol.EncodeMsg(protocol.REQ, protocol.CMD_PING, "")
-	fmt.Println("send ", req_msg)
-
+	emptydata := ""
+	req_msg := protocol.EncodeMsg(protocol.REQ, protocol.CMD_PING, emptydata)
+	fmt.Println("request ", req_msg)
 	resp_msg := protocol.RequestReply(rw, req_msg)
-
 	log.Println("reply ", resp_msg)
 
 	return nil

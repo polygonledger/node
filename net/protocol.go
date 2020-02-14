@@ -20,15 +20,11 @@ const (
 	Server_address string = "127.0.0.1"
 	Port                  = ":8888"
 	//TODO move to message type
-	CMD_PING                  = "PING"
-	CMD_TX                    = "TX"
-	CMD_RANDOM_ACCOUNT        = "RANACC"
-	CMD_BALANCE               = "BALANCE" //get balance of account
-	Genesis_Address    string = "P0614579c42f2"
-	DELIM              byte   = '|'
-	DELIM_HEAD         byte   = '#'
-	EMPTY_MSG                 = ""
-	ERROR_READ                = "error_read"
+	Genesis_Address string = "P0614579c42f2"
+	DELIM           byte   = '|'
+	DELIM_HEAD      byte   = '#'
+	EMPTY_MSG              = ""
+	ERROR_READ             = "error_read"
 )
 
 //---- protocol layer ------
@@ -87,9 +83,11 @@ func EncodeReply(resp string) string {
 }
 
 func EncodeMessageTx(txJson []byte) string {
-	emptyData := ""
+	//emptyData := ""
 	msgCmd := "TX"
-	msg := REQ + string(DELIM_HEAD) + msgCmd + string(DELIM_HEAD) + string(txJson) + string(DELIM_HEAD) + emptyData + string(DELIM)
+	//TODO check
+	//msg := REQ + string(DELIM_HEAD) + msgCmd + string(DELIM_HEAD) + string(txJson) + string(DELIM_HEAD) + emptyData + string(DELIM)
+	msg := EncodeMsg(REQ, msgCmd, string(txJson))
 	return msg
 }
 
@@ -173,23 +171,6 @@ func ConstructMessage(cmd string) string {
 /*
 request account address
 */
-func RequestTest(rw *bufio.ReadWriter) error {
-	log.Println("RequestTest")
-	a := Message{Command: "test"}
-	log.Printf("msg: \n%#v\n", a)
-	enc := gob.NewEncoder(rw)
-	err := enc.Encode(a)
-	rw.WriteString(string(DELIM))
-	err = rw.Flush()
-	if err != nil {
-		return errors.Wrap(err, "Flush failed")
-	}
-	return err
-}
-
-/*
-request account address
-*/
 func RequestAccount(rw *bufio.ReadWriter) error {
 	log.Println("RequestAccount ", CMD_RANDOM_ACCOUNT)
 	msg := ConstructMessage(CMD_RANDOM_ACCOUNT)
@@ -206,26 +187,7 @@ func ReceiveAccount(rw *bufio.ReadWriter) error {
 }
 
 /*
-send message
-*/
-func SendMessage(rw *bufio.ReadWriter) error {
-
-	//Command
-	msg := "data" + string(DELIM)
-	//log.Println("?? ", msg)
-	n, err := rw.WriteString(msg)
-	if err != nil {
-		return errors.Wrap(err, "Could not write data ("+strconv.Itoa(n)+" bytes written)")
-	}
-
-	err = rw.Flush()
-	if err != nil {
-		return errors.Wrap(err, "Flush failed")
-	}
-	return nil
-}
-
-/*
+//TODO old
 sends account address
 */
 func SendAccount(rw *bufio.ReadWriter) error {
@@ -238,7 +200,7 @@ func SendAccount(rw *bufio.ReadWriter) error {
 	//Command
 
 	msg := CMD_RANDOM_ACCOUNT + string(DELIM)
-	//log.Println("?? ", msg)
+
 	n, err := rw.WriteString(msg)
 	if err != nil {
 		return errors.Wrap(err, "Could not write GOB data ("+strconv.Itoa(n)+" bytes written)")

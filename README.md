@@ -6,9 +6,9 @@ architecture: accounts, not UTXO. transaction types, scripting through transacti
 
 current status: experimental client-server protocol. once finalized move to peer-to-peer
 
-## run
+## run node
 
-server:
+node:
 ```go run server.go```
 
 the server will run a node and a webserver at the same time
