@@ -74,6 +74,7 @@ func ParseMessage(msgString string) Message {
 }
 
 func ReadMsg(rw *bufio.ReadWriter) string {
+	//TODO handle err
 	msg, _ := rw.ReadString(DELIM)
 	msg = strings.Trim(msg, string(DELIM))
 	return msg

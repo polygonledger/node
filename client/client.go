@@ -10,7 +10,6 @@ import (
 	"net"
 	"os"
 	"strconv"
-	"strings"
 
 	"github.com/pkg/errors"
 
@@ -44,8 +43,7 @@ func MakeRandomTx(rw *bufio.ReadWriter) error {
 	//make a random transaction by requesting random account from node
 	//get random account
 
-	//TODO use messageencoder
-	msg := protocol.REQ + string(protocol.DELIM_HEAD) + protocol.CMD_RANDOM_ACCOUNT + string(protocol.DELIM_HEAD) + "emptydata" + string(protocol.DELIM)
+	msg := protocol.EncodeMsg(protocol.REQ, protocol.CMD_RANDOM_ACCOUNT, "emptydata")
 
 	n, err := rw.WriteString(msg)
 	if err != nil {
@@ -54,8 +52,8 @@ func MakeRandomTx(rw *bufio.ReadWriter) error {
 
 	err = rw.Flush()
 
-	msg2, err2 := rw.ReadString(protocol.DELIM)
-	msg2 = strings.Trim(msg2, string(protocol.DELIM))
+	msg2 := protocol.ReadMsg(rw)
+
 	var a block.Account
 	dataBytes := []byte(msg2)
 	if err := json.Unmarshal(dataBytes, &a); err != nil {
@@ -63,9 +61,7 @@ func MakeRandomTx(rw *bufio.ReadWriter) error {
 	}
 	log.Print(" account key ", a.AccountKey)
 	if err != nil {
-		log.Println("Failed ", err2)
-		//log.Println(err.)
-		//break
+		log.Println("Failed ", err)
 	}
 
 	//use this random account to send coins from
@@ -84,13 +80,8 @@ func MakeRandomTx(rw *bufio.ReadWriter) error {
 
 	err = rw.Flush()
 
-	msg4, err2 := rw.ReadString(protocol.DELIM)
+	msg4 := protocol.ReadMsg(rw)
 	log.Print("reply msg ", msg4)
-	if err != nil {
-		log.Println("Failed ", err2)
-		//log.Println(err.)
-		//break
-	}
 
 	return nil
 }
@@ -101,12 +92,8 @@ func Getbalance(rw *bufio.ReadWriter) error {
 	//data := "P4e968b02dd42"
 	txJson, _ := json.Marshal(block.Account{AccountKey: data})
 	msg := protocol.EncodeMsg(protocol.REQ, protocol.CMD_BALANCE, string(txJson))
-	n, err := rw.WriteString(msg)
-	if err != nil {
-		return errors.Wrap(err, "Could not write JSON data ("+strconv.Itoa(n)+" bytes written)")
-	}
+	protocol.WritePipe(rw, msg)
 
-	err = rw.Flush()
 	rcvmsg := protocol.ReadMsg(rw)
 
 	x, _ := strconv.Atoi(rcvmsg)

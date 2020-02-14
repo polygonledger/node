@@ -17,7 +17,7 @@ import (
 const (
 	REQ = "REQ"
 	REP = "REP"
-	CMD = "RANDOM_ACCOUNT"
+	//CMD = "RANDOM_ACCOUNT"
 	//PUB
 	//SUB
 	//HANDSHAKE
