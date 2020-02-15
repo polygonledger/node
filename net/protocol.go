@@ -23,7 +23,7 @@ const (
 	Genesis_Address string = "P0614579c42f2"
 	DELIM           byte   = '|'
 	DELIM_HEAD      byte   = '#'
-	EMPTY_MSG              = ""
+	EMPTY_MSG              = "EMPTY"
 	ERROR_READ             = "error_read"
 )
 
