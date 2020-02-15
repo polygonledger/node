@@ -6,6 +6,7 @@ package main
 import (
 	"bufio"
 	"encoding/hex"
+	"encoding/json"
 	"flag"
 	"fmt"
 	"io/ioutil"
@@ -13,6 +14,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/polygonledger/node/block"
 	cryptoutil "github.com/polygonledger/node/crypto"
 )
 
@@ -86,6 +88,31 @@ func main() {
 
 		sighex := hex.EncodeToString(signature.Serialize())
 		log.Println("sighex ", sighex)
+	} else if *optionPtr == "createtx" {
+		reader := bufio.NewReader(os.Stdin)
+		fmt.Print("Enter sender: ")
+		sender, _ := reader.ReadString('\n')
+		sender = strings.Trim(sender, string('\n'))
+		s := block.AccountFromString(sender)
+		fmt.Print("Enter receiver: ")
+		receiver, _ := reader.ReadString('\n')
+		receiver = strings.Trim(receiver, string('\n'))
+		r := block.AccountFromString(receiver)
+
+		tx := block.Tx{Nonce: 1, Amount: 0, Sender: s, Receiver: r}
+
+		kp := readKeys("keys.txt")
+		signature := cryptoutil.SignTx(tx, kp)
+
+		//sighex := hex.EncodeToString(signature.Serialize())
+		tx.Signature = signature
+
+		txJson, _ := json.Marshal(tx)
+		//write to file
+		log.Println(txJson)
+
+		ioutil.WriteFile("tx.json", []byte(txJson), 0644)
+
 	} else if *optionPtr == "verify" {
 		reader := bufio.NewReader(os.Stdin)
 		fmt.Print("Enter message to verify: ")

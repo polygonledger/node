@@ -1,6 +1,5 @@
 package main
 
-//
 //server should run via DNS
 //nodexample.com
 
@@ -8,6 +7,8 @@ package main
 //server receives tx messages
 //adds tx messages to a pool
 //block gets created every 10 secs
+
+//publish peer list
 
 //Delegates
 //rounds
@@ -18,23 +19,22 @@ package main
 
 import (
 	"bufio"
+	"encoding/json"
 	"fmt"
 	"log"
 	"net"
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/pkg/errors"
 
+	"github.com/polygonledger/node/block"
 	chain "github.com/polygonledger/node/chain"
 	protocol "github.com/polygonledger/node/net"
 )
 
-/*
-Incoming connections
-*/
-
-// starts listening
+// start listening on tcp and put connection into go routine
 func ListenAll() error {
 	log.Println("listen all")
 	var err error
@@ -54,13 +54,12 @@ func ListenAll() error {
 			continue
 		}
 		log.Println("Handle incoming messages")
-		go handleMessagesChan(conn)
+		go handleMessagesConn(conn)
 	}
 }
 
 func Reply(rw *bufio.ReadWriter, resp string) {
 	response := protocol.EncodeReply(resp)
-	log.Println(">> ", response)
 	n, err := rw.WriteString(response)
 	if err != nil {
 		log.Println(err, n)
@@ -97,17 +96,39 @@ func handleMsg(msg_in_chan chan string, msg_out_chan chan string) {
 	fmt.Println("msg type ", msg.MessageType)
 
 	if msg.MessageType == protocol.REQ {
-		log.Println("Request")
+		log.Println("handle REQ")
 		log.Println("Handle ", msg.Command)
 
 		switch msg.Command {
 
 		case protocol.CMD_PING:
 			log.Println("PING PONG")
-			msg_out_chan <- "PONG"
+			reply := "PONG"
+			msg_out_chan <- reply
 
-			// case protocol.CMD_TX:
-			// 	log.Println("Handle tx")
+		case protocol.CMD_BALANCE:
+			log.Println("Handle balance")
+
+			dataBytes := msg.Data
+			log.Println("data ", dataBytes)
+			var account block.Account
+
+			if err := json.Unmarshal(dataBytes, &account); err != nil {
+				panic(err)
+			}
+			log.Println("balance for account ", account)
+
+			balance := chain.Accounts[account]
+			s := strconv.Itoa(balance)
+			msg_out_chan <- s
+
+		case protocol.CMD_FAUCET:
+			var faucettx block.Tx
+			//send money to specified address
+			log.Println(faucettx.Amount)
+
+		case protocol.CMD_TX:
+			log.Println("Handle tx")
 
 			// 	dataBytes := msg.Data
 			// 	log.Println("data ", dataBytes)
@@ -131,23 +152,6 @@ func handleMsg(msg_in_chan chan string, msg_out_chan chan string) {
 			// 	//log.Println("amount ", tx.Amount)
 			// 	//n, err := rw.WriteString("response " + strconv.Itoa(tx.Amount) + string(protocol.DELIM))
 
-			// case protocol.CMD_BALANCE:
-			// 	log.Println("Handle balance")
-
-			// 	dataBytes := msg.Data
-			// 	log.Println("data ", dataBytes)
-			// 	var account block.Account
-
-			// 	if err := json.Unmarshal(dataBytes, &account); err != nil {
-			// 		panic(err)
-			// 	}
-			// 	log.Println("balance for account ", account)
-
-			// 	balance := chain.Accounts[account]
-			// 	s := strconv.Itoa(balance)
-			// 	//log.Println(s)
-			// 	Reply(rw, s)
-
 			// 	//log.Println("amount ", tx.Amount)
 			// 	//n, err := rw.WriteString("response " + strconv.Itoa(tx.Amount) + string(protocol.DELIM))
 
@@ -155,11 +159,55 @@ func handleMsg(msg_in_chan chan string, msg_out_chan chan string) {
 	}
 }
 
-func handleMessagesChan(conn net.Conn) {
+func requestReplyLoop(rw *bufio.ReadWriter, msg_in_chan chan string, msg_out_chan chan string) {
 
-	//msg_in_chan := make(chan string)
-	//go putMsg(msg_in_chan)
+	//continously read
+	for {
+		//REQUEST<>REPLY protocol only so far
 
+		// read from network
+		msgString := protocol.ReadStream(rw)
+		log.Print("Receive message ", msgString)
+
+		//put in the channel
+		go putMsg(msg_in_chan, msgString)
+
+		//handle in channel and put reply in msg_out channel
+		go handleMsg(msg_in_chan, msg_out_chan)
+
+		//take from channel and send over network
+		reply := <-msg_out_chan
+		fmt.Println("msg out ", reply)
+		Reply(rw, reply)
+
+	}
+}
+
+// func publishLoop(rw *bufio.ReadWriter, msg_in_chan chan string, msg_out_chan chan string) {
+
+// 	//continously publish
+// 	for {
+
+// 		//resp := "testout"
+// 		t := protocol.TimeMessage{Timestamp: time.Now()}
+// 		msgJson, _ := json.Marshal(t)
+// 		response := protocol.EncodeReply(string(msgJson))
+// 		log.Println(response)
+// 		n, err := rw.WriteString(response)
+// 		if err != nil {
+// 			log.Println(err, n)
+// 		}
+// 		rw.Flush()
+
+// 		time.Sleep(2 * time.Second)
+
+// 	}
+// }
+
+//handle connections
+func handleMessagesConn(conn net.Conn) {
+
+	//TODO use msg types
 	msg_in_chan := make(chan string)
 	msg_out_chan := make(chan string)
 
@@ -167,23 +215,15 @@ func handleMessagesChan(conn net.Conn) {
 	//could add max listen
 	//timeoutDuration := 5 * time.Second
 	//conn.SetReadDeadline(time.Now().Add(timeoutDuration))
-	defer conn.Close()
-	for {
 
-		// read
-		msgString := protocol.ReadStream(rw)
-		//msg := ReadMessage(rw)
-		log.Print("Receive message ", msgString)
+	//TODO
+	//when close?
+	//defer conn.Close()
 
-		go putMsg(msg_in_chan, msgString)
+	go requestReplyLoop(rw, msg_in_chan, msg_out_chan)
 
-		go handleMsg(msg_in_chan, msg_out_chan)
+	//go publishLoop(rw, msg_in_chan, msg_out_chan)
 
-		x := <-msg_out_chan
-		fmt.Println("msg out ", x)
-		Reply(rw, x)
-
-	}
 }
 
 // handle ranaccount request

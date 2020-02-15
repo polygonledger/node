@@ -2,6 +2,7 @@ package net
 
 import (
 	"fmt"
+	"time"
 
 	block "github.com/polygonledger/node/block"
 )
@@ -24,9 +25,10 @@ const (
 
 const (
 	CMD_PING           = "PING"    //ping
-	CMD_TX             = "TX"      //send transaction
 	CMD_BALANCE        = "BALANCE" //get balance of account
-	CMD_RANDOM_ACCOUNT = "RANACC"  //get some random account
+	CMD_FAUCET         = "FAUCET"
+	CMD_TX             = "TX"     //send transaction
+	CMD_RANDOM_ACCOUNT = "RANACC" //get some random account
 )
 
 //TODO proper enums
@@ -47,6 +49,10 @@ type Message struct {
 	Command     string //Specific message command
 	Data        []byte
 	//Signature       btcec.Signature
+}
+
+type TimeMessage struct {
+	Timestamp time.Time
 }
 
 func EmptyMsg() Message {

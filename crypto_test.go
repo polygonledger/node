@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/hex"
+	"encoding/json"
 	"testing"
 
 	"github.com/btcd/chaincfg/chainhash"
@@ -113,14 +114,32 @@ func TestGenkeys(t *testing.T) {
 func TestSignTx(t *testing.T) {
 	keypair := crypto.PairFromSecret("test")
 	var tx block.Tx
-	s := block.AccountFromString("")
-	tx = block.Tx{Nonce: 0, Amount: 0, Sender: s, Receiver: s}
+	s := block.AccountFromString("Pa033f6528cc1")
+	r := s //TODO
+	tx = block.Tx{Nonce: 0, Amount: 0, Sender: s, Receiver: r}
 	signature := crypto.SignTx(tx, keypair)
 
-	//TODO
 	sighex := hex.EncodeToString(signature.Serialize())
 	if sighex == "" {
 		t.Error("hex empty")
+	}
+
+	sign := crypto.SignatureFromHex(sighex)
+
+	txJson, _ := json.Marshal(tx)
+	verified := crypto.VerifyMessageSignPub(sign, keypair.PubKey, string(txJson))
+
+	if !verified {
+		t.Error("verify tx fail")
+	}
+
+	tx = block.Tx{Nonce: 1, Amount: 0, Sender: s, Receiver: r}
+	txJson, _ = json.Marshal(tx)
+
+	verified = crypto.VerifyMessageSignPub(sign, keypair.PubKey, string(txJson))
+
+	if verified {
+		t.Error("verify should fail")
 	}
 
 }

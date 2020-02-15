@@ -79,10 +79,11 @@ func MakeRandomTx(rw *bufio.ReadWriter) error {
 
 func Getbalance(rw *bufio.ReadWriter) error {
 	//TODO use messageencoder
-	data := "P0614579c42f2"
+	data := "P5d2a02fc95f9"
 	//data := "P4e968b02dd42"
 	txJson, _ := json.Marshal(block.Account{AccountKey: data})
 	msg := protocol.EncodeMsg(protocol.REQ, protocol.CMD_BALANCE, string(txJson))
+	fmt.Println("msg ", msg)
 	protocol.WritePipe(rw, msg)
 
 	rcvmsg := protocol.ReadMsg(rw)
@@ -157,6 +158,20 @@ func main() {
 	flag.Parse()
 	fmt.Println("option:", *optionPtr)
 
+	rw, err := client(configuration.ServerAddress)
+	if err != nil {
+		log.Println("Error:", errors.WithStack(err))
+	}
+
+	// //sub loop
+	// for {
+	// 	log.Println("..")
+	// 	msg, _ := rw.ReadString(protocol.DELIM)
+	// 	log.Println(msg)
+	// 	msg = strings.Trim(msg, string(protocol.DELIM))
+	// 	time.Sleep(2 * time.Second)
+	// }
+
 	if *optionPtr == "createkeypair" {
 		//TODO read secret from cmd
 		kp := crypto.PairFromSecret("test")
@@ -165,26 +180,15 @@ func main() {
 	} else if *optionPtr == "ping" {
 		log.Println("ping")
 		//protocol.Server_address
-		rw, err := client(configuration.ServerAddress)
-		if err != nil {
-			log.Println("Error:", errors.WithStack(err))
-		}
 		MakePing(rw)
 
 	} else if *optionPtr == "getbalance" {
 		log.Println("getbalance")
 		//protocol.Server_address
-		rw, err := client(configuration.ServerAddress)
-		if err != nil {
-			log.Println("Error:", errors.WithStack(err))
-		}
+
 		Getbalance(rw)
 
 	} else if *optionPtr == "randomtx" {
-		rw, err := client(configuration.ServerAddress)
-		if err != nil {
-			log.Println("Error:", errors.WithStack(err))
-		}
 		//log.Println("Client done")
 		err = MakeRandomTx(rw)
 		return
