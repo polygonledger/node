@@ -181,7 +181,7 @@ func main() {
 		Getbalance(rw)
 
 	} else if *optionPtr == "randomtx" {
-		rw, err := client(protocol.Server_address)
+		rw, err := client(configuration.ServerAddress)
 		if err != nil {
 			log.Println("Error:", errors.WithStack(err))
 		}

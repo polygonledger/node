@@ -85,7 +85,14 @@ func ReadMessage(rw *bufio.ReadWriter) protocol.Message {
 	return msg
 }
 
+func putChan(msg protocol.Message, out chan<- protocol.Message) {
+	out <- msg
+}
+
 func handleMessagesChan(conn net.Conn) {
+
+	out := make(chan protocol.Message)
+
 	rw := bufio.NewReadWriter(bufio.NewReader(conn), bufio.NewWriter(conn))
 	//could add max listen
 	//timeoutDuration := 5 * time.Second
@@ -96,6 +103,12 @@ func handleMessagesChan(conn net.Conn) {
 		// read
 		log.Print("Receive message")
 		msg := ReadMessage(rw)
+
+		//TODO all via chans
+		go putChan(msg, out)
+
+		fmt.Println("chan ", <-out)
+
 		if msg.MessageType == "" {
 			break
 		}
