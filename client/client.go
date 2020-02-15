@@ -192,6 +192,17 @@ func main() {
 		//log.Println("Client done")
 		err = MakeRandomTx(rw)
 		return
+	} else if *optionPtr == "pushtx" {
+		//read locally created tx file and push it to server
+		data, _ := ioutil.ReadFile("tx.json")
+		log.Println(string(data))
+		var tx block.Tx
+		if err := json.Unmarshal(data, &tx); err != nil {
+			panic(err)
+		}
+		log.Println(">> ", tx)
+
+		return
 	}
 
 }

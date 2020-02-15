@@ -40,7 +40,10 @@ func writeKeys(kp cryptoutil.Keypair, keysfile string) {
 	privHex := cryptoutil.PrivKeyToHex(kp.PrivKey)
 	log.Println("privHex ", privHex)
 
-	t := pubkeyHex + "\n" + privHex
+	address := cryptoutil.Address(pubkeyHex)
+
+	t := pubkeyHex + "\n" + privHex + "\n" + address
+
 	ioutil.WriteFile(keysfile, []byte(t), 0644)
 }
 
