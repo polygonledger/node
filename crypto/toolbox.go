@@ -127,6 +127,17 @@ func SignTx(tx block.Tx, keypair Keypair) btcec.Signature {
 	//fmt.Printf("Signature Verified? %v\n", verified)
 }
 
+func RemoveSigTx(tx block.Tx) block.Tx {
+	tx.Signature = ""
+	return tx
+}
+
+func RemovePubTx(tx block.Tx) block.Tx {
+	tx.SenderPubkey = ""
+	return tx
+}
+
+//OLD
 func CheckSignTxServer(tx block.Tx, keypair Keypair) bool {
 	//message := strconv.Itoa(tx.Id)
 	// message := fmt.Sprintf("%d", tx.Id)
@@ -150,4 +161,20 @@ func CheckSignTxServer(tx block.Tx, keypair Keypair) bool {
 	//fmt.Println("??? ", verify)
 	return true //verify
 
+}
+
+//TODO
+func VerifyTx(tx block.Tx) bool {
+
+	//public key
+
+	// sighex := tx.Signature
+	// sign := SignatureFromHex(sighex)
+	// tx = RemoveSigTx(tx)
+
+	// txJson, _ := json.Marshal(tx)
+	// verified := VerifyMessageSignPub(sign, keypair.PubKey, string(txJson))
+	// return verified
+	verified := false
+	return verified
 }

@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/hex"
 	"encoding/json"
+	"log"
 	"testing"
 
 	"github.com/btcd/chaincfg/chainhash"
@@ -112,34 +113,41 @@ func TestGenkeys(t *testing.T) {
 }
 
 func TestSignTx(t *testing.T) {
+	//sign
 	keypair := crypto.PairFromSecret("test")
 	var tx block.Tx
 	s := block.AccountFromString("Pa033f6528cc1")
 	r := s //TODO
 	tx = block.Tx{Nonce: 0, Amount: 0, Sender: s, Receiver: r}
-	signature := crypto.SignTx(tx, keypair)
 
+	signature := crypto.SignTx(tx, keypair)
 	sighex := hex.EncodeToString(signature.Serialize())
+
 	if sighex == "" {
 		t.Error("hex empty")
 	}
+	tx.Signature = sighex
 
-	sign := crypto.SignatureFromHex(sighex)
+	tx.SenderPubkey = crypto.PubKeyToHex(keypair.PubKey)
+
+	//verify
+
+	//remove sig
+
+	log.Println(tx.SenderPubkey)
+	getpubkey := crypto.PubKeyFromHex(tx.SenderPubkey)
+	log.Println(getpubkey)
+
+	gotsighex := tx.Signature
+	sign := crypto.SignatureFromHex(gotsighex)
+	tx = crypto.RemoveSigTx(tx)
+	tx = crypto.RemovePubTx(tx)
 
 	txJson, _ := json.Marshal(tx)
-	verified := crypto.VerifyMessageSignPub(sign, keypair.PubKey, string(txJson))
+	verified := crypto.VerifyMessageSignPub(sign, getpubkey, string(txJson))
 
 	if !verified {
 		t.Error("verify tx fail")
-	}
-
-	tx = block.Tx{Nonce: 1, Amount: 0, Sender: s, Receiver: r}
-	txJson, _ = json.Marshal(tx)
-
-	verified = crypto.VerifyMessageSignPub(sign, keypair.PubKey, string(txJson))
-
-	if verified {
-		t.Error("verify should fail")
 	}
 
 }

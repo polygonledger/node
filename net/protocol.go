@@ -3,6 +3,7 @@ package net
 import (
 	"bufio"
 	"encoding/gob"
+	"encoding/hex"
 	"fmt"
 	"log"
 	"math/rand"
@@ -129,14 +130,12 @@ func RandomTx(account_s block.Account) block.Tx {
 	log.Printf("randomAmount ", randomAmount)
 	log.Printf("randNonce ", randNonce)
 	testTx := block.Tx{Nonce: randNonce, Sender: account_s, Receiver: account_r, Amount: randomAmount}
-	testTx.Signature = cryptoutil.SignTx(testTx, kp)
+	sig := cryptoutil.SignTx(testTx, kp)
+	sighex := hex.EncodeToString(sig.Serialize())
+	testTx.Signature = sighex
 	log.Println(">> ran tx", testTx.Signature)
 	return testTx
 }
-
-// func ReadPipe(rw *bufio.ReadWriter) {
-
-// }
 
 func RequestReply(rw *bufio.ReadWriter, req_msg string) string {
 	//REQUEST

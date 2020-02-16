@@ -1,7 +1,5 @@
 package block
 
-import "github.com/btcd/btcec"
-
 //chain "github.com/polygonledger/node/chain"
 
 //potential TransactionTypes
@@ -16,12 +14,14 @@ const (
 )
 
 type Tx struct {
-	Id        [32]byte `json:"id"` //gets assigned when verified in a block
-	Nonce     int      `json:"Nonce"`
-	Amount    int      `json:"Amount"`
-	Sender    Account  //[32]byte
-	Receiver  Account  //[32]byte
-	Signature btcec.Signature
+	Id       [32]byte `json:"id"` //gets assigned when verified in a block
+	Nonce    int      `json:"Nonce"`
+	Amount   int      `json:"Amount"`
+	Sender   Account  //[32]byte
+	Receiver Account  //[32]byte
+
+	SenderPubkey string
+	Signature    string //hex string
 	//fee
 	//txtype
 	//timestamp
@@ -29,3 +29,5 @@ type Tx struct {
 	//confirmations
 	//height
 }
+
+//type TxSig struct {
