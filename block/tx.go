@@ -14,14 +14,14 @@ const (
 )
 
 type Tx struct {
-	Id       [32]byte `json:"id"` //gets assigned when verified in a block
-	Nonce    int      `json:"Nonce"`
-	Amount   int      `json:"Amount"`
-	Sender   Account  //[32]byte
-	Receiver Account  //[32]byte
+	Nonce    int     `json:"Nonce"`
+	Amount   int     `json:"Amount"`
+	Sender   Account //[32]byte
+	Receiver Account //[32]byte
 
 	SenderPubkey string
-	Signature    string //hex string
+	Signature    string   //hex string
+	Id           [32]byte `json:"id"` //gets assigned when verified in a block
 
 	//fee
 	//txtype

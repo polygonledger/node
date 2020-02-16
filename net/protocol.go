@@ -183,13 +183,3 @@ func ReceiveAccount(rw *bufio.ReadWriter) error {
 	log.Println("RequestAccount ", CMD_RANDOM_ACCOUNT)
 	return nil
 }
-
-/*
-//TODO old
-sends account address
-*/
-func SendAccount() {
-	//a := block.Account{AccountKey: "test"}
-	//msg := CMD_RANDOM_ACCOUNT + string(DELIM)
-
-}

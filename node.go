@@ -13,6 +13,7 @@ package main
 
 import (
 	"bufio"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -25,6 +26,7 @@ import (
 
 	"github.com/polygonledger/node/block"
 	chain "github.com/polygonledger/node/chain"
+	"github.com/polygonledger/node/crypto"
 	protocol "github.com/polygonledger/node/net"
 )
 
@@ -95,6 +97,9 @@ func handleMsg(msg_in_chan chan string, msg_out_chan chan string) {
 
 		switch msg.Command {
 
+		//TODO
+		//CMD_VALIDTX
+
 		case protocol.CMD_PING:
 			log.Println("PING PONG")
 			reply := "PONG"
@@ -110,16 +115,41 @@ func handleMsg(msg_in_chan chan string, msg_out_chan chan string) {
 			if err := json.Unmarshal(dataBytes, &account); err != nil {
 				panic(err)
 			}
-			log.Println("balance for account ", account)
+			log.Println("get balance for account ", account)
 
 			balance := chain.Accounts[account]
 			s := strconv.Itoa(balance)
 			msg_out_chan <- s
 
 		case protocol.CMD_FAUCET:
-			var faucettx block.Tx
 			//send money to specified address
-			log.Println(faucettx.Amount)
+
+			dataBytes := msg.Data
+			var account block.Account
+			if err := json.Unmarshal(dataBytes, &account); err != nil {
+				panic(err)
+			}
+			log.Println("faucet for ... ", account)
+
+			randNonce := 0
+
+			amount := 10
+
+			keypair := chain.GenesisKeys()
+			addr := crypto.Address(crypto.PubKeyToHex(keypair.PubKey))
+			Genesis_Account := block.AccountFromString(addr)
+
+			tx := block.Tx{Nonce: randNonce, Amount: amount, Sender: Genesis_Account, Receiver: account, SenderPubkey: "", Signature: ""}
+			log.Println("tx >>> ", tx)
+
+			signature := crypto.SignTx(tx, keypair)
+			sighex := hex.EncodeToString(signature.Serialize())
+
+			tx.Signature = sighex
+			tx.SenderPubkey = crypto.PubKeyToHex(keypair.PubKey)
+
+			resp := chain.HandleTx(tx)
+			log.Println("resp > ", resp)
 
 		case protocol.CMD_TX:
 			log.Println("Handle tx")

@@ -8,6 +8,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"log"
 
 	"github.com/btcd/btcec"
 	"github.com/btcd/chaincfg/chainhash"
@@ -120,11 +121,8 @@ func SignTx(tx block.Tx, keypair Keypair) btcec.Signature {
 		fmt.Println(err)
 		//return
 	}
-	//fmt.Println("signature ", signature)
 	return *signature
 
-	//verified := signature.Verify(messageHash, &keypair.PubKey)
-	//fmt.Printf("Signature Verified? %v\n", verified)
 }
 
 func RemoveSigTx(tx block.Tx) block.Tx {
@@ -137,17 +135,17 @@ func RemovePubTx(tx block.Tx) block.Tx {
 	return tx
 }
 
-//TODO
 func VerifyTxSig(tx block.Tx) bool {
-	getpubkey := PubKeyFromHex(tx.SenderPubkey)
-	gotsighex := tx.Signature
-	sign := SignatureFromHex(gotsighex)
+	pubkey := PubKeyFromHex(tx.SenderPubkey)
+	sighex := tx.Signature
+	sign := SignatureFromHex(sighex)
 	//need to remove sig and pubkey for validation
 	tx = RemoveSigTx(tx)
 	tx = RemovePubTx(tx)
 
 	txJson, _ := json.Marshal(tx)
-	verified := VerifyMessageSignPub(sign, getpubkey, string(txJson))
+	log.Println("verify sig for tx ", string(txJson))
+	verified := VerifyMessageSignPub(sign, pubkey, string(txJson))
 	return verified
 
 }

@@ -19,9 +19,17 @@ var Accounts map[block.Account]int
 
 //TODO fix circular import
 const (
-	Genesis_Address string = "P0614579c42f2"
+	//Genesis_Address string = "P0614579c42f2"
+	Genesis_Address string = "P2e2bfb58c9db"
 	//Treasury_Address string = "PXXXXX"
 )
+
+//TODO
+func GenesisKeys() crypto.Keypair {
+	keypair := crypto.PairFromSecret("genesis")
+	return keypair
+
+}
 
 //testing
 func InitAccounts() {

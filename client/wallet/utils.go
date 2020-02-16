@@ -6,6 +6,7 @@ package main
 import (
 	"bufio"
 	"encoding/hex"
+	"encoding/json"
 	"flag"
 	"fmt"
 	"io/ioutil"
@@ -95,8 +96,6 @@ func main() {
 		//reader := bufio.NewReader(os.Stdin)
 		kp := readKeys("keys.txt")
 
-		// sender, _ := reader.ReadString('\n')
-		// sender = strings.Trim(sender, string('\n'))
 		pubk := cryptoutil.PubKeyToHex(kp.PubKey)
 		addr := cryptoutil.Address(pubk)
 		s := block.AccountFromString(addr)
@@ -115,22 +114,27 @@ func main() {
 
 		tx := block.Tx{Nonce: 1, Amount: amount_int, Sender: block.Account{addr}, Receiver: block.Account{recv}}
 		log.Println(tx)
+
+		signature := cryptoutil.SignTx(tx, kp)
+		sighex := hex.EncodeToString(signature.Serialize())
+
+		tx.Signature = sighex
+		tx.SenderPubkey = cryptoutil.PubKeyToHex(kp.PubKey)
+		log.Println(tx)
+
 		// fmt.Print("Enter receiver: ")
 		// receiver, _ := reader.ReadString('\n')
 		// receiver = strings.Trim(receiver, string('\n'))
 		// r := block.AccountFromString(receiver)
 
-		// kp := readKeys("keys.txt")
-		// signature := cryptoutil.SignTx(tx, kp)
-
 		// //sighex := hex.EncodeToString(signature.Serialize())
 		// tx.Signature = signature
 
-		// txJson, _ := json.Marshal(tx)
+		txJson, _ := json.Marshal(tx)
 		// //write to file
 		// log.Println(txJson)
 
-		// ioutil.WriteFile("tx.json", []byte(txJson), 0644)
+		ioutil.WriteFile("tx.json", []byte(txJson), 0644)
 
 	} else if *optionPtr == "verify" {
 		reader := bufio.NewReader(os.Stdin)

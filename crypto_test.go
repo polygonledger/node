@@ -125,7 +125,6 @@ func TestSignTx(t *testing.T) {
 		t.Error("hex empty")
 	}
 	tx.Signature = sighex
-
 	tx.SenderPubkey = crypto.PubKeyToHex(keypair.PubKey)
 
 	//verify

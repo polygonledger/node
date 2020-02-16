@@ -97,6 +97,21 @@ func Getbalance(rw *bufio.ReadWriter) error {
 	return nil
 }
 
+func GetFaucet(rw *bufio.ReadWriter) error {
+	reader := bufio.NewReader(os.Stdin)
+	fmt.Print("Enter address: ")
+	addr, _ := reader.ReadString('\n')
+	addr = strings.Trim(addr, string('\n'))
+
+	txJson, _ := json.Marshal(block.Account{AccountKey: addr})
+	msg := protocol.EncodeMsg(protocol.REQ, protocol.CMD_FAUCET, string(txJson))
+	protocol.WritePipe(rw, msg)
+	rcvmsg := protocol.ReadMsg(rw)
+	log.Println("account ", rcvmsg)
+
+	return nil
+}
+
 func MakePing(rw *bufio.ReadWriter) error {
 	emptydata := ""
 	req_msg := protocol.EncodeMsg(protocol.REQ, protocol.CMD_PING, emptydata)
@@ -195,7 +210,9 @@ func main() {
 		Getbalance(rw)
 
 	} else if *optionPtr == "faucet" {
+		log.Println("faucet")
 		//get coins
+		GetFaucet(rw)
 
 	} else if *optionPtr == "randomtx" {
 		err = MakeRandomTx(rw)
