@@ -97,29 +97,41 @@ func Getbalance(rw *bufio.ReadWriter) error {
 	return nil
 }
 
-func GetFaucet(rw *bufio.ReadWriter) error {
+//get money from faucet
+func GetFaucetOld(rw *bufio.ReadWriter) error {
 	reader := bufio.NewReader(os.Stdin)
 	fmt.Print("Enter address: ")
 	addr, _ := reader.ReadString('\n')
 	addr = strings.Trim(addr, string('\n'))
 
 	accountJson, _ := json.Marshal(block.Account{AccountKey: addr})
-	msg := protocol.EncodeMsg(protocol.REQ, protocol.CMD_FAUCET, string(accountJson))
-	protocol.WritePipe(rw, msg)
+	req_msg := protocol.EncodeMsg(protocol.REQ, protocol.CMD_FAUCET, string(accountJson))
+	protocol.WritePipe(rw, req_msg)
 	//rcvmsg := protocol.ReadMsg(rw)
 	//log.Println("account ", rcvmsg)
 
 	return nil
 }
 
-func MakePing(rw *bufio.ReadWriter) error {
-	emptydata := ""
-	req_msg := protocol.EncodeMsg(protocol.REQ, protocol.CMD_PING, emptydata)
-	fmt.Println("request ", req_msg)
-	resp_msg := protocol.RequestReply(rw, req_msg)
-	log.Println("reply ", resp_msg)
+func GetFaucet(msg_in_chan chan string, msg_out_chan chan string) error {
+	reader := bufio.NewReader(os.Stdin)
+	fmt.Print("Enter address: ")
+	addr, _ := reader.ReadString('\n')
+	addr = strings.Trim(addr, string('\n'))
+
+	accountJson, _ := json.Marshal(block.Account{AccountKey: addr})
+	req_msg := protocol.EncodeMsg(protocol.REQ, protocol.CMD_FAUCET, string(accountJson))
+	protocol.RequestReplyChan(req_msg, msg_in_chan, msg_out_chan)
+	//log.Println("resp ", resp)
 
 	return nil
+}
+
+func MakePing(msg_in_chan chan string, msg_out_chan chan string) {
+	emptydata := ""
+	req_msg := protocol.EncodeMsg(protocol.REQ, protocol.CMD_PING, emptydata)
+	resp := protocol.RequestReplyChan(req_msg, msg_in_chan, msg_out_chan)
+	log.Println("resp ", resp)
 }
 
 func client(ip string) (*bufio.ReadWriter, error) {
@@ -149,6 +161,21 @@ func readdns() {
 	// 	fmt.Printf(domain+". IN A %s\n", ip.String())
 	// }
 
+}
+
+func requestLoop(rw *bufio.ReadWriter, msg_in_chan chan string, msg_out_chan chan string) {
+	for {
+
+		//take from channel and request
+		request := <-msg_in_chan
+		fmt.Println("request ", request)
+
+		resp_msg := protocol.RequestReply(rw, request)
+		fmt.Println("resp_msg ", resp_msg)
+
+		msg_out_chan <- resp_msg
+
+	}
 }
 
 /*
@@ -193,6 +220,10 @@ func main() {
 	// 	time.Sleep(2 * time.Second)
 	// }
 
+	msg_in_chan := make(chan string)
+	msg_out_chan := make(chan string)
+	go requestLoop(rw, msg_in_chan, msg_out_chan)
+
 	if *optionPtr == "createkeypair" {
 		//TODO read secret from cmd
 		kp := crypto.PairFromSecret("test")
@@ -201,7 +232,7 @@ func main() {
 	} else if *optionPtr == "ping" {
 		log.Println("ping")
 		//protocol.Server_address
-		MakePing(rw)
+		MakePing(msg_in_chan, msg_out_chan)
 
 	} else if *optionPtr == "getbalance" {
 		log.Println("getbalance")
@@ -212,7 +243,8 @@ func main() {
 	} else if *optionPtr == "faucet" {
 		log.Println("faucet")
 		//get coins
-		GetFaucet(rw)
+		//GetFaucet(rw)
+		GetFaucet(msg_in_chan, msg_out_chan)
 
 	} else if *optionPtr == "randomtx" {
 		err = MakeRandomTx(rw)

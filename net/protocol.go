@@ -136,6 +136,7 @@ func RandomTx(account_s block.Account) block.Tx {
 	return testTx
 }
 
+//TODO convert to chan
 func RequestReply(rw *bufio.ReadWriter, req_msg string) string {
 	//REQUEST
 	WritePipe(rw, req_msg)
@@ -182,4 +183,11 @@ request account address
 func ReceiveAccount(rw *bufio.ReadWriter) error {
 	log.Println("RequestAccount ", CMD_RANDOM_ACCOUNT)
 	return nil
+}
+
+//generic request<->reply
+func RequestReplyChan(request string, msg_in_chan chan string, msg_out_chan chan string) string {
+	msg_in_chan <- request
+	resp := <-msg_out_chan
+	return resp
 }

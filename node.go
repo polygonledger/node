@@ -147,8 +147,10 @@ func handleMsg(msg_in_chan chan string, msg_out_chan chan string) {
 			//tx.SenderPubkey = crypto.PubKeyToHex(keypair.PubKey)
 
 			tx = crypto.SignTxAdd(tx, keypair)
-			resp := chain.HandleTx(tx)
-			log.Println("resp > ", resp)
+			reply := chain.HandleTx(tx)
+			log.Println("resp > ", reply)
+
+			msg_out_chan <- reply
 
 		case protocol.CMD_TX:
 			log.Println("Handle tx")
@@ -184,7 +186,7 @@ func handleMsg(msg_in_chan chan string, msg_out_chan chan string) {
 
 func requestReplyLoop(rw *bufio.ReadWriter, msg_in_chan chan string, msg_out_chan chan string) {
 
-	//continously read
+	//continously read for requests and reply
 	for {
 		//REQUEST<>REPLY protocol only so far
 
