@@ -1,5 +1,8 @@
 package net
 
+// protocol layer
+//protocol operates on messages and channels not bytestreams
+
 import (
 	"bufio"
 	"encoding/hex"
@@ -27,7 +30,6 @@ const (
 	ERROR_READ             = "error_read"
 )
 
-//---- protocol layer ------
 //given a sream read from it
 //TODO proper error handling
 func ReadStream(rw *bufio.ReadWriter) string {
@@ -50,7 +52,7 @@ func ReadStream(rw *bufio.ReadWriter) string {
 //we have a message string and will parse it to a message struct
 //delimiters of two kind:
 //* DELIM for delimiting the entire message
-//* DELIM_
+//* DELIM_HEAD
 //currently we employ delimiters instead of byte encoding, so the size of messages is unlimited
 //can however easily fix by adding size to header and reject messages larger than maximum size
 func ParseMessage(msgString string) Message {
@@ -86,22 +88,11 @@ func EncodeMessageTx(txJson []byte) string {
 	//emptyData := ""
 	msgCmd := "TX"
 	//TODO check
-	//msg := REQ + string(DELIM_HEAD) + msgCmd + string(DELIM_HEAD) + string(txJson) + string(DELIM_HEAD) + emptyData + string(DELIM)
 	msg := EncodeMsg(REQ, msgCmd, string(txJson))
 	return msg
 }
 
-//Faucet => send fixed number of coins to specified address
-
-//getBlocks
-//registerPeer
-
-//pickRandomAccount
-
-//storeBalance
-
 //handlers TODO this is higher level and should be somewhere else
-
 func RandomTx(account_s block.Account) block.Tx {
 	// s := cryptoutil.RandomPublicKey()
 	// address_s := cryptoutil.Address(s)
@@ -167,9 +158,7 @@ func ConstructMessage(cmd string) string {
 	return msg
 }
 
-/*
-request account address
-*/
+//request account address
 func RequestAccount(rw *bufio.ReadWriter) error {
 	log.Println("RequestAccount ", CMD_RANDOM_ACCOUNT)
 	msg := ConstructMessage(CMD_RANDOM_ACCOUNT)
@@ -177,9 +166,7 @@ func RequestAccount(rw *bufio.ReadWriter) error {
 	return error
 }
 
-/*
-request account address
-*/
+//request account address
 func ReceiveAccount(rw *bufio.ReadWriter) error {
 	log.Println("RequestAccount ", CMD_RANDOM_ACCOUNT)
 	return nil

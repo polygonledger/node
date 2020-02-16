@@ -57,6 +57,9 @@ func txHash(tx block.Tx) [32]byte {
 //speed of evaluation should be way less than 1 msec
 //TODO check nonce
 func txValid(tx block.Tx) bool {
+
+	//TODO check receiver is valid address
+
 	sufficientBalance := Accounts[tx.Sender] >= tx.Amount
 	fmt.Println("sufficientBalance ", sufficientBalance)
 	// log.Println("sufficientBalance ", sufficientBalance, tx.Sender, Accounts[tx.Sender], tx.Amount)

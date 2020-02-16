@@ -44,7 +44,7 @@ func writeKeys(kp cryptoutil.Keypair, keysfile string) {
 	address := cryptoutil.Address(pubkeyHex)
 
 	t := pubkeyHex + "\n" + privHex + "\n" + address
-
+	//log.Println("address ", address)
 	ioutil.WriteFile(keysfile, []byte(t), 0644)
 }
 
@@ -73,7 +73,7 @@ func main() {
 
 	optionPtr := flag.String("option", "createkeys", "createkeys files")
 	flag.Parse()
-	fmt.Println("option:", *optionPtr)
+	fmt.Println("running utils with option:", *optionPtr)
 
 	if *optionPtr == "createkeys" {
 		createKeys()
@@ -99,7 +99,7 @@ func main() {
 		pubk := cryptoutil.PubKeyToHex(kp.PubKey)
 		addr := cryptoutil.Address(pubk)
 		s := block.AccountFromString(addr)
-		log.Println(s)
+		log.Println("using account ", s)
 
 		reader := bufio.NewReader(os.Stdin)
 		fmt.Print("Enter amount: ")
@@ -112,7 +112,7 @@ func main() {
 		recv, _ := reader.ReadString('\n')
 		recv = strings.Trim(recv, string('\n'))
 
-		tx := block.Tx{Nonce: 1, Amount: amount_int, Sender: block.Account{addr}, Receiver: block.Account{recv}}
+		tx := block.Tx{Nonce: 1, Amount: amount_int, Sender: block.Account{AccountKey: addr}, Receiver: block.Account{AccountKey: recv}}
 		log.Println(tx)
 
 		signature := cryptoutil.SignTx(tx, kp)
@@ -146,8 +146,7 @@ func main() {
 		fmt.Print("Enter signature to verify: ")
 		msgsig, _ := reader.ReadString('\n')
 		msgsig = strings.Trim(msgsig, string('\n'))
-		//x := "3045022100dd2781cc37edb84c5ed21b3d8fc03d49ebddf5647d23a9132eeea8bd2b951bd1022041519c47b77803d528d1b428ccb4d84a90ce3b67a22662d5feaa84c4521e5759"
-		//fmt.Println("??", msgsig[0], len(msgsig), len(x))
+		//examplesig := "3045022100dd2781cc37edb84c5ed21b3d8fc03d49ebddf5647d23a9132eeea8bd2b951bd1022041519c47b77803d528d1b428ccb4d84a90ce3b67a22662d5feaa84c4521e5759"
 
 		sign := cryptoutil.SignatureFromHex(msgsig)
 

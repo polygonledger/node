@@ -9,6 +9,11 @@ package main
 //adds tx messages to a pool
 //block gets created every 10 secs
 
+//getBlocks
+//registerPeer
+//pickRandomAccount
+//storeBalance
+
 //newWallet
 
 import (
@@ -94,6 +99,8 @@ func handleMsg(msg_in_chan chan string, msg_out_chan chan string) {
 
 		log.Println("Handle ", msg.Command)
 
+		//TODO is msg.command  valid?
+
 		switch msg.Command {
 
 		//TODO
@@ -137,20 +144,19 @@ func handleMsg(msg_in_chan chan string, msg_out_chan chan string) {
 			addr := crypto.Address(crypto.PubKeyToHex(keypair.PubKey))
 			Genesis_Account := block.AccountFromString(addr)
 
-			//tx := block.Tx{Nonce: randNonce, Amount: amount, Sender: Genesis_Account, Receiver: account, SenderPubkey: "", Signature: ""}
 			tx := block.Tx{Nonce: randNonce, Amount: amount, Sender: Genesis_Account, Receiver: account}
 			log.Println("tx >>> ", tx)
-
-			//signature := crypto.SignTx(tx, keypair)
-			//sighex := hex.EncodeToString(signature.Serialize())
-			//tx.Signature = sighex
-			//tx.SenderPubkey = crypto.PubKeyToHex(keypair.PubKey)
 
 			tx = crypto.SignTxAdd(tx, keypair)
 			reply := chain.HandleTx(tx)
 			log.Println("resp > ", reply)
 
 			msg_out_chan <- reply
+
+		case protocol.CMD_GETTXPOOL:
+			log.Println("get tx pool")
+
+		//case CMD_GETBLOCKS:
 
 		case protocol.CMD_TX:
 			log.Println("Handle tx")

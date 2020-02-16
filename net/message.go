@@ -29,6 +29,8 @@ const (
 	CMD_FAUCET         = "FAUCET"
 	CMD_TX             = "TX"     //send transaction
 	CMD_RANDOM_ACCOUNT = "RANACC" //get some random account
+	CMD_GETTXPOOL      = "GETTXPOOL"
+	//CMD_GETBLOCKS      = "GETBLOCKS"
 )
 
 //TODO proper enums
