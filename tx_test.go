@@ -2,9 +2,12 @@ package main
 
 import (
 	"encoding/json"
+	"log"
 	"testing"
 
 	"github.com/polygonledger/node/block"
+	chain "github.com/polygonledger/node/chain"
+	"github.com/polygonledger/node/crypto"
 )
 
 //basic block functions
@@ -37,5 +40,33 @@ func TestTxJson(t *testing.T) {
 	}
 	if newtx.Sender != tx.Sender {
 		t.Error("json marshal failed")
+	}
+}
+
+func TestSignTxBasic(t *testing.T) {
+
+	keypair := crypto.PairFromSecret("test")
+	pub := crypto.PubKeyToHex(keypair.PubKey)
+	account := block.Account{AccountKey: crypto.Address(pub)}
+
+	randNonce := 0
+	amount := 10
+
+	genkeypair := chain.GenesisKeys()
+	addr := crypto.Address(crypto.PubKeyToHex(genkeypair.PubKey))
+	Genesis_Account := block.AccountFromString(addr)
+
+	//{"Nonce":0,"Amount":0,"Sender":{"AccountKey":"Pa033f6528cc1"},"Receiver":{"AccountKey":"Pa033f6528cc1"},"SenderPubkey":"","Signature":"","id":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]}
+
+	tx := block.Tx{Nonce: randNonce, Amount: amount, Sender: Genesis_Account, Receiver: account, SenderPubkey: "", Signature: ""}
+
+	tx = crypto.SignTxAdd(tx, keypair)
+
+	log.Println(tx)
+
+	verified := crypto.VerifyTxSig(tx)
+
+	if !verified {
+		t.Error("verify tx fail")
 	}
 }

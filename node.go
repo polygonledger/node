@@ -13,7 +13,6 @@ package main
 
 import (
 	"bufio"
-	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -132,22 +131,22 @@ func handleMsg(msg_in_chan chan string, msg_out_chan chan string) {
 			log.Println("faucet for ... ", account)
 
 			randNonce := 0
-
 			amount := 10
 
 			keypair := chain.GenesisKeys()
 			addr := crypto.Address(crypto.PubKeyToHex(keypair.PubKey))
 			Genesis_Account := block.AccountFromString(addr)
 
-			tx := block.Tx{Nonce: randNonce, Amount: amount, Sender: Genesis_Account, Receiver: account, SenderPubkey: "", Signature: ""}
+			//tx := block.Tx{Nonce: randNonce, Amount: amount, Sender: Genesis_Account, Receiver: account, SenderPubkey: "", Signature: ""}
+			tx := block.Tx{Nonce: randNonce, Amount: amount, Sender: Genesis_Account, Receiver: account}
 			log.Println("tx >>> ", tx)
 
-			signature := crypto.SignTx(tx, keypair)
-			sighex := hex.EncodeToString(signature.Serialize())
+			//signature := crypto.SignTx(tx, keypair)
+			//sighex := hex.EncodeToString(signature.Serialize())
+			//tx.Signature = sighex
+			//tx.SenderPubkey = crypto.PubKeyToHex(keypair.PubKey)
 
-			tx.Signature = sighex
-			tx.SenderPubkey = crypto.PubKeyToHex(keypair.PubKey)
-
+			tx = crypto.SignTxAdd(tx, keypair)
 			resp := chain.HandleTx(tx)
 			log.Println("resp > ", resp)
 

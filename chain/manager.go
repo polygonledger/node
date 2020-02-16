@@ -38,7 +38,7 @@ func InitAccounts() {
 	log.Println("init accounts %i", len(Accounts))
 	//Genesis_Account := block.AccountFromString(Genesis_Address)
 	//set genesiss account, this is the amount that the genesis address receives
-	genesisAmount := 200
+	genesisAmount := 400
 	SetAccount(block.AccountFromString(Genesis_Address), genesisAmount)
 }
 
@@ -58,6 +58,7 @@ func txHash(tx block.Tx) [32]byte {
 //TODO check nonce
 func txValid(tx block.Tx) bool {
 	sufficientBalance := Accounts[tx.Sender] >= tx.Amount
+	fmt.Println("sufficientBalance ", sufficientBalance)
 	// log.Println("sufficientBalance ", sufficientBalance, tx.Sender, Accounts[tx.Sender], tx.Amount)
 	btxValid := sufficientBalance
 	//TODO and signature
@@ -76,12 +77,12 @@ func txValid(tx block.Tx) bool {
 
 func HandleTx(tx block.Tx) string {
 	//hash of timestamp is same, check lenght of bytes used??
-	timestamp := time.Now().Unix()
+	//timestamp := time.Now().Unix()
 	//b := []byte(append(string(timestamp)[:], string(tx.Nonce)[:]))
 
-	tx.Id = txHash(tx)
+	//tx.Id = txHash(tx)
 	//check timestamp
-	log.Println("hash %x time %s sign %x", tx.Id, timestamp, tx.Signature)
+	//log.Println("hash %x time %s sign %x", tx.Id, timestamp, tx.Signature)
 
 	//verify signature
 	//verified := signature.Verify(messageHash, &keypair.PubKey)
@@ -181,6 +182,7 @@ func GenesisTx() block.Tx {
 	return gTx
 }
 func MakeGenesisBlock() block.Block {
+
 	emptyhash := [32]byte{}
 	timestamp := time.Now() //.Unix()
 	b := []byte("banks on brink again")[:]
@@ -210,8 +212,8 @@ func ApplyBlock(block block.Block) {
 		applyTx(block.Txs[j])
 		//if success
 		//assign id
-		block.Txs[j].Id = txHash(block.Txs[j])
-		log.Println("hash ", block.Txs[j].Id)
+		//block.Txs[j].Id = txHash(block.Txs[j])
+		//og.Println("hash ", block.Txs[j].Id)
 	}
 }
 

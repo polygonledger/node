@@ -125,6 +125,17 @@ func SignTx(tx block.Tx, keypair Keypair) btcec.Signature {
 
 }
 
+//sign tx and add signature and pubkey
+func SignTxAdd(tx block.Tx, keypair Keypair) block.Tx {
+
+	signature := SignTx(tx, keypair)
+	sighex := hex.EncodeToString(signature.Serialize())
+
+	tx.Signature = sighex
+	tx.SenderPubkey = PubKeyToHex(keypair.PubKey)
+	return tx
+}
+
 func RemoveSigTx(tx block.Tx) block.Tx {
 	tx.Signature = ""
 	return tx
@@ -147,5 +158,10 @@ func VerifyTxSig(tx block.Tx) bool {
 	log.Println("verify sig for tx ", string(txJson))
 	verified := VerifyMessageSignPub(sign, pubkey, string(txJson))
 	return verified
+
+}
+
+//TODO
+func FaucetTx() {
 
 }

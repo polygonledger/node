@@ -103,11 +103,11 @@ func GetFaucet(rw *bufio.ReadWriter) error {
 	addr, _ := reader.ReadString('\n')
 	addr = strings.Trim(addr, string('\n'))
 
-	txJson, _ := json.Marshal(block.Account{AccountKey: addr})
-	msg := protocol.EncodeMsg(protocol.REQ, protocol.CMD_FAUCET, string(txJson))
+	accountJson, _ := json.Marshal(block.Account{AccountKey: addr})
+	msg := protocol.EncodeMsg(protocol.REQ, protocol.CMD_FAUCET, string(accountJson))
 	protocol.WritePipe(rw, msg)
-	rcvmsg := protocol.ReadMsg(rw)
-	log.Println("account ", rcvmsg)
+	//rcvmsg := protocol.ReadMsg(rw)
+	//log.Println("account ", rcvmsg)
 
 	return nil
 }
