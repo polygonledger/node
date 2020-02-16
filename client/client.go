@@ -79,17 +79,14 @@ func MakeRandomTx(rw *bufio.ReadWriter) error {
 }
 
 func Getbalance(rw *bufio.ReadWriter) error {
-	//TODO use messageencoder
 	reader := bufio.NewReader(os.Stdin)
 	fmt.Print("Enter address: ")
 	addr, _ := reader.ReadString('\n')
 	addr = strings.Trim(addr, string('\n'))
 
-	//data := "P9b2a9f21466b"
-	//data := "P4e968b02dd42"
 	txJson, _ := json.Marshal(block.Account{AccountKey: addr})
 	msg := protocol.EncodeMsg(protocol.REQ, protocol.CMD_BALANCE, string(txJson))
-	fmt.Println("msg ", msg)
+	//fmt.Println("msg ", msg)
 	protocol.WritePipe(rw, msg)
 
 	rcvmsg := protocol.ReadMsg(rw)
@@ -197,8 +194,10 @@ func main() {
 
 		Getbalance(rw)
 
+	} else if *optionPtr == "faucet" {
+		//get coins
+
 	} else if *optionPtr == "randomtx" {
-		//log.Println("Client done")
 		err = MakeRandomTx(rw)
 		return
 	} else if *optionPtr == "pushtx" {

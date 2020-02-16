@@ -6,12 +6,12 @@ package main
 import (
 	"bufio"
 	"encoding/hex"
-	"encoding/json"
 	"flag"
 	"fmt"
 	"io/ioutil"
 	"log"
 	"os"
+	"strconv"
 	"strings"
 
 	"github.com/polygonledger/node/block"
@@ -92,29 +92,45 @@ func main() {
 		sighex := hex.EncodeToString(signature.Serialize())
 		log.Println("sighex ", sighex)
 	} else if *optionPtr == "createtx" {
-		reader := bufio.NewReader(os.Stdin)
-		fmt.Print("Enter sender: ")
-		sender, _ := reader.ReadString('\n')
-		sender = strings.Trim(sender, string('\n'))
-		s := block.AccountFromString(sender)
-		fmt.Print("Enter receiver: ")
-		receiver, _ := reader.ReadString('\n')
-		receiver = strings.Trim(receiver, string('\n'))
-		r := block.AccountFromString(receiver)
-
-		tx := block.Tx{Nonce: 1, Amount: 0, Sender: s, Receiver: r}
-
+		//reader := bufio.NewReader(os.Stdin)
 		kp := readKeys("keys.txt")
-		signature := cryptoutil.SignTx(tx, kp)
 
-		//sighex := hex.EncodeToString(signature.Serialize())
-		tx.Signature = signature
+		// sender, _ := reader.ReadString('\n')
+		// sender = strings.Trim(sender, string('\n'))
+		pubk := cryptoutil.PubKeyToHex(kp.PubKey)
+		addr := cryptoutil.Address(pubk)
+		s := block.AccountFromString(addr)
+		log.Println(s)
 
-		txJson, _ := json.Marshal(tx)
-		//write to file
-		log.Println(txJson)
+		reader := bufio.NewReader(os.Stdin)
+		fmt.Print("Enter amount: ")
+		amount, _ := reader.ReadString('\n')
+		amount = strings.Trim(amount, string('\n'))
+		amount_int, _ := strconv.Atoi(amount)
 
-		ioutil.WriteFile("tx.json", []byte(txJson), 0644)
+		reader = bufio.NewReader(os.Stdin)
+		fmt.Print("Enter receiver: ")
+		recv, _ := reader.ReadString('\n')
+		recv = strings.Trim(recv, string('\n'))
+
+		tx := block.Tx{Nonce: 1, Amount: amount_int, Sender: block.Account{addr}, Receiver: block.Account{recv}}
+		log.Println(tx)
+		// fmt.Print("Enter receiver: ")
+		// receiver, _ := reader.ReadString('\n')
+		// receiver = strings.Trim(receiver, string('\n'))
+		// r := block.AccountFromString(receiver)
+
+		// kp := readKeys("keys.txt")
+		// signature := cryptoutil.SignTx(tx, kp)
+
+		// //sighex := hex.EncodeToString(signature.Serialize())
+		// tx.Signature = signature
+
+		// txJson, _ := json.Marshal(tx)
+		// //write to file
+		// log.Println(txJson)
+
+		// ioutil.WriteFile("tx.json", []byte(txJson), 0644)
 
 	} else if *optionPtr == "verify" {
 		reader := bufio.NewReader(os.Stdin)
