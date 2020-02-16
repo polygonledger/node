@@ -55,9 +55,11 @@ func txValid(tx block.Tx) bool {
 	//TODO and signature
 	//the transaction is signed by the sender
 	//TODO fix this is only for testing
-	kp := crypto.PairFromSecret("test1")
-	sigvalid := crypto.CheckSignTxServer(tx, kp)
-	fmt.Println("sigvalid ", sigvalid)
+	//kp := crypto.PairFromSecret("test1")
+	//sigvalid := crypto.CheckSignTxServer(tx, kp)
+	verified := crypto.VerifyTx(tx)
+	fmt.Println("sigvalid ", verified)
+	//TODO check sig
 	return btxValid
 	//return true
 }

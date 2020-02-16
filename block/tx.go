@@ -22,6 +22,7 @@ type Tx struct {
 
 	SenderPubkey string
 	Signature    string //hex string
+
 	//fee
 	//txtype
 	//timestamp

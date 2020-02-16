@@ -137,44 +137,17 @@ func RemovePubTx(tx block.Tx) block.Tx {
 	return tx
 }
 
-//OLD
-func CheckSignTxServer(tx block.Tx, keypair Keypair) bool {
-	//message := strconv.Itoa(tx.Id)
-	// message := fmt.Sprintf("%d", tx.Id)
-	// messageHash := chainhash.DoubleHashB([]byte(message))
-
-	//TODO parse signature from bytes
-	//signature, err := btcec.ParseSignature(sigBytes, btcec.S256())
-	fmt.Println("SERVER PUBKEY ", keypair.PubKey)
-
-	// sigBytes, err := hex.DecodeString("30450220090ebfb3690a0ff115bb1b38b" +
-	// 	"8b323a667b7653454f1bccb06d4bbdca42c2079022100ec95778b51e707" +
-	// 	"1cb1205f8bde9af6592fc978b0452dafe599481c46d6b2e479")
-
-	// if err != nil {
-	// 	fmt.Println(err)
-	// 	return false
-	// }
-	// signature, err := btcec.ParseSignature(sigBytes, btcec.S256())
-
-	//verify := signature.Verify(messageHash, &keypair.PubKey)
-	//fmt.Println("??? ", verify)
-	return true //verify
-
-}
-
 //TODO
 func VerifyTx(tx block.Tx) bool {
+	getpubkey := PubKeyFromHex(tx.SenderPubkey)
+	gotsighex := tx.Signature
+	sign := SignatureFromHex(gotsighex)
+	//need to remove sig and pubkey for validation
+	tx = RemoveSigTx(tx)
+	tx = RemovePubTx(tx)
 
-	//public key
-
-	// sighex := tx.Signature
-	// sign := SignatureFromHex(sighex)
-	// tx = RemoveSigTx(tx)
-
-	// txJson, _ := json.Marshal(tx)
-	// verified := VerifyMessageSignPub(sign, keypair.PubKey, string(txJson))
-	// return verified
-	verified := false
+	txJson, _ := json.Marshal(tx)
+	verified := VerifyMessageSignPub(sign, getpubkey, string(txJson))
 	return verified
+
 }

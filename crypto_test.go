@@ -2,8 +2,6 @@ package main
 
 import (
 	"encoding/hex"
-	"encoding/json"
-	"log"
 	"testing"
 
 	"github.com/btcd/chaincfg/chainhash"
@@ -131,20 +129,7 @@ func TestSignTx(t *testing.T) {
 	tx.SenderPubkey = crypto.PubKeyToHex(keypair.PubKey)
 
 	//verify
-
-	//remove sig
-
-	log.Println(tx.SenderPubkey)
-	getpubkey := crypto.PubKeyFromHex(tx.SenderPubkey)
-	log.Println(getpubkey)
-
-	gotsighex := tx.Signature
-	sign := crypto.SignatureFromHex(gotsighex)
-	tx = crypto.RemoveSigTx(tx)
-	tx = crypto.RemovePubTx(tx)
-
-	txJson, _ := json.Marshal(tx)
-	verified := crypto.VerifyMessageSignPub(sign, getpubkey, string(txJson))
+	verified := crypto.VerifyTx(tx)
 
 	if !verified {
 		t.Error("verify tx fail")
