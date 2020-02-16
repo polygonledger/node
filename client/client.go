@@ -10,6 +10,7 @@ import (
 	"net"
 	"os"
 	"strconv"
+	"strings"
 
 	"github.com/pkg/errors"
 
@@ -79,9 +80,14 @@ func MakeRandomTx(rw *bufio.ReadWriter) error {
 
 func Getbalance(rw *bufio.ReadWriter) error {
 	//TODO use messageencoder
-	data := "P5d2a02fc95f9"
+	reader := bufio.NewReader(os.Stdin)
+	fmt.Print("Enter address: ")
+	addr, _ := reader.ReadString('\n')
+	addr = strings.Trim(addr, string('\n'))
+
+	//data := "P9b2a9f21466b"
 	//data := "P4e968b02dd42"
-	txJson, _ := json.Marshal(block.Account{AccountKey: data})
+	txJson, _ := json.Marshal(block.Account{AccountKey: addr})
 	msg := protocol.EncodeMsg(protocol.REQ, protocol.CMD_BALANCE, string(txJson))
 	fmt.Println("msg ", msg)
 	protocol.WritePipe(rw, msg)
@@ -120,14 +126,8 @@ type Configuration struct {
 	ServerAddress string
 }
 
-/*
-start client and connect to the host
-*/
-func main() {
-
-	//prepare to run client
-
-	// domain := "google.com"
+func readdns() {
+	// domain := "example.com"
 	// ips, err1 := net.LookupIP(domain)
 	// if err1 != nil {
 	// 	fmt.Fprintf(os.Stderr, "Could not get IPs: %v\n", err1)
@@ -136,6 +136,15 @@ func main() {
 	// for _, ip := range ips {
 	// 	fmt.Printf(domain+". IN A %s\n", ip.String())
 	// }
+
+}
+
+/*
+start client and connect to the host
+*/
+func main() {
+
+	//prepare to run client
 
 	//read config
 
@@ -150,9 +159,9 @@ func main() {
 	fmt.Println("ServerAddress: ", configuration.ServerAddress)
 
 	//if exists
-	dat, _ := ioutil.ReadFile("keys.txt")
-	//check(err)
-	fmt.Print("keys ", string(dat))
+	// dat, _ := ioutil.ReadFile("keys.txt")
+	// //check(err)
+	// fmt.Print("keys ", string(dat))
 
 	optionPtr := flag.String("option", "createkeypair", "the command to be performed")
 	flag.Parse()

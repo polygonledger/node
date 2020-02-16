@@ -129,7 +129,7 @@ func TestSignTx(t *testing.T) {
 	tx.SenderPubkey = crypto.PubKeyToHex(keypair.PubKey)
 
 	//verify
-	verified := crypto.VerifyTx(tx)
+	verified := crypto.VerifyTxSig(tx)
 
 	if !verified {
 		t.Error("verify tx fail")

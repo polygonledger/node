@@ -2,7 +2,6 @@ package net
 
 import (
 	"bufio"
-	"encoding/gob"
 	"encoding/hex"
 	"fmt"
 	"log"
@@ -189,28 +188,8 @@ func ReceiveAccount(rw *bufio.ReadWriter) error {
 //TODO old
 sends account address
 */
-func SendAccount(rw *bufio.ReadWriter) error {
+func SendAccount() {
+	//a := block.Account{AccountKey: "test"}
+	//msg := CMD_RANDOM_ACCOUNT + string(DELIM)
 
-	a := block.Account{AccountKey: "test"}
-
-	log.Printf("account: \n%#v\n", a)
-
-	enc := gob.NewEncoder(rw)
-	//Command
-
-	msg := CMD_RANDOM_ACCOUNT + string(DELIM)
-
-	n, err := rw.WriteString(msg)
-	if err != nil {
-		return errors.Wrap(err, "Could not write GOB data ("+strconv.Itoa(n)+" bytes written)")
-	}
-	err = enc.Encode(a)
-	if err != nil {
-		return errors.Wrapf(err, "Encode failed for struct: %#v", a)
-	}
-	err = rw.Flush()
-	if err != nil {
-		return errors.Wrap(err, "Flush failed")
-	}
-	return nil
 }

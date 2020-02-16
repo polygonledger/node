@@ -4,14 +4,14 @@ new blockchain. delegated proof-of-asset algorithm
 
 architecture: accounts, not UTXO. transaction types, scripting through transaction multiplexing
 
-current status: experimental client-server protocol. once finalized move to peer-to-peer
+current status: experimental node protocoltxValid(tx)
 
 ## run node
 
 node:
-```go run server.go```
+```go run node.go```
 
-the server will run a node and a webserver at the same time
+the node will run a peer and a webserver at the same time
 
 with browser go to http://localhost:8080
 
@@ -19,9 +19,6 @@ with browser go to http://localhost:8080
 
 client:
 ```cd client && go run client.go -option=randomtx```
-
-the client will send transactions to the server, and the server adds the transaction to the tx pool
-
 
 getbalance:
 go run client.go -option=getbalance

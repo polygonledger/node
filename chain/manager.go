@@ -53,11 +53,11 @@ func txValid(tx block.Tx) bool {
 	// log.Println("sufficientBalance ", sufficientBalance, tx.Sender, Accounts[tx.Sender], tx.Amount)
 	btxValid := sufficientBalance
 	//TODO and signature
+
 	//the transaction is signed by the sender
 	//TODO fix this is only for testing
-	//kp := crypto.PairFromSecret("test1")
-	//sigvalid := crypto.CheckSignTxServer(tx, kp)
-	verified := crypto.VerifyTx(tx)
+
+	verified := crypto.VerifyTxSig(tx)
 	fmt.Println("sigvalid ", verified)
 	//TODO check sig
 	return btxValid
@@ -122,7 +122,8 @@ func moveCash(SenderAccount block.Account, ReceiverAccount block.Account, amount
 
 func applyTx(tx block.Tx) {
 	//TODO check transaction type, not implemented yet
-	if txValid(tx) {
+	valid := true //txValid(tx)
+	if valid {
 		moveCash(tx.Sender, tx.Receiver, tx.Amount)
 	} else {
 		log.Printf("tx invalid, dont apply")

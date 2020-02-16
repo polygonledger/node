@@ -1,19 +1,13 @@
 package main
 
-//server should run via DNS
+//kill -9 $(lsof -t -i:8888)
+//node should run via DNS
 //nodexample.com
 
-//basic server based protocol
-//server receives tx messages
+//basic protocol
+//node receives tx messages
 //adds tx messages to a pool
 //block gets created every 10 secs
-
-//publish peer list
-
-//Delegates
-//rounds
-//slotTime = getSlotNumber(currentBlockData.time))
-//if slotTime generate block
 
 //newWallet
 
@@ -96,7 +90,7 @@ func handleMsg(msg_in_chan chan string, msg_out_chan chan string) {
 	fmt.Println("msg type ", msg.MessageType)
 
 	if msg.MessageType == protocol.REQ {
-		log.Println("handle REQ")
+
 		log.Println("Handle ", msg.Command)
 
 		switch msg.Command {
@@ -227,9 +221,9 @@ func handleMessagesConn(conn net.Conn) {
 }
 
 // handle ranaccount request
-func handleRandomAccountRequest(rw *bufio.ReadWriter) {
-	protocol.SendAccount(rw)
-}
+// func handleRandomAccountRequest(rw *bufio.ReadWriter) {
+// 	protocol.SendAccount(rw)
+// }
 
 func serverNode() {
 	// Start listening
@@ -298,18 +292,13 @@ func runweb() {
 }
 
 /*
-start server listening for incoming requests
+start node listening for incoming requests
 */
 func main() {
 
-	log.Println("run server")
+	log.Println("run node")
 
-	//account := block.Account{AccountKey: "test"}
-	//accountJson, _ := json.Marshal(account)
-	//fmt.Println(string(accountJson))
-
-	/////
-
+	//TODO signatures of genesis
 	chain.InitAccounts()
 
 	genBlock := chain.MakeGenesisBlock()

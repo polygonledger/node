@@ -138,7 +138,7 @@ func RemovePubTx(tx block.Tx) block.Tx {
 }
 
 //TODO
-func VerifyTx(tx block.Tx) bool {
+func VerifyTxSig(tx block.Tx) bool {
 	getpubkey := PubKeyFromHex(tx.SenderPubkey)
 	gotsighex := tx.Signature
 	sign := SignatureFromHex(gotsighex)
