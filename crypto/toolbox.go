@@ -99,6 +99,14 @@ func VerifyMessageSign(signature btcec.Signature, keypair Keypair, message strin
 	return verified
 }
 
+//hash of a transaction, currently sha256 of the nonce
+//TODO hash properly
+func TxHash(tx block.Tx) [32]byte {
+	b := []byte(string(tx.Nonce)[:])
+	hash := sha256.Sum256(b)
+	return hash
+}
+
 func SignMsgHash(keypair Keypair, message string) btcec.Signature {
 	messageHash := chainhash.DoubleHashB([]byte(message))
 	signature, err := keypair.PrivKey.Sign(messageHash)

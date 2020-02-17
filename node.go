@@ -82,7 +82,12 @@ func putMsg(msg_in_chan chan string, msg string) {
 	msg_in_chan <- msg
 }
 
-func handleMsg(msg_in_chan chan string, msg_out_chan chan string) {
+func HandlePing(msg_out_chan chan string) {
+	reply := "PONG"
+	msg_out_chan <- reply
+}
+
+func HandleMsg(msg_in_chan chan string, msg_out_chan chan string) {
 	msgString := <-msg_in_chan
 	fmt.Println("handle msg string ", msgString)
 
@@ -108,8 +113,7 @@ func handleMsg(msg_in_chan chan string, msg_out_chan chan string) {
 
 		case protocol.CMD_PING:
 			log.Println("PING PONG")
-			reply := "PONG"
-			msg_out_chan <- reply
+			HandlePing(msg_out_chan)
 
 		case protocol.CMD_BALANCE:
 			log.Println("Handle balance")
@@ -215,7 +219,7 @@ func requestReplyLoop(rw *bufio.ReadWriter, msg_in_chan chan string, msg_out_cha
 		go putMsg(msg_in_chan, msgString)
 
 		//handle in channel and put reply in msg_out channel
-		go handleMsg(msg_in_chan, msg_out_chan)
+		go HandleMsg(msg_in_chan, msg_out_chan)
 
 		//take from channel and send over network
 		reply := <-msg_out_chan
@@ -268,7 +272,7 @@ func loadContent() string {
 	for i := 0; i < len(chain.Tx_pool); i++ {
 		//content += fmt.Sprintf("Nonce %d, Id %x<br>", chain.Tx_pool[i].Nonce, chain.Tx_pool[i].Id[:])
 		ctx := chain.Tx_pool[i]
-		content += fmt.Sprintf("%x, %d from %s to %s<br>", ctx.Id, ctx.Amount, ctx.Sender, ctx.Receiver)
+		content += fmt.Sprintf("%d from %s to %s %x<br>", ctx.Amount, ctx.Sender, ctx.Receiver, ctx.Id)
 	}
 
 	content += fmt.Sprintf("<h2>Accounts</h2>number of accounts: %d<br><br>", len(chain.Accounts))
@@ -291,7 +295,7 @@ func loadContent() string {
 		content += fmt.Sprintf("<h4>Number of Tx %d</h4>", len(chain.Blocks[i].Txs))
 		for j := 0; j < len(chain.Blocks[i].Txs); j++ {
 			ctx := chain.Blocks[i].Txs[j]
-			content += fmt.Sprintf("%x, %d from %s to %s<br>", ctx.Id, ctx.Amount, ctx.Sender, ctx.Receiver)
+			content += fmt.Sprintf("%d from %s to %s %x<br>", ctx.Amount, ctx.Sender, ctx.Receiver, ctx.Id)
 		}
 	}
 

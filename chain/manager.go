@@ -42,14 +42,6 @@ func InitAccounts() {
 	SetAccount(block.AccountFromString(Genesis_Address), genesisAmount)
 }
 
-//hash of a transaction, currently sha256 of the nonce
-//TODO hash properly
-func txHash(tx block.Tx) [32]byte {
-	b := []byte(string(tx.Nonce)[:])
-	hash := sha256.Sum256(b)
-	return hash
-}
-
 //valid cash transaction
 //instead of needing to evluate bytecode like Bitcoin or Ethereum this is hardcoded cash transaction, no multisig, no timelocks
 //* sufficient balance of sender (the sender has the cash, no credit as of now)
@@ -65,13 +57,13 @@ func txValid(tx block.Tx) bool {
 		fmt.Println("insufficientBalance ")
 	}
 	// log.Println("sufficientBalance ", sufficientBalance, tx.Sender, Accounts[tx.Sender], tx.Amount)
-	btxValid := sufficientBalance
 	//TODO and signature
 
 	//the transaction is signed by the sender
 	//TODO fix this is only for testing
 
 	verified := crypto.VerifyTxSig(tx)
+	btxValid := sufficientBalance && verified
 	fmt.Println("sigvalid ", verified)
 	//TODO check sig
 	return btxValid
@@ -83,17 +75,13 @@ func txValid(tx block.Tx) bool {
 func HandleTx(tx block.Tx) string {
 	//hash of timestamp is same, check lenght of bytes used??
 	//timestamp := time.Now().Unix()
-	//b := []byte(append(string(timestamp)[:], string(tx.Nonce)[:]))
 
-	//tx.Id = txHash(tx)
-	//check timestamp
+	//TODO check timestamp
 	//log.Println("hash %x time %s sign %x", tx.Id, timestamp, tx.Signature)
-
-	//verify signature
-	//verified := signature.Verify(messageHash, &keypair.PubKey)
 
 	//TODO its own function
 	if txValid(tx) {
+		tx.Id = crypto.TxHash(tx)
 		Tx_pool = append(Tx_pool, tx)
 		return "ok"
 	} else {
@@ -104,7 +92,7 @@ func HandleTx(tx block.Tx) string {
 	//log.Printf("tx_pool_size: \n%d", tx_pool_size)
 
 	//log.Printf("tx_pool size: %d\n", len(Tx_pool))
-	return "ok"
+	//return "ok"
 
 }
 

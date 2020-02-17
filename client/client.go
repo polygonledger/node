@@ -200,9 +200,7 @@ func requestLoop(rw *bufio.ReadWriter, msg_in_chan chan string, msg_out_chan cha
 	}
 }
 
-/*
-start client and connect to the host
-*/
+//start client and connect to the host
 func main() {
 
 	//prepare to run client
