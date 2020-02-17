@@ -10,6 +10,7 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/pkg/errors"
 
@@ -236,6 +237,13 @@ func main() {
 		log.Println("ping")
 		//protocol.Server_address
 		MakePing(msg_in_chan, msg_out_chan)
+	} else if *optionPtr == "pingconnect" {
+		log.Println("ping continously")
+		//protocol.Server_address
+		for {
+			MakePing(msg_in_chan, msg_out_chan)
+			time.Sleep(10 * time.Second)
+		}
 
 	} else if *optionPtr == "getbalance" {
 		log.Println("getbalance")

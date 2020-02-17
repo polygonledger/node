@@ -11,7 +11,7 @@ current status: experimental
 node:
 ```go run node.go```
 
-the node will run a peer and a webserver at the same time
+the node will run a peer on 8888 and a webserver at the same time
 
 with browser go to http://localhost:8080
 

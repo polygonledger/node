@@ -34,6 +34,14 @@ import (
 	protocol "github.com/polygonledger/node/net"
 )
 
+var Peers []protocol.Peer
+
+func addpeer(addr string) {
+	p := protocol.Peer{Address: addr}
+	Peers = append(Peers, p)
+	log.Println("peers ", Peers)
+}
+
 // start listening on tcp and put connection into go routine
 func ListenAll() error {
 	log.Println("listen all")
@@ -45,14 +53,26 @@ func ListenAll() error {
 		return errors.Wrapf(err, "Unable to listen on port %s\n", protocol.Port)
 	}
 
-	log.Println("Listen on", listener.Addr().String())
+	addr := listener.Addr().String()
+	log.Println("Listen on", addr)
+
+	//TODO check if peers are alive see
+	//https://stackoverflow.com/questions/12741386/how-to-know-tcp-connection-is-closed-in-net-package
+	//https://gist.github.com/elico/3eecebd87d4bc714c94066a1783d4c9c
+
 	for {
 		log.Println("Accept a connection request")
+
 		conn, err := listener.Accept()
+		strRemoteAddr := conn.RemoteAddr().String()
+
+		log.Println("accepted conn ", strRemoteAddr)
 		if err != nil {
 			log.Println("Failed accepting a connection request:", err)
 			continue
 		}
+		addpeer(strRemoteAddr)
+
 		log.Println("Handle incoming messages")
 		go handleMessagesConn(conn)
 	}
@@ -236,11 +256,6 @@ func handleMessagesConn(conn net.Conn) {
 
 	//go publishLoop(rw, msg_in_chan, msg_out_chan)
 
-}
-
-func serverNode() {
-	// Start listening
-	ListenAll()
 }
 
 //basic threading helper

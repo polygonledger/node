@@ -8,6 +8,10 @@ import (
 	"github.com/pkg/errors"
 )
 
+type Peer struct {
+	Address string `json:"Address"`
+}
+
 //peer functions
 //onReceiveBlock
 //validateBlockSlot
