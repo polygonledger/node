@@ -304,9 +304,7 @@ func runweb() {
 
 }
 
-// start node listening for incoming requests
-func main() {
-
+func run_node() {
 	log.Println("run node")
 
 	//TODO signatures of genesis
@@ -320,11 +318,17 @@ func main() {
 	blockTime := 10000 * time.Millisecond
 	go doEvery(blockTime, chain.MakeBlock)
 
-	// //node server
-
 	go ListenAll()
 
+}
+
+// start node listening for incoming requests
+func main() {
+
+	run_node()
+
+	log.Println("node running")
+
 	runweb()
-	//log.Println("Server running")
 
 }

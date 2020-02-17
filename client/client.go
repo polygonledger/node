@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
-	"net"
 	"os"
 	"strconv"
 	"strings"
@@ -18,20 +17,6 @@ import (
 	"github.com/polygonledger/node/crypto"
 	protocol "github.com/polygonledger/node/net"
 )
-
-//Outgoing connections. A `net.Conn` satisfies the io.Reader and `io.Writer` interfaces
-
-// Open connects to a TCP Address
-// It returns a TCP connection with a timeout wrapped into a buffered ReadWriter.
-func Open(addr string) (*bufio.ReadWriter, error) {
-	// Dial the remote process.
-	log.Println("Dial " + addr)
-	conn, err := net.Dial("tcp", addr)
-	if err != nil {
-		return nil, errors.Wrap(err, "Dialing "+addr+" failed")
-	}
-	return bufio.NewReadWriter(bufio.NewReader(conn), bufio.NewWriter(conn)), nil
-}
 
 //
 func MakeRandomTx(rw *bufio.ReadWriter) error {
@@ -157,7 +142,7 @@ func MakePing(msg_in_chan chan string, msg_out_chan chan string) {
 func client(ip string) (*bufio.ReadWriter, error) {
 
 	// Open a connection to the server.
-	rw, err := Open(ip + protocol.Port)
+	rw, err := protocol.Open(ip + protocol.Port)
 	//log.Println(rw)
 	if err != nil {
 		return nil, errors.Wrap(err, "Client: Failed to open connection to "+ip+protocol.Port)
