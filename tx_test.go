@@ -1,7 +1,9 @@
 package main
 
 import (
+	"encoding/hex"
 	"encoding/json"
+	"io/ioutil"
 	"log"
 	"testing"
 
@@ -69,4 +71,51 @@ func TestSignTxBasic(t *testing.T) {
 	if !verified {
 		t.Error("verify tx fail")
 	}
+}
+
+func TestTxFile(t *testing.T) {
+	//write tx.json
+
+	keypair := crypto.PairFromSecret("test")
+
+	pubk := crypto.PubKeyToHex(keypair.PubKey)
+	addr := crypto.Address(pubk)
+
+	if addr != "Pa033f6528cc1" {
+		t.Error("address wrong ", addr)
+	}
+
+	keypair_recv := crypto.PairFromSecret("receive")
+	addr_recv := crypto.Address(crypto.PubKeyToHex(keypair_recv.PubKey))
+
+	tx := block.Tx{Nonce: 1, Amount: 10, Sender: block.Account{AccountKey: addr}, Receiver: block.Account{AccountKey: addr_recv}}
+
+	signature := crypto.SignTx(tx, keypair)
+	sighex := hex.EncodeToString(signature.Serialize())
+
+	tx.Signature = sighex
+	tx.SenderPubkey = crypto.PubKeyToHex(keypair.PubKey)
+
+	if !(tx.Amount == 10) {
+		t.Error("amount wrong ")
+	}
+
+	txJson, _ := json.Marshal(tx)
+
+	ioutil.WriteFile("tx_test.json", []byte(txJson), 0644)
+
+	dat, _ := ioutil.ReadFile("tx_test.json")
+
+	var rtx block.Tx
+
+	if err := json.Unmarshal(dat, &rtx); err != nil {
+		panic(err)
+	}
+
+	log.Println(rtx.SenderPubkey)
+
+	if !(rtx.Amount == 10) {
+		t.Error("amount wrong ")
+	}
+
 }

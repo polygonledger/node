@@ -156,36 +156,46 @@ func handleMsg(msg_in_chan chan string, msg_out_chan chan string) {
 		case protocol.CMD_GETTXPOOL:
 			log.Println("get tx pool")
 
+			//TODO
+			data, _ := json.Marshal(chain.Tx_pool)
+			msg := protocol.EncodeMsg(protocol.REP, protocol.CMD_GETTXPOOL, string(data))
+			msg_out_chan <- msg
+
+			//var Tx_pool []block.Tx
+
 		//case CMD_GETBLOCKS:
 
 		case protocol.CMD_TX:
 			log.Println("Handle tx")
 
-			// 	dataBytes := msg.Data
-			// 	log.Println("data ", dataBytes)
-			// 	var tx block.Tx
+			dataBytes := msg.Data
 
-			// 	if err := json.Unmarshal(dataBytes, &tx); err != nil {
-			// 		panic(err)
-			// 	}
-			// 	log.Println(tx, tx.Amount, tx.Nonce)
-			// 	resp := chain.HandleTx(tx)
-			// 	Reply(rw, resp)
-			// 	//log.Println("amount ", tx.Amount)
-			// 	//n, err := rw.WriteString("response " + strconv.Itoa(tx.Amount) + string(protocol.DELIM))
+			var tx block.Tx
 
-			// case protocol.CMD_RANDOM_ACCOUNT:
-			// 	log.Println("Handle random account")
+			if err := json.Unmarshal(dataBytes, &tx); err != nil {
+				panic(err)
+			}
+			log.Println(">> ", tx)
 
-			// 	txJson, _ := json.Marshal(chain.RandomAccount())
-			// 	Reply(rw, string(txJson))
+		// 	resp := chain.HandleTx(tx)
+		// 	Reply(rw, resp)
+		// 	//log.Println("amount ", tx.Amount)
+		// 	//n, err := rw.WriteString("response " + strconv.Itoa(tx.Amount) + string(protocol.DELIM))
 
-			// 	//log.Println("amount ", tx.Amount)
-			// 	//n, err := rw.WriteString("response " + strconv.Itoa(tx.Amount) + string(protocol.DELIM))
+		// case protocol.CMD_RANDOM_ACCOUNT:
+		// 	log.Println("Handle random account")
 
-			// 	//log.Println("amount ", tx.Amount)
-			// 	//n, err := rw.WriteString("response " + strconv.Itoa(tx.Amount) + string(protocol.DELIM))
+		// 	txJson, _ := json.Marshal(chain.RandomAccount())
+		// 	Reply(rw, string(txJson))
 
+		// 	//log.Println("amount ", tx.Amount)
+		// 	//n, err := rw.WriteString("response " + strconv.Itoa(tx.Amount) + string(protocol.DELIM))
+
+		// 	//log.Println("amount ", tx.Amount)
+		// 	//n, err := rw.WriteString("response " + strconv.Itoa(tx.Amount) + string(protocol.DELIM))
+
+		default:
+			log.Println("unknown cmd ", msg.Command)
 		}
 	}
 }
@@ -214,27 +224,6 @@ func requestReplyLoop(rw *bufio.ReadWriter, msg_in_chan chan string, msg_out_cha
 	}
 }
 
-// func publishLoop(rw *bufio.ReadWriter, msg_in_chan chan string, msg_out_chan chan string) {
-
-// 	//continously publish
-// 	for {
-
-// 		//resp := "testout"
-// 		t := protocol.TimeMessage{Timestamp: time.Now()}
-// 		msgJson, _ := json.Marshal(t)
-// 		response := protocol.EncodeReply(string(msgJson))
-// 		log.Println(response)
-// 		n, err := rw.WriteString(response)
-// 		if err != nil {
-// 			log.Println(err, n)
-// 		}
-// 		rw.Flush()
-
-// 		time.Sleep(2 * time.Second)
-
-// 	}
-// }
-
 //handle connections
 func handleMessagesConn(conn net.Conn) {
 
@@ -256,11 +245,6 @@ func handleMessagesConn(conn net.Conn) {
 	//go publishLoop(rw, msg_in_chan, msg_out_chan)
 
 }
-
-// handle ranaccount request
-// func handleRandomAccountRequest(rw *bufio.ReadWriter) {
-// 	protocol.SendAccount(rw)
-// }
 
 func serverNode() {
 	// Start listening
@@ -328,9 +312,7 @@ func runweb() {
 
 }
 
-/*
-start node listening for incoming requests
-*/
+// start node listening for incoming requests
 func main() {
 
 	log.Println("run node")

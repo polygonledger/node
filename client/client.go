@@ -2,10 +2,10 @@ package main
 
 import (
 	"bufio"
+	"encoding/hex"
 	"encoding/json"
 	"flag"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"net"
 	"os"
@@ -34,10 +34,6 @@ func Open(addr string) (*bufio.ReadWriter, error) {
 	}
 	return bufio.NewReadWriter(bufio.NewReader(conn), bufio.NewWriter(conn)), nil
 }
-
-// func getRandomAccount() block.Account {
-// 	//TODO
-// }
 
 //
 func MakeRandomTx(rw *bufio.ReadWriter) error {
@@ -78,6 +74,29 @@ func MakeRandomTx(rw *bufio.ReadWriter) error {
 	return nil
 }
 
+func PushTx(rw *bufio.ReadWriter) error {
+
+	keypair := crypto.PairFromSecret("test")
+	var tx block.Tx
+	s := block.AccountFromString("Pa033f6528cc1")
+	r := s //TODO
+	tx = block.Tx{Nonce: 0, Amount: 0, Sender: s, Receiver: r}
+	signature := crypto.SignTx(tx, keypair)
+	sighex := hex.EncodeToString(signature.Serialize())
+	tx.Signature = sighex
+	tx.SenderPubkey = crypto.PubKeyToHex(keypair.PubKey)
+
+	//send Tx
+	txJson, _ := json.Marshal(tx)
+	log.Println("txJson ", string(txJson))
+
+	//	req_msg := protocol.EncodeMessageTx(txJson)
+	// resp_msg := protocol.RequestReply(rw, req_msg)
+	// log.Print("reply msg ", resp_msg)
+
+	return nil
+}
+
 func Getbalance(rw *bufio.ReadWriter) error {
 	reader := bufio.NewReader(os.Stdin)
 	fmt.Print("Enter address: ")
@@ -97,18 +116,14 @@ func Getbalance(rw *bufio.ReadWriter) error {
 	return nil
 }
 
-//get money from faucet
-func GetFaucetOld(rw *bufio.ReadWriter) error {
-	reader := bufio.NewReader(os.Stdin)
-	fmt.Print("Enter address: ")
-	addr, _ := reader.ReadString('\n')
-	addr = strings.Trim(addr, string('\n'))
+func Gettxpool(rw *bufio.ReadWriter) error {
+	msg := protocol.EncodeMsg(protocol.REQ, protocol.CMD_GETTXPOOL, "")
+	log.Println("> ", msg)
+	protocol.WritePipe(rw, msg)
 
-	accountJson, _ := json.Marshal(block.Account{AccountKey: addr})
-	req_msg := protocol.EncodeMsg(protocol.REQ, protocol.CMD_FAUCET, string(accountJson))
-	protocol.WritePipe(rw, req_msg)
-	//rcvmsg := protocol.ReadMsg(rw)
-	//log.Println("account ", rcvmsg)
+	rcvmsg := protocol.ReadMsg(rw)
+
+	log.Println("rcvmsg ", rcvmsg)
 
 	return nil
 }
@@ -246,20 +261,27 @@ func main() {
 		//GetFaucet(rw)
 		GetFaucet(msg_in_chan, msg_out_chan)
 
+	} else if *optionPtr == "txpool" {
+		err = Gettxpool(rw)
+		return
+	} else if *optionPtr == "pushtx" {
+		err = PushTx(rw)
+		return
 	} else if *optionPtr == "randomtx" {
 		err = MakeRandomTx(rw)
 		return
-	} else if *optionPtr == "pushtx" {
-		//read locally created tx file and push it to server
-		data, _ := ioutil.ReadFile("tx.json")
-		log.Println(string(data))
-		var tx block.Tx
-		if err := json.Unmarshal(data, &tx); err != nil {
-			panic(err)
-		}
-		log.Println(">> ", tx)
-
-		return
 	}
+	// else if *optionPtr == "pushtx" {
+	// 	//read locally created tx file and push it to server
+	// 	data, _ := ioutil.ReadFile("tx.json")
+	// 	log.Println(string(data))
+	// 	var tx block.Tx
+	// 	if err := json.Unmarshal(data, &tx); err != nil {
+	// 		panic(err)
+	// 	}
+	// 	log.Println(">> ", tx)
+
+	// 	return
+	// }
 
 }

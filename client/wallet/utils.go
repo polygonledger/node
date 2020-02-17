@@ -69,6 +69,49 @@ func createKeys() {
 
 }
 
+func createtx() {
+	kp := readKeys("keys.txt")
+
+	// reader := bufio.NewReader(os.Stdin)
+	// fmt.Print("Enter password: ")
+	// pw, _ := reader.ReadString('\n')
+	// pw = strings.Trim(pw, string('\n'))
+
+	// keypair := crypto.PairFromSecret(pw)
+
+	pubk := cryptoutil.PubKeyToHex(kp.PubKey)
+	addr := cryptoutil.Address(pubk)
+	s := block.AccountFromString(addr)
+	log.Println("using account ", s)
+
+	reader := bufio.NewReader(os.Stdin)
+	fmt.Print("Enter amount: ")
+	amount, _ := reader.ReadString('\n')
+	amount = strings.Trim(amount, string('\n'))
+	amount_int, _ := strconv.Atoi(amount)
+
+	reader = bufio.NewReader(os.Stdin)
+	fmt.Print("Enter receiver: ")
+	recv, _ := reader.ReadString('\n')
+	recv = strings.Trim(recv, string('\n'))
+
+	tx := block.Tx{Nonce: 1, Amount: amount_int, Sender: block.Account{AccountKey: addr}, Receiver: block.Account{AccountKey: recv}}
+	log.Println(tx)
+
+	signature := cryptoutil.SignTx(tx, kp)
+	sighex := hex.EncodeToString(signature.Serialize())
+
+	tx.Signature = sighex
+	tx.SenderPubkey = cryptoutil.PubKeyToHex(kp.PubKey)
+	log.Println(tx)
+
+	txJson, _ := json.Marshal(tx)
+	// //write to file
+	// log.Println(txJson)
+
+	ioutil.WriteFile("tx.json", []byte(txJson), 0644)
+}
+
 func main() {
 
 	optionPtr := flag.String("option", "createkeys", "createkeys files")
@@ -93,48 +136,8 @@ func main() {
 		sighex := hex.EncodeToString(signature.Serialize())
 		log.Println("sighex ", sighex)
 	} else if *optionPtr == "createtx" {
-		//reader := bufio.NewReader(os.Stdin)
-		kp := readKeys("keys.txt")
 
-		pubk := cryptoutil.PubKeyToHex(kp.PubKey)
-		addr := cryptoutil.Address(pubk)
-		s := block.AccountFromString(addr)
-		log.Println("using account ", s)
-
-		reader := bufio.NewReader(os.Stdin)
-		fmt.Print("Enter amount: ")
-		amount, _ := reader.ReadString('\n')
-		amount = strings.Trim(amount, string('\n'))
-		amount_int, _ := strconv.Atoi(amount)
-
-		reader = bufio.NewReader(os.Stdin)
-		fmt.Print("Enter receiver: ")
-		recv, _ := reader.ReadString('\n')
-		recv = strings.Trim(recv, string('\n'))
-
-		tx := block.Tx{Nonce: 1, Amount: amount_int, Sender: block.Account{AccountKey: addr}, Receiver: block.Account{AccountKey: recv}}
-		log.Println(tx)
-
-		signature := cryptoutil.SignTx(tx, kp)
-		sighex := hex.EncodeToString(signature.Serialize())
-
-		tx.Signature = sighex
-		tx.SenderPubkey = cryptoutil.PubKeyToHex(kp.PubKey)
-		log.Println(tx)
-
-		// fmt.Print("Enter receiver: ")
-		// receiver, _ := reader.ReadString('\n')
-		// receiver = strings.Trim(receiver, string('\n'))
-		// r := block.AccountFromString(receiver)
-
-		// //sighex := hex.EncodeToString(signature.Serialize())
-		// tx.Signature = signature
-
-		txJson, _ := json.Marshal(tx)
-		// //write to file
-		// log.Println(txJson)
-
-		ioutil.WriteFile("tx.json", []byte(txJson), 0644)
+		createtx()
 
 	} else if *optionPtr == "verify" {
 		reader := bufio.NewReader(os.Stdin)
