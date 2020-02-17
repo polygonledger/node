@@ -61,7 +61,9 @@ func txValid(tx block.Tx) bool {
 	//TODO check receiver is valid address
 
 	sufficientBalance := Accounts[tx.Sender] >= tx.Amount
-	fmt.Println("sufficientBalance ", sufficientBalance)
+	if !sufficientBalance {
+		fmt.Println("insufficientBalance ")
+	}
 	// log.Println("sufficientBalance ", sufficientBalance, tx.Sender, Accounts[tx.Sender], tx.Amount)
 	btxValid := sufficientBalance
 	//TODO and signature

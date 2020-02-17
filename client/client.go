@@ -2,10 +2,10 @@ package main
 
 import (
 	"bufio"
-	"encoding/hex"
 	"encoding/json"
 	"flag"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"net"
 	"os"
@@ -76,23 +76,30 @@ func MakeRandomTx(rw *bufio.ReadWriter) error {
 
 func PushTx(rw *bufio.ReadWriter) error {
 
-	keypair := crypto.PairFromSecret("test")
+	// keypair := crypto.PairFromSecret("test")
+	// var tx block.Tx
+	// s := block.AccountFromString("Pa033f6528cc1")
+	// r := s //TODO
+	// tx = block.Tx{Nonce: 0, Amount: 0, Sender: s, Receiver: r}
+	// signature := crypto.SignTx(tx, keypair)
+	// sighex := hex.EncodeToString(signature.Serialize())
+	// tx.Signature = sighex
+	// tx.SenderPubkey = crypto.PubKeyToHex(keypair.PubKey)
+
+	dat, _ := ioutil.ReadFile("tx.json")
 	var tx block.Tx
-	s := block.AccountFromString("Pa033f6528cc1")
-	r := s //TODO
-	tx = block.Tx{Nonce: 0, Amount: 0, Sender: s, Receiver: r}
-	signature := crypto.SignTx(tx, keypair)
-	sighex := hex.EncodeToString(signature.Serialize())
-	tx.Signature = sighex
-	tx.SenderPubkey = crypto.PubKeyToHex(keypair.PubKey)
+
+	if err := json.Unmarshal(dat, &tx); err != nil {
+		panic(err)
+	}
 
 	//send Tx
 	txJson, _ := json.Marshal(tx)
 	log.Println("txJson ", string(txJson))
 
-	//	req_msg := protocol.EncodeMessageTx(txJson)
-	// resp_msg := protocol.RequestReply(rw, req_msg)
-	// log.Print("reply msg ", resp_msg)
+	req_msg := protocol.EncodeMessageTx(txJson)
+	resp_msg := protocol.RequestReply(rw, req_msg)
+	log.Print("reply msg ", resp_msg)
 
 	return nil
 }

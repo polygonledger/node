@@ -4,7 +4,7 @@ new blockchain. delegated proof-of-asset algorithm
 
 architecture: accounts, not UTXO. transaction types, scripting through transaction multiplexing
 
-current status: experimental node protocoltxValid(tx)
+current status: experimental
 
 ## run node
 
@@ -19,9 +19,6 @@ with browser go to http://localhost:8080
 
 client:
 ```cd client && go run client.go -option=randomtx```
-
-getbalance:
-go run client.go -option=getbalance
 
 ## wallet
 

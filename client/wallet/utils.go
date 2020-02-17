@@ -91,7 +91,7 @@ func createtx() {
 	amount_int, _ := strconv.Atoi(amount)
 
 	reader = bufio.NewReader(os.Stdin)
-	fmt.Print("Enter receiver: ")
+	fmt.Print("Enter recipient: ")
 	recv, _ := reader.ReadString('\n')
 	recv = strings.Trim(recv, string('\n'))
 

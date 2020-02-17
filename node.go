@@ -145,7 +145,7 @@ func handleMsg(msg_in_chan chan string, msg_out_chan chan string) {
 			Genesis_Account := block.AccountFromString(addr)
 
 			tx := block.Tx{Nonce: randNonce, Amount: amount, Sender: Genesis_Account, Receiver: account}
-			log.Println("tx >>> ", tx)
+			//log.Println("tx >>> ", tx)
 
 			tx = crypto.SignTxAdd(tx, keypair)
 			reply := chain.HandleTx(tx)
@@ -177,8 +177,9 @@ func handleMsg(msg_in_chan chan string, msg_out_chan chan string) {
 			}
 			log.Println(">> ", tx)
 
-		// 	resp := chain.HandleTx(tx)
-		// 	Reply(rw, resp)
+			resp := chain.HandleTx(tx)
+			msg_out_chan <- resp
+
 		// 	//log.Println("amount ", tx.Amount)
 		// 	//n, err := rw.WriteString("response " + strconv.Itoa(tx.Amount) + string(protocol.DELIM))
 
@@ -308,7 +309,7 @@ func runweb() {
 		fmt.Fprintf(w, "<h1>Polygon chain</h1><div>%s</div>", p)
 	})
 
-	log.Fatal(http.ListenAndServe(":8081", nil))
+	log.Fatal(http.ListenAndServe(":8080", nil))
 
 }
 

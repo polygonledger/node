@@ -118,4 +118,10 @@ func TestTxFile(t *testing.T) {
 		t.Error("amount wrong ")
 	}
 
+	verified := crypto.VerifyTxSig(tx)
+
+	if !verified {
+		t.Error("verify tx fail")
+	}
+
 }
