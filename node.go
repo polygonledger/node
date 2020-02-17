@@ -84,6 +84,7 @@ func putMsg(msg_in_chan chan string, msg string) {
 
 func HandlePing(msg_out_chan chan string) {
 	reply := "PONG"
+	//response := protocol.EncodeReply(reply)
 	msg_out_chan <- reply
 }
 
@@ -104,12 +105,7 @@ func HandleMsg(msg_in_chan chan string, msg_out_chan chan string) {
 
 		log.Println("Handle ", msg.Command)
 
-		//TODO is msg.command  valid?
-
 		switch msg.Command {
-
-		//TODO
-		//CMD_VALIDTX
 
 		case protocol.CMD_PING:
 			log.Println("PING PONG")
@@ -184,20 +180,11 @@ func HandleMsg(msg_in_chan chan string, msg_out_chan chan string) {
 			resp := chain.HandleTx(tx)
 			msg_out_chan <- resp
 
-		// 	//log.Println("amount ", tx.Amount)
-		// 	//n, err := rw.WriteString("response " + strconv.Itoa(tx.Amount) + string(protocol.DELIM))
-
 		// case protocol.CMD_RANDOM_ACCOUNT:
 		// 	log.Println("Handle random account")
 
 		// 	txJson, _ := json.Marshal(chain.RandomAccount())
 		// 	Reply(rw, string(txJson))
-
-		// 	//log.Println("amount ", tx.Amount)
-		// 	//n, err := rw.WriteString("response " + strconv.Itoa(tx.Amount) + string(protocol.DELIM))
-
-		// 	//log.Println("amount ", tx.Amount)
-		// 	//n, err := rw.WriteString("response " + strconv.Itoa(tx.Amount) + string(protocol.DELIM))
 
 		default:
 			log.Println("unknown cmd ", msg.Command)

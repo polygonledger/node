@@ -19,9 +19,7 @@ import (
 	protocol "github.com/polygonledger/node/net"
 )
 
-/*
-Outgoing connections. A `net.Conn` satisfies the io.Reader and `io.Writer` interfaces
-*/
+//Outgoing connections. A `net.Conn` satisfies the io.Reader and `io.Writer` interfaces
 
 // Open connects to a TCP Address
 // It returns a TCP connection with a timeout wrapped into a buffered ReadWriter.

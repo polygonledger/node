@@ -80,8 +80,8 @@ func ReadMsg(rw *bufio.ReadWriter) string {
 
 func EncodeReply(resp string) string {
 	//TODO! header missing
-	response := resp + string(DELIM)
-	return response
+	msg := EncodeMsg(REP, resp, "")
+	return msg
 }
 
 func EncodeMessageTx(txJson []byte) string {

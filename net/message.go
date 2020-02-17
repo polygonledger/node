@@ -114,3 +114,8 @@ func EncodeMsg(msgType string, cmd string, data string) string {
 	msg := msgType + string(DELIM_HEAD) + cmd + string(DELIM_HEAD) + data + string(DELIM)
 	return msg
 }
+
+func DecodeMsg(msg string) string {
+
+	return msg
+}
