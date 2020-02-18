@@ -114,14 +114,14 @@ func HandlePing(msg_out_chan chan string) {
 	msg_out_chan <- reply
 }
 
-func HandleReqMsg(msg protocol.Message, msg_in_chan chan string, msg_out_chan chan string) {
+func HandleReqMsg(msg protocol.Message, rep_chan chan string) {
 	log.Println("Handle ", msg.Command)
 
 	switch msg.Command {
 
 	case protocol.CMD_PING:
 		log.Println("PING PONG")
-		HandlePing(msg_out_chan)
+		HandlePing(rep_chan)
 
 	case protocol.CMD_BALANCE:
 		log.Println("Handle balance")
@@ -137,7 +137,7 @@ func HandleReqMsg(msg protocol.Message, msg_in_chan chan string, msg_out_chan ch
 
 		balance := chain.Accounts[account]
 		s := strconv.Itoa(balance)
-		msg_out_chan <- s
+		rep_chan <- s
 
 	case protocol.CMD_FAUCET:
 		//send money to specified address
@@ -163,7 +163,7 @@ func HandleReqMsg(msg protocol.Message, msg_in_chan chan string, msg_out_chan ch
 		reply := chain.HandleTx(tx)
 		log.Println("resp > ", reply)
 
-		msg_out_chan <- reply
+		rep_chan <- reply
 
 	case protocol.CMD_GETTXPOOL:
 		log.Println("get tx pool")
@@ -171,7 +171,7 @@ func HandleReqMsg(msg protocol.Message, msg_in_chan chan string, msg_out_chan ch
 		//TODO
 		data, _ := json.Marshal(chain.Tx_pool)
 		msg := protocol.EncodeMsg(protocol.REP, protocol.CMD_GETTXPOOL, string(data))
-		msg_out_chan <- msg
+		rep_chan <- msg
 
 		//var Tx_pool []block.Tx
 
@@ -190,7 +190,7 @@ func HandleReqMsg(msg protocol.Message, msg_in_chan chan string, msg_out_chan ch
 		log.Println(">> ", tx)
 
 		resp := chain.HandleTx(tx)
-		msg_out_chan <- resp
+		rep_chan <- resp
 
 	// case protocol.CMD_RANDOM_ACCOUNT:
 	// 	log.Println("Handle random account")
@@ -200,11 +200,14 @@ func HandleReqMsg(msg protocol.Message, msg_in_chan chan string, msg_out_chan ch
 
 	default:
 		log.Println("unknown cmd ", msg.Command)
+		resp := "ERROR UNKONWN CMD"
+		rep_chan <- resp
 	}
 }
 
-func HandleMsg(msg_in_chan chan string, msg_out_chan chan string) {
-	msgString := <-msg_in_chan
+//handle messages
+func HandleMsg(req_chan chan string, rep_chan chan string) {
+	msgString := <-req_chan
 	fmt.Println("handle msg string ", msgString)
 
 	if msgString == protocol.EMPTY_MSG {
@@ -212,12 +215,14 @@ func HandleMsg(msg_in_chan chan string, msg_out_chan chan string) {
 		return
 	}
 
-	msg := protocol.ParseMessage(msgString)
+	req_msg := protocol.ParseMessage(msgString)
 
-	fmt.Println("msg type ", msg.MessageType)
+	fmt.Println("msg type ", req_msg.MessageType)
 
-	if msg.MessageType == protocol.REQ {
-		HandleReqMsg(msg, msg_in_chan, msg_out_chan)
+	if req_msg.MessageType == protocol.REQ {
+		HandleReqMsg(req_msg, rep_chan)
+	} else if req_msg.MessageType == protocol.REP {
+		log.Println("handle reply")
 	}
 }
 
@@ -225,11 +230,10 @@ func requestReplyLoop(rw *bufio.ReadWriter, req_chan chan string, rep_chan chan 
 
 	//continously read for requests and respond with reply
 	for {
-		//REQUEST<>REPLY protocol only so far
 
 		// read from network
 		msgString := protocol.ReadStream(rw)
-		log.Print("Receive message ", msgString)
+		log.Print("Receive message over network ", msgString)
 
 		//put in the channel
 		go putMsg(req_chan, msgString)
@@ -260,6 +264,8 @@ func channelNetwork(conn net.Conn) {
 	//TODO
 	//when close?
 	//defer conn.Close()
+
+	//REQUEST<>REPLY protocol only so far
 
 	go requestReplyLoop(rw, req_chan, rep_chan)
 
