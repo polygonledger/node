@@ -42,7 +42,14 @@ func addpeer(addr string) {
 	log.Println("peers ", Peers)
 }
 
-// start listening on tcp and put connection into go routine
+func setupPeer(addr string, conn net.Conn) {
+	addpeer(addr)
+
+	log.Println("setup channels for incoming requests")
+	go channelNetwork(conn)
+}
+
+// start listening on tcp and handle connection through channels
 func ListenAll() error {
 	log.Println("listen all")
 	var err error
@@ -71,10 +78,9 @@ func ListenAll() error {
 			log.Println("Failed accepting a connection request:", err)
 			continue
 		}
-		addpeer(strRemoteAddr)
 
-		log.Println("Handle incoming messages")
-		go handleMessagesConn(conn)
+		setupPeer(strRemoteAddr, conn)
+
 	}
 }
 
@@ -108,6 +114,95 @@ func HandlePing(msg_out_chan chan string) {
 	msg_out_chan <- reply
 }
 
+func HandleReqMsg(msg protocol.Message, msg_in_chan chan string, msg_out_chan chan string) {
+	log.Println("Handle ", msg.Command)
+
+	switch msg.Command {
+
+	case protocol.CMD_PING:
+		log.Println("PING PONG")
+		HandlePing(msg_out_chan)
+
+	case protocol.CMD_BALANCE:
+		log.Println("Handle balance")
+
+		dataBytes := msg.Data
+		log.Println("data ", dataBytes)
+		var account block.Account
+
+		if err := json.Unmarshal(dataBytes, &account); err != nil {
+			panic(err)
+		}
+		log.Println("get balance for account ", account)
+
+		balance := chain.Accounts[account]
+		s := strconv.Itoa(balance)
+		msg_out_chan <- s
+
+	case protocol.CMD_FAUCET:
+		//send money to specified address
+
+		dataBytes := msg.Data
+		var account block.Account
+		if err := json.Unmarshal(dataBytes, &account); err != nil {
+			panic(err)
+		}
+		log.Println("faucet for ... ", account)
+
+		randNonce := 0
+		amount := 10
+
+		keypair := chain.GenesisKeys()
+		addr := crypto.Address(crypto.PubKeyToHex(keypair.PubKey))
+		Genesis_Account := block.AccountFromString(addr)
+
+		tx := block.Tx{Nonce: randNonce, Amount: amount, Sender: Genesis_Account, Receiver: account}
+		//log.Println("tx >>> ", tx)
+
+		tx = crypto.SignTxAdd(tx, keypair)
+		reply := chain.HandleTx(tx)
+		log.Println("resp > ", reply)
+
+		msg_out_chan <- reply
+
+	case protocol.CMD_GETTXPOOL:
+		log.Println("get tx pool")
+
+		//TODO
+		data, _ := json.Marshal(chain.Tx_pool)
+		msg := protocol.EncodeMsg(protocol.REP, protocol.CMD_GETTXPOOL, string(data))
+		msg_out_chan <- msg
+
+		//var Tx_pool []block.Tx
+
+	//case CMD_GETBLOCKS:
+
+	case protocol.CMD_TX:
+		log.Println("Handle tx")
+
+		dataBytes := msg.Data
+
+		var tx block.Tx
+
+		if err := json.Unmarshal(dataBytes, &tx); err != nil {
+			panic(err)
+		}
+		log.Println(">> ", tx)
+
+		resp := chain.HandleTx(tx)
+		msg_out_chan <- resp
+
+	// case protocol.CMD_RANDOM_ACCOUNT:
+	// 	log.Println("Handle random account")
+
+	// 	txJson, _ := json.Marshal(chain.RandomAccount())
+	// 	Reply(rw, string(txJson))
+
+	default:
+		log.Println("unknown cmd ", msg.Command)
+	}
+}
+
 func HandleMsg(msg_in_chan chan string, msg_out_chan chan string) {
 	msgString := <-msg_in_chan
 	fmt.Println("handle msg string ", msgString)
@@ -122,99 +217,13 @@ func HandleMsg(msg_in_chan chan string, msg_out_chan chan string) {
 	fmt.Println("msg type ", msg.MessageType)
 
 	if msg.MessageType == protocol.REQ {
-
-		log.Println("Handle ", msg.Command)
-
-		switch msg.Command {
-
-		case protocol.CMD_PING:
-			log.Println("PING PONG")
-			HandlePing(msg_out_chan)
-
-		case protocol.CMD_BALANCE:
-			log.Println("Handle balance")
-
-			dataBytes := msg.Data
-			log.Println("data ", dataBytes)
-			var account block.Account
-
-			if err := json.Unmarshal(dataBytes, &account); err != nil {
-				panic(err)
-			}
-			log.Println("get balance for account ", account)
-
-			balance := chain.Accounts[account]
-			s := strconv.Itoa(balance)
-			msg_out_chan <- s
-
-		case protocol.CMD_FAUCET:
-			//send money to specified address
-
-			dataBytes := msg.Data
-			var account block.Account
-			if err := json.Unmarshal(dataBytes, &account); err != nil {
-				panic(err)
-			}
-			log.Println("faucet for ... ", account)
-
-			randNonce := 0
-			amount := 10
-
-			keypair := chain.GenesisKeys()
-			addr := crypto.Address(crypto.PubKeyToHex(keypair.PubKey))
-			Genesis_Account := block.AccountFromString(addr)
-
-			tx := block.Tx{Nonce: randNonce, Amount: amount, Sender: Genesis_Account, Receiver: account}
-			//log.Println("tx >>> ", tx)
-
-			tx = crypto.SignTxAdd(tx, keypair)
-			reply := chain.HandleTx(tx)
-			log.Println("resp > ", reply)
-
-			msg_out_chan <- reply
-
-		case protocol.CMD_GETTXPOOL:
-			log.Println("get tx pool")
-
-			//TODO
-			data, _ := json.Marshal(chain.Tx_pool)
-			msg := protocol.EncodeMsg(protocol.REP, protocol.CMD_GETTXPOOL, string(data))
-			msg_out_chan <- msg
-
-			//var Tx_pool []block.Tx
-
-		//case CMD_GETBLOCKS:
-
-		case protocol.CMD_TX:
-			log.Println("Handle tx")
-
-			dataBytes := msg.Data
-
-			var tx block.Tx
-
-			if err := json.Unmarshal(dataBytes, &tx); err != nil {
-				panic(err)
-			}
-			log.Println(">> ", tx)
-
-			resp := chain.HandleTx(tx)
-			msg_out_chan <- resp
-
-		// case protocol.CMD_RANDOM_ACCOUNT:
-		// 	log.Println("Handle random account")
-
-		// 	txJson, _ := json.Marshal(chain.RandomAccount())
-		// 	Reply(rw, string(txJson))
-
-		default:
-			log.Println("unknown cmd ", msg.Command)
-		}
+		HandleReqMsg(msg, msg_in_chan, msg_out_chan)
 	}
 }
 
-func requestReplyLoop(rw *bufio.ReadWriter, msg_in_chan chan string, msg_out_chan chan string) {
+func requestReplyLoop(rw *bufio.ReadWriter, req_chan chan string, rep_chan chan string) {
 
-	//continously read for requests and reply
+	//continously read for requests and respond with reply
 	for {
 		//REQUEST<>REPLY protocol only so far
 
@@ -223,25 +232,25 @@ func requestReplyLoop(rw *bufio.ReadWriter, msg_in_chan chan string, msg_out_cha
 		log.Print("Receive message ", msgString)
 
 		//put in the channel
-		go putMsg(msg_in_chan, msgString)
+		go putMsg(req_chan, msgString)
 
 		//handle in channel and put reply in msg_out channel
-		go HandleMsg(msg_in_chan, msg_out_chan)
+		go HandleMsg(req_chan, rep_chan)
 
-		//take from channel and send over network
-		reply := <-msg_out_chan
+		//take from reply channel and send over network
+		reply := <-rep_chan
 		fmt.Println("msg out ", reply)
 		Reply(rw, reply)
 
 	}
 }
 
-//handle connections
-func handleMessagesConn(conn net.Conn) {
+//setup the network of channels
+func channelNetwork(conn net.Conn) {
 
 	//TODO use msg types
-	msg_in_chan := make(chan string)
-	msg_out_chan := make(chan string)
+	req_chan := make(chan string)
+	rep_chan := make(chan string)
 
 	rw := bufio.NewReadWriter(bufio.NewReader(conn), bufio.NewWriter(conn))
 	//could add max listen
@@ -252,7 +261,7 @@ func handleMessagesConn(conn net.Conn) {
 	//when close?
 	//defer conn.Close()
 
-	go requestReplyLoop(rw, msg_in_chan, msg_out_chan)
+	go requestReplyLoop(rw, req_chan, rep_chan)
 
 	//go publishLoop(rw, msg_in_chan, msg_out_chan)
 
