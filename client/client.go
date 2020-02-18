@@ -16,7 +16,7 @@ import (
 
 	"github.com/polygonledger/node/block"
 	"github.com/polygonledger/node/crypto"
-	protocol "github.com/polygonledger/node/net"
+	protocol "github.com/polygonledger/node/ntwk"
 )
 
 //

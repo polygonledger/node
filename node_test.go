@@ -3,7 +3,7 @@ package main
 import (
 	"testing"
 
-	protocol "github.com/polygonledger/node/net"
+	protocol "github.com/polygonledger/node/ntwk"
 )
 
 func TestBasicPing(t *testing.T) {

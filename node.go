@@ -31,7 +31,7 @@ import (
 	"github.com/polygonledger/node/block"
 	chain "github.com/polygonledger/node/chain"
 	"github.com/polygonledger/node/crypto"
-	protocol "github.com/polygonledger/node/net"
+	protocol "github.com/polygonledger/node/ntwk"
 )
 
 var Peers []protocol.Peer
