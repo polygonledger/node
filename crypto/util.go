@@ -9,8 +9,8 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/btcd/btcec"
-	"github.com/btcd/chaincfg/chainhash"
+	"github.com/btcsuite/btcd/btcec"
+	"github.com/btcsuite/btcd/chaincfg/chainhash"
 )
 
 func GetMD5Hash(text string) string {

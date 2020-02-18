@@ -3,7 +3,7 @@ package block
 import (
 	"time"
 
-	"github.com/btcd/btcec"
+	"github.com/btcsuite/btcd/btcec"
 )
 
 type Block struct {
