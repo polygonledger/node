@@ -36,11 +36,12 @@ const (
 //TODO proper error handling
 func NetworkReadMessage(rw *bufio.ReadWriter) string {
 	msg, err := rw.ReadString(DELIM)
+	//log.Println("msg > ", msg)
 	if err != nil {
 		//issue
 		//special case is empty message if client disconnects?
 		if len(msg) == 0 {
-			log.Println("empty message")
+			//log.Println("empty message")
 			return EMPTY_MSG
 		} else {
 			log.Println("Failed ", err)
@@ -82,7 +83,7 @@ func ReadMsg(rw *bufio.ReadWriter) string {
 
 func EncodeReply(resp string) string {
 	//TODO! header missing
-	msg := EncodeMsg(REP, resp, "")
+	msg := EncodeMsgString(REP, resp, "")
 	return msg
 }
 
@@ -90,7 +91,7 @@ func EncodeMessageTx(txJson []byte) string {
 	//emptyData := ""
 	msgCmd := "TX"
 	//TODO check
-	msg := EncodeMsg(REQ, msgCmd, string(txJson))
+	msg := EncodeMsgString(REQ, msgCmd, string(txJson))
 	return msg
 }
 
@@ -112,7 +113,7 @@ func RequestLoop(rw *bufio.ReadWriter, msg_in_chan chan string, msg_out_chan cha
 //TODO convert to chan
 func RequestReply(rw *bufio.ReadWriter, req_msg string) string {
 	//REQUEST
-	WritePipe(rw, req_msg)
+	NetworkWrite(rw, req_msg)
 
 	//REPLY
 	resp_msg := ReadMsg(rw)
@@ -120,7 +121,7 @@ func RequestReply(rw *bufio.ReadWriter, req_msg string) string {
 	return resp_msg
 }
 
-func WritePipe(rw *bufio.ReadWriter, message string) error {
+func NetworkWrite(rw *bufio.ReadWriter, message string) error {
 	n, err := rw.WriteString(message)
 	if err != nil {
 		return errors.Wrap(err, "Could not write data ("+strconv.Itoa(n)+" bytes written)")
@@ -135,8 +136,8 @@ func WritePipe(rw *bufio.ReadWriter, message string) error {
 }
 
 func ReplyNetwork(rw *bufio.ReadWriter, resp string) {
-	rep_msg := EncodeReply(resp)
-	WritePipe(rw, rep_msg)
+	//rep_msg := EncodeReply(resp)
+	NetworkWrite(rw, resp)
 }
 
 func ReadMessage(rw *bufio.ReadWriter) Message {
@@ -153,20 +154,6 @@ func ConstructMessage(cmd string) string {
 	//delim := "\n"
 	msg := cmd + string(DELIM)
 	return msg
-}
-
-//request account address
-func RequestAccount(rw *bufio.ReadWriter) error {
-	log.Println("RequestAccount ", CMD_RANDOM_ACCOUNT)
-	msg := ConstructMessage(CMD_RANDOM_ACCOUNT)
-	error := WritePipe(rw, msg)
-	return error
-}
-
-//request account address
-func ReceiveAccount(rw *bufio.ReadWriter) error {
-	log.Println("RequestAccount ", CMD_RANDOM_ACCOUNT)
-	return nil
 }
 
 //generic request<->reply
@@ -210,3 +197,10 @@ func RandomTx(account_s block.Account) block.Tx {
 	log.Println(">> ran tx", testTx.Signature)
 	return testTx
 }
+
+//request account address
+// func RequestAccount(rw *bufio.ReadWriter) error {
+// 	msg := ConstructMessage(CMD_RANDOM_ACCOUNT)
+
+// func ReceiveAccount(rw *bufio.ReadWriter) error {
+// 	log.Println("RequestAccount ", CMD_RANDOM_ACCOUNT)

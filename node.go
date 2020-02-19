@@ -20,9 +20,11 @@ import (
 	"bufio"
 	"encoding/json"
 	"fmt"
+	"io"
 	"log"
 	"net"
 	"net/http"
+	"os"
 	"strconv"
 	"time"
 
@@ -35,47 +37,49 @@ import (
 )
 
 var Peers []protocol.Peer
+var nlog *log.Logger
+var logfile_name = "node.log"
 
 func addpeer(addr string) {
 	p := protocol.Peer{Address: addr}
 	Peers = append(Peers, p)
-	log.Println("peers ", Peers)
+	nlog.Println("peers ", Peers)
 }
 
 func setupPeer(addr string, conn net.Conn) {
 	addpeer(addr)
 
-	log.Println("setup channels for incoming requests")
+	nlog.Println("setup channels for incoming requests")
 	go channelNetwork(conn)
 }
 
 // start listening on tcp and handle connection through channels
 func ListenAll() error {
-	log.Println("listen all")
+	nlog.Println("listen all")
 	var err error
 	var listener net.Listener
 	listener, err = net.Listen("tcp", protocol.Port)
 	if err != nil {
-		log.Println(err)
+		nlog.Println(err)
 		return errors.Wrapf(err, "Unable to listen on port %s\n", protocol.Port)
 	}
 
 	addr := listener.Addr().String()
-	log.Println("Listen on", addr)
+	nlog.Println("Listen on", addr)
 
 	//TODO check if peers are alive see
 	//https://stackoverflow.com/questions/12741386/how-to-know-tcp-connection-is-closed-in-net-package
 	//https://gist.github.com/elico/3eecebd87d4bc714c94066a1783d4c9c
 
 	for {
-		log.Println("Accept a connection request")
+		nlog.Println("Accept a connection request")
 
 		conn, err := listener.Accept()
 		strRemoteAddr := conn.RemoteAddr().String()
 
-		log.Println("accepted conn ", strRemoteAddr)
+		nlog.Println("accepted conn ", strRemoteAddr)
 		if err != nil {
-			log.Println("Failed accepting a connection request:", err)
+			nlog.Println("Failed accepting a connection request:", err)
 			continue
 		}
 
@@ -84,35 +88,35 @@ func ListenAll() error {
 	}
 }
 
-func putMsg(msg_in_chan chan string, msg string) {
+func putMsg(msg_in_chan chan protocol.Message, msg protocol.Message) {
 	msg_in_chan <- msg
 }
 
 func HandlePing(msg_out_chan chan string) {
-	reply := "PONG"
+	reply := protocol.EncodeMsgString(protocol.REP, protocol.CMD_PONG, protocol.EMPTY_DATA)
 	msg_out_chan <- reply
 }
 
 func HandleReqMsg(msg protocol.Message, rep_chan chan string) {
-	log.Println("Handle ", msg.Command)
+	nlog.Println("Handle ", msg.Command)
 
 	switch msg.Command {
 
 	case protocol.CMD_PING:
-		log.Println("PING PONG")
+		nlog.Println("PING PONG")
 		HandlePing(rep_chan)
 
 	case protocol.CMD_BALANCE:
-		log.Println("Handle balance")
+		nlog.Println("Handle balance")
 
 		dataBytes := msg.Data
-		log.Println("data ", dataBytes)
+		nlog.Println("data ", dataBytes)
 		var account block.Account
 
 		if err := json.Unmarshal(dataBytes, &account); err != nil {
 			panic(err)
 		}
-		log.Println("get balance for account ", account)
+		nlog.Println("get balance for account ", account)
 
 		balance := chain.Accounts[account]
 		s := strconv.Itoa(balance)
@@ -126,7 +130,7 @@ func HandleReqMsg(msg protocol.Message, rep_chan chan string) {
 		if err := json.Unmarshal(dataBytes, &account); err != nil {
 			panic(err)
 		}
-		log.Println("faucet for ... ", account)
+		nlog.Println("faucet for ... ", account)
 
 		randNonce := 0
 		amount := 10
@@ -136,20 +140,19 @@ func HandleReqMsg(msg protocol.Message, rep_chan chan string) {
 		Genesis_Account := block.AccountFromString(addr)
 
 		tx := block.Tx{Nonce: randNonce, Amount: amount, Sender: Genesis_Account, Receiver: account}
-		//log.Println("tx >>> ", tx)
 
 		tx = crypto.SignTxAdd(tx, keypair)
 		reply := chain.HandleTx(tx)
-		log.Println("resp > ", reply)
+		nlog.Println("resp > ", reply)
 
 		rep_chan <- reply
 
 	case protocol.CMD_GETTXPOOL:
-		log.Println("get tx pool")
+		nlog.Println("get tx pool")
 
 		//TODO
 		data, _ := json.Marshal(chain.Tx_pool)
-		msg := protocol.EncodeMsg(protocol.REP, protocol.CMD_GETTXPOOL, string(data))
+		msg := protocol.EncodeMsgString(protocol.REP, protocol.CMD_GETTXPOOL, string(data))
 		rep_chan <- msg
 
 		//var Tx_pool []block.Tx
@@ -157,7 +160,7 @@ func HandleReqMsg(msg protocol.Message, rep_chan chan string) {
 	//case CMD_GETBLOCKS:
 
 	case protocol.CMD_TX:
-		log.Println("Handle tx")
+		nlog.Println("Handle tx")
 
 		dataBytes := msg.Data
 
@@ -166,55 +169,57 @@ func HandleReqMsg(msg protocol.Message, rep_chan chan string) {
 		if err := json.Unmarshal(dataBytes, &tx); err != nil {
 			panic(err)
 		}
-		log.Println(">> ", tx)
+		nlog.Println(">> ", tx)
 
 		resp := chain.HandleTx(tx)
 		rep_chan <- resp
 
 	// case protocol.CMD_RANDOM_ACCOUNT:
-	// 	log.Println("Handle random account")
+	// 	nlog.Println("Handle random account")
 
 	// 	txJson, _ := json.Marshal(chain.RandomAccount())
 
 	default:
-		log.Println("unknown cmd ", msg.Command)
+		nlog.Println("unknown cmd ", msg.Command)
 		resp := "ERROR UNKONWN CMD"
 		rep_chan <- resp
 	}
 }
 
 //handle messages
-func HandleMsg(req_chan chan string, rep_chan chan string) {
-	msgString := <-req_chan
-	fmt.Println("handle msg string ", msgString)
-
-	if msgString == protocol.EMPTY_MSG {
-		fmt.Println("empty msg")
-		return
-	}
-
-	req_msg := protocol.ParseMessage(msgString)
+func HandleMsg(req_chan chan protocol.Message, rep_chan chan string) {
+	req_msg := <-req_chan
+	//msgString := <-req_chan
+	//msgString :=
+	//	fmt.Println("handle msg string ", msgString)
 
 	fmt.Println("msg type ", req_msg.MessageType)
 
 	if req_msg.MessageType == protocol.REQ {
 		HandleReqMsg(req_msg, rep_chan)
 	} else if req_msg.MessageType == protocol.REP {
-		log.Println("handle reply")
+		nlog.Println("handle reply")
 	}
 }
 
-func requestReplyLoop(rw *bufio.ReadWriter, req_chan chan string, rep_chan chan string) {
+func RequestReplyLoop(rw *bufio.ReadWriter, req_chan chan protocol.Message, rep_chan chan string) {
 
 	//continously read for requests and respond with reply
 	for {
 
 		// read from network
 		msgString := protocol.NetworkReadMessage(rw)
-		log.Print("Receive message over network ", msgString)
+		if msgString == protocol.EMPTY_MSG {
+			//log.Println("empty message, ignore")
+			time.Sleep(500 * time.Millisecond)
+			continue
+		}
+
+		msg := protocol.ParseMessage(msgString)
+		nlog.Print("Receive message over network ", msgString)
 
 		//put in the channel
-		go putMsg(req_chan, msgString)
+		go putMsg(req_chan, msg)
 
 		//handle in channel and put reply in msg_out channel
 		go HandleMsg(req_chan, rep_chan)
@@ -231,7 +236,7 @@ func requestReplyLoop(rw *bufio.ReadWriter, req_chan chan string, rep_chan chan 
 func channelNetwork(conn net.Conn) {
 
 	//TODO use msg types
-	req_chan := make(chan string)
+	req_chan := make(chan protocol.Message)
 	rep_chan := make(chan string)
 
 	rw := bufio.NewReadWriter(bufio.NewReader(conn), bufio.NewWriter(conn))
@@ -245,7 +250,7 @@ func channelNetwork(conn net.Conn) {
 
 	//REQUEST<>REPLY protocol only so far
 
-	go requestReplyLoop(rw, req_chan, rep_chan)
+	go RequestReplyLoop(rw, req_chan, rep_chan)
 
 	//go publishLoop(msg_in_chan, msg_out_chan)
 
@@ -300,20 +305,20 @@ func loadContent() string {
 func runweb() {
 	//webserver to access node state through browser
 	// HTTP
-	log.Println("start webserver")
+	nlog.Println("start webserver")
 
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		p := loadContent()
-		//log.Print(p)
+		//nlog.Print(p)
 		fmt.Fprintf(w, "<h1>Polygon chain</h1><div>%s</div>", p)
 	})
 
-	log.Fatal(http.ListenAndServe(":8080", nil))
+	nlog.Fatal(http.ListenAndServe(":8080", nil))
 
 }
 
 func run_node() {
-	log.Println("run node")
+	nlog.Println("run node")
 
 	//TODO signatures of genesis
 	chain.InitAccounts()
@@ -330,12 +335,38 @@ func run_node() {
 
 }
 
+func setupLogfile() *log.Logger {
+	//setup log file
+
+	logFile, err := os.OpenFile(logfile_name, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0644)
+	if err != nil {
+		nlog.Fatal(err)
+	}
+
+	//defer logfile.Close()
+
+	mw := io.MultiWriter(os.Stdout, logFile)
+	log.SetOutput(mw)
+
+	//logger := log.New(logFile, "", log.LstdFlags)
+	logger := log.New(logFile, "node ", log.LstdFlags)
+	logger.SetOutput(mw)
+
+	//log.SetOutput(file)
+
+	nlog = logger
+	return logger
+
+}
+
 // start node listening for incoming requests
 func main() {
 
+	setupLogfile()
+
 	run_node()
 
-	log.Println("node running")
+	nlog.Println("node running")
 
 	runweb()
 

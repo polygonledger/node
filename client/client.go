@@ -24,7 +24,7 @@ func MakeRandomTx(msg_in_chan chan string, msg_out_chan chan string) error {
 	//make a random transaction by requesting random account from node
 	//get random account
 
-	req_msg := protocol.EncodeMsg(protocol.REQ, protocol.CMD_RANDOM_ACCOUNT, "emptydata")
+	req_msg := protocol.EncodeMsgString(protocol.REQ, protocol.CMD_RANDOM_ACCOUNT, "emptydata")
 
 	response := protocol.RequestReplyChan(req_msg, msg_in_chan, msg_out_chan)
 
@@ -87,7 +87,7 @@ func Getbalance(msg_in_chan chan string, msg_out_chan chan string) error {
 	addr = strings.Trim(addr, string('\n'))
 
 	txJson, _ := json.Marshal(block.Account{AccountKey: addr})
-	req_msg := protocol.EncodeMsg(protocol.REQ, protocol.CMD_BALANCE, string(txJson))
+	req_msg := protocol.EncodeMsgString(protocol.REQ, protocol.CMD_BALANCE, string(txJson))
 	//fmt.Println("msg ", msg)
 	response := protocol.RequestReplyChan(req_msg, msg_in_chan, msg_out_chan)
 
@@ -98,7 +98,7 @@ func Getbalance(msg_in_chan chan string, msg_out_chan chan string) error {
 }
 
 func Gettxpool(msg_in_chan chan string, msg_out_chan chan string) error {
-	req_msg := protocol.EncodeMsg(protocol.REQ, protocol.CMD_GETTXPOOL, "")
+	req_msg := protocol.EncodeMsgString(protocol.REQ, protocol.CMD_GETTXPOOL, "")
 	log.Println("> ", req_msg)
 	response := protocol.RequestReplyChan(req_msg, msg_in_chan, msg_out_chan)
 
@@ -114,7 +114,7 @@ func GetFaucet(msg_in_chan chan string, msg_out_chan chan string) error {
 	addr = strings.Trim(addr, string('\n'))
 
 	accountJson, _ := json.Marshal(block.Account{AccountKey: addr})
-	req_msg := protocol.EncodeMsg(protocol.REQ, protocol.CMD_FAUCET, string(accountJson))
+	req_msg := protocol.EncodeMsgString(protocol.REQ, protocol.CMD_FAUCET, string(accountJson))
 	protocol.RequestReplyChan(req_msg, msg_in_chan, msg_out_chan)
 	//log.Println("resp ", resp)
 
@@ -123,7 +123,7 @@ func GetFaucet(msg_in_chan chan string, msg_out_chan chan string) error {
 
 func MakePing(msg_in_chan chan string, msg_out_chan chan string) {
 	emptydata := ""
-	req_msg := protocol.EncodeMsg(protocol.REQ, protocol.CMD_PING, emptydata)
+	req_msg := protocol.EncodeMsgString(protocol.REQ, protocol.CMD_PING, emptydata)
 	resp := protocol.RequestReplyChan(req_msg, msg_in_chan, msg_out_chan)
 	log.Println("resp ", resp)
 }
@@ -142,6 +142,7 @@ func client(ip string) (*bufio.ReadWriter, error) {
 
 type Configuration struct {
 	ServerAddress string
+	PeerAddresses []string
 }
 
 func readdns() {
@@ -160,8 +161,6 @@ func readdns() {
 //start client and connect to the host
 func main() {
 
-	//prepare to run client
-
 	//read config
 
 	file, _ := os.Open("conf.json")
@@ -173,6 +172,7 @@ func main() {
 		fmt.Println("error:", err)
 	}
 	fmt.Println("ServerAddress: ", configuration.ServerAddress)
+	fmt.Println("PeerAddresses: ", configuration.PeerAddresses)
 
 	//if exists
 	// dat, _ := ioutil.ReadFile("keys.txt")
@@ -188,18 +188,9 @@ func main() {
 		log.Println("Error:", errors.WithStack(err))
 	}
 
-	// //sub loop
-	// for {
-	// 	log.Println("..")
-	// 	msg, _ := rw.ReadString(protocol.DELIM)
-	// 	log.Println(msg)
-	// 	msg = strings.Trim(msg, string(protocol.DELIM))
-	// 	time.Sleep(2 * time.Second)
-	// }
-
-	msg_in_chan := make(chan string)
-	msg_out_chan := make(chan string)
-	go protocol.RequestLoop(rw, msg_in_chan, msg_out_chan)
+	req_chan := make(chan string)
+	rep_chan := make(chan string)
+	go protocol.RequestLoop(rw, req_chan, rep_chan)
 
 	if *optionPtr == "createkeypair" {
 		//TODO read secret from cmd
@@ -209,12 +200,19 @@ func main() {
 	} else if *optionPtr == "ping" {
 		log.Println("ping")
 		//protocol.Server_address
-		MakePing(msg_in_chan, msg_out_chan)
+		MakePing(req_chan, rep_chan)
+	} else if *optionPtr == "pingall" {
+		//protocol.Server_address
+		for _, peer := range configuration.PeerAddresses {
+			log.Println("ping ", peer)
+
+		}
+		MakePing(req_chan, rep_chan)
 	} else if *optionPtr == "pingconnect" {
 		log.Println("ping continously")
 		//protocol.Server_address
 		for {
-			MakePing(msg_in_chan, msg_out_chan)
+			MakePing(req_chan, rep_chan)
 			time.Sleep(10 * time.Second)
 		}
 
@@ -222,22 +220,22 @@ func main() {
 		log.Println("getbalance")
 		//protocol.Server_address
 
-		Getbalance(msg_in_chan, msg_out_chan)
+		Getbalance(req_chan, rep_chan)
 
 	} else if *optionPtr == "faucet" {
 		log.Println("faucet")
 		//get coins
 		//GetFaucet(rw)
-		GetFaucet(msg_in_chan, msg_out_chan)
+		GetFaucet(req_chan, rep_chan)
 
 	} else if *optionPtr == "txpool" {
-		err = Gettxpool(msg_in_chan, msg_out_chan)
+		err = Gettxpool(req_chan, rep_chan)
 		return
 	} else if *optionPtr == "pushtx" {
-		err = PushTx(msg_in_chan, msg_out_chan)
+		err = PushTx(req_chan, rep_chan)
 		return
 	} else if *optionPtr == "randomtx" {
-		err = MakeRandomTx(msg_in_chan, msg_out_chan)
+		err = MakeRandomTx(req_chan, rep_chan)
 		return
 	}
 	// else if *optionPtr == "pushtx" {

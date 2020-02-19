@@ -25,12 +25,14 @@ const (
 
 const (
 	CMD_PING           = "PING"    //ping
+	CMD_PONG           = "PONG"    //ping
 	CMD_BALANCE        = "BALANCE" //get balance of account
 	CMD_FAUCET         = "FAUCET"
 	CMD_TX             = "TX"     //send transaction
 	CMD_RANDOM_ACCOUNT = "RANACC" //get some random account
 	CMD_GETTXPOOL      = "GETTXPOOL"
 	//CMD_GETBLOCKS      = "GETBLOCKS"
+	EMPTY_DATA = "EMPTY"
 )
 
 //TODO proper enums
@@ -109,10 +111,15 @@ func AccountMessage(account block.Account) MessageAccount {
 }
 
 //encode a message
-func EncodeMsg(msgType string, cmd string, data string) string {
+func EncodeMsgString(msgType string, cmd string, data string) string {
 	//TODO types
 	msg := msgType + string(DELIM_HEAD) + cmd + string(DELIM_HEAD) + data + string(DELIM)
 	return msg
+}
+
+func EncodeMsg(msgType string, cmd string, data string) Message {
+	m := Message{MessageType: msgType, Command: cmd, Data: []byte(data)}
+	return m
 }
 
 func DecodeMsg(msg string) string {

@@ -13,17 +13,20 @@ func TestBasicPing(t *testing.T) {
 	go HandlePing(msg_out_chan)
 	msg := <-msg_out_chan
 
-	if !(msg == "PONG") {
-		t.Error("ping failed")
+	if !(msg == "REP#PONG#EMPTY|") {
+		t.Error("ping failed ", msg)
 	}
 }
 
 func TestBasicPingMsg(t *testing.T) {
 
-	msg_in := make(chan string)
+	setupLogfile()
+
+	msg_in := make(chan protocol.Message)
 	msg_out := make(chan string)
 
 	emptydata := ""
+	//req_msg := protocol.EncodeMsgString(protocol.REQ, protocol.CMD_PING, emptydata)
 	req_msg := protocol.EncodeMsg(protocol.REQ, protocol.CMD_PING, emptydata)
 	go func() {
 		msg_in <- req_msg
@@ -31,7 +34,7 @@ func TestBasicPingMsg(t *testing.T) {
 	go HandleMsg(msg_in, msg_out)
 	msg := <-msg_out
 
-	if !(msg == "PONG") {
-		t.Error("ping failed")
+	if !(msg == "REP#PONG#EMPTY|") {
+		t.Error("ping failed ", msg)
 	}
 }
