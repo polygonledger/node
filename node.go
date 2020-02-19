@@ -50,6 +50,7 @@ func setupPeer(addr string, conn net.Conn) {
 	addpeer(addr)
 
 	nlog.Println("setup channels for incoming requests")
+	//TODO peers chan
 	go channelNetwork(conn)
 }
 
@@ -92,12 +93,13 @@ func putMsg(msg_in_chan chan protocol.Message, msg protocol.Message) {
 	msg_in_chan <- msg
 }
 
-func HandlePing(msg_out_chan chan string) {
-	reply := protocol.EncodeMsgString(protocol.REP, protocol.CMD_PONG, protocol.EMPTY_DATA)
+func HandlePing(msg_out_chan chan protocol.Message) {
+	//reply := protocol.EncodeMsgString(protocol.REP, protocol.CMD_PONG, protocol.EMPTY_DATA)
+	reply := protocol.EncodeMsg(protocol.REP, protocol.CMD_PONG, protocol.EMPTY_DATA)
 	msg_out_chan <- reply
 }
 
-func HandleReqMsg(msg protocol.Message, rep_chan chan string) {
+func HandleReqMsg(msg protocol.Message, rep_chan chan protocol.Message) {
 	nlog.Println("Handle ", msg.Command)
 
 	switch msg.Command {
@@ -120,7 +122,9 @@ func HandleReqMsg(msg protocol.Message, rep_chan chan string) {
 
 		balance := chain.Accounts[account]
 		s := strconv.Itoa(balance)
-		rep_chan <- s
+		reply := protocol.EncodeMsg(protocol.REP, protocol.CMD_BALANCE, s)
+		//rep_chan <- s
+		rep_chan <- reply
 
 	case protocol.CMD_FAUCET:
 		//send money to specified address
@@ -142,8 +146,10 @@ func HandleReqMsg(msg protocol.Message, rep_chan chan string) {
 		tx := block.Tx{Nonce: randNonce, Amount: amount, Sender: Genesis_Account, Receiver: account}
 
 		tx = crypto.SignTxAdd(tx, keypair)
-		reply := chain.HandleTx(tx)
-		nlog.Println("resp > ", reply)
+		reply_string := chain.HandleTx(tx)
+		nlog.Println("resp > ", reply_string)
+
+		reply := protocol.EncodeMsg(protocol.REP, protocol.CMD_FAUCET, reply_string)
 
 		rep_chan <- reply
 
@@ -152,7 +158,7 @@ func HandleReqMsg(msg protocol.Message, rep_chan chan string) {
 
 		//TODO
 		data, _ := json.Marshal(chain.Tx_pool)
-		msg := protocol.EncodeMsgString(protocol.REP, protocol.CMD_GETTXPOOL, string(data))
+		msg := protocol.EncodeMsg(protocol.REP, protocol.CMD_GETTXPOOL, string(data))
 		rep_chan <- msg
 
 		//var Tx_pool []block.Tx
@@ -172,7 +178,8 @@ func HandleReqMsg(msg protocol.Message, rep_chan chan string) {
 		nlog.Println(">> ", tx)
 
 		resp := chain.HandleTx(tx)
-		rep_chan <- resp
+		msg := protocol.EncodeMsg(protocol.REP, protocol.CMD_TX, resp)
+		rep_chan <- msg
 
 	// case protocol.CMD_RANDOM_ACCOUNT:
 	// 	nlog.Println("Handle random account")
@@ -182,12 +189,14 @@ func HandleReqMsg(msg protocol.Message, rep_chan chan string) {
 	default:
 		nlog.Println("unknown cmd ", msg.Command)
 		resp := "ERROR UNKONWN CMD"
-		rep_chan <- resp
+		//TODO error message
+		msg := protocol.EncodeMsg(protocol.REP, protocol.CMD_TX, resp)
+		rep_chan <- msg
 	}
 }
 
 //handle messages
-func HandleMsg(req_chan chan protocol.Message, rep_chan chan string) {
+func HandleMsg(req_chan chan protocol.Message, rep_chan chan protocol.Message) {
 	req_msg := <-req_chan
 	//msgString := <-req_chan
 	//msgString :=
@@ -202,7 +211,7 @@ func HandleMsg(req_chan chan protocol.Message, rep_chan chan string) {
 	}
 }
 
-func RequestReplyLoop(rw *bufio.ReadWriter, req_chan chan protocol.Message, rep_chan chan string) {
+func RequestReplyLoop(rw *bufio.ReadWriter, req_chan chan protocol.Message, rep_chan chan protocol.Message) {
 
 	//continously read for requests and respond with reply
 	for {
@@ -237,7 +246,7 @@ func channelNetwork(conn net.Conn) {
 
 	//TODO use msg types
 	req_chan := make(chan protocol.Message)
-	rep_chan := make(chan string)
+	rep_chan := make(chan protocol.Message)
 
 	rw := bufio.NewReadWriter(bufio.NewReader(conn), bufio.NewWriter(conn))
 	//could add max listen

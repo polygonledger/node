@@ -10,6 +10,8 @@ import (
 
 type Peer struct {
 	Address string `json:"Address"`
+	//TODO chans
+
 }
 
 //peer functions

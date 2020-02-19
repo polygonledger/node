@@ -135,9 +135,10 @@ func NetworkWrite(rw *bufio.ReadWriter, message string) error {
 	return nil
 }
 
-func ReplyNetwork(rw *bufio.ReadWriter, resp string) {
+func ReplyNetwork(rw *bufio.ReadWriter, resp Message) {
 	//rep_msg := EncodeReply(resp)
-	NetworkWrite(rw, resp)
+	resp_string := MsgString(resp)
+	NetworkWrite(rw, resp_string)
 }
 
 func ReadMessage(rw *bufio.ReadWriter) Message {
