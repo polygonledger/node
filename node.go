@@ -84,33 +84,12 @@ func ListenAll() error {
 	}
 }
 
-func Reply(rw *bufio.ReadWriter, resp string) {
-	response := protocol.EncodeReply(resp)
-	n, err := rw.WriteString(response)
-	if err != nil {
-		log.Println(err, n)
-		//err:= errors.Wrap(err, "Could not write GOB data ("+strconv.Itoa(n)+" bytes written)")
-	}
-	rw.Flush()
-}
-
-func ReadMessage(rw *bufio.ReadWriter) protocol.Message {
-	var msg protocol.Message
-	msgString := protocol.ReadStream(rw)
-	if msgString == protocol.EMPTY_MSG {
-		return protocol.EmptyMsg()
-	}
-	msg = protocol.ParseMessage(msgString)
-	return msg
-}
-
 func putMsg(msg_in_chan chan string, msg string) {
 	msg_in_chan <- msg
 }
 
 func HandlePing(msg_out_chan chan string) {
 	reply := "PONG"
-	//response := protocol.EncodeReply(reply)
 	msg_out_chan <- reply
 }
 
@@ -196,7 +175,6 @@ func HandleReqMsg(msg protocol.Message, rep_chan chan string) {
 	// 	log.Println("Handle random account")
 
 	// 	txJson, _ := json.Marshal(chain.RandomAccount())
-	// 	Reply(rw, string(txJson))
 
 	default:
 		log.Println("unknown cmd ", msg.Command)
@@ -232,7 +210,7 @@ func requestReplyLoop(rw *bufio.ReadWriter, req_chan chan string, rep_chan chan 
 	for {
 
 		// read from network
-		msgString := protocol.ReadStream(rw)
+		msgString := protocol.NetworkReadMessage(rw)
 		log.Print("Receive message over network ", msgString)
 
 		//put in the channel
@@ -244,7 +222,7 @@ func requestReplyLoop(rw *bufio.ReadWriter, req_chan chan string, rep_chan chan 
 		//take from reply channel and send over network
 		reply := <-rep_chan
 		fmt.Println("msg out ", reply)
-		Reply(rw, reply)
+		protocol.ReplyNetwork(rw, reply)
 
 	}
 }
@@ -269,7 +247,7 @@ func channelNetwork(conn net.Conn) {
 
 	go requestReplyLoop(rw, req_chan, rep_chan)
 
-	//go publishLoop(rw, msg_in_chan, msg_out_chan)
+	//go publishLoop(msg_in_chan, msg_out_chan)
 
 }
 

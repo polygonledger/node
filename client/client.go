@@ -20,19 +20,16 @@ import (
 )
 
 //
-func MakeRandomTx(rw *bufio.ReadWriter) error {
+func MakeRandomTx(msg_in_chan chan string, msg_out_chan chan string) error {
 	//make a random transaction by requesting random account from node
 	//get random account
 
-	msg := protocol.EncodeMsg(protocol.REQ, protocol.CMD_RANDOM_ACCOUNT, "emptydata")
+	req_msg := protocol.EncodeMsg(protocol.REQ, protocol.CMD_RANDOM_ACCOUNT, "emptydata")
 
-	protocol.WritePipe(rw, msg)
-
-	//response
-	msg2 := protocol.ReadMsg(rw)
+	response := protocol.RequestReplyChan(req_msg, msg_in_chan, msg_out_chan)
 
 	var a block.Account
-	dataBytes := []byte(msg2)
+	dataBytes := []byte(response)
 	if err := json.Unmarshal(dataBytes, &a); err != nil {
 		panic(err)
 	}
@@ -45,20 +42,15 @@ func MakeRandomTx(rw *bufio.ReadWriter) error {
 	txJson, _ := json.Marshal(testTx)
 	log.Println("txJson ", txJson)
 
-	req_msg := protocol.EncodeMessageTx(txJson)
+	req_msg = protocol.EncodeMessageTx(txJson)
 
-	//REQUEST
-	//protocol.WritePipe(rw, req_msg)
-
-	//REPLY
-	//resp_msg := protocol.ReadMsg(rw)
-	resp_msg := protocol.RequestReply(rw, req_msg)
-	log.Print("reply msg ", resp_msg)
+	response = protocol.RequestReplyChan(req_msg, msg_in_chan, msg_out_chan)
+	log.Print("response msg ", response)
 
 	return nil
 }
 
-func PushTx(rw *bufio.ReadWriter) error {
+func PushTx(msg_in_chan chan string, msg_out_chan chan string) error {
 
 	// keypair := crypto.PairFromSecret("test")
 	// var tx block.Tx
@@ -82,39 +74,35 @@ func PushTx(rw *bufio.ReadWriter) error {
 	log.Println("txJson ", string(txJson))
 
 	req_msg := protocol.EncodeMessageTx(txJson)
-	resp_msg := protocol.RequestReply(rw, req_msg)
-	log.Print("reply msg ", resp_msg)
+	response := protocol.RequestReplyChan(req_msg, msg_in_chan, msg_out_chan)
+	log.Print("reply msg ", response)
 
 	return nil
 }
 
-func Getbalance(rw *bufio.ReadWriter) error {
+func Getbalance(msg_in_chan chan string, msg_out_chan chan string) error {
 	reader := bufio.NewReader(os.Stdin)
 	fmt.Print("Enter address: ")
 	addr, _ := reader.ReadString('\n')
 	addr = strings.Trim(addr, string('\n'))
 
 	txJson, _ := json.Marshal(block.Account{AccountKey: addr})
-	msg := protocol.EncodeMsg(protocol.REQ, protocol.CMD_BALANCE, string(txJson))
+	req_msg := protocol.EncodeMsg(protocol.REQ, protocol.CMD_BALANCE, string(txJson))
 	//fmt.Println("msg ", msg)
-	protocol.WritePipe(rw, msg)
+	response := protocol.RequestReplyChan(req_msg, msg_in_chan, msg_out_chan)
 
-	rcvmsg := protocol.ReadMsg(rw)
-
-	x, _ := strconv.Atoi(rcvmsg)
+	x, _ := strconv.Atoi(response)
 	log.Println("balance of account ", x)
 
 	return nil
 }
 
-func Gettxpool(rw *bufio.ReadWriter) error {
-	msg := protocol.EncodeMsg(protocol.REQ, protocol.CMD_GETTXPOOL, "")
-	log.Println("> ", msg)
-	protocol.WritePipe(rw, msg)
+func Gettxpool(msg_in_chan chan string, msg_out_chan chan string) error {
+	req_msg := protocol.EncodeMsg(protocol.REQ, protocol.CMD_GETTXPOOL, "")
+	log.Println("> ", req_msg)
+	response := protocol.RequestReplyChan(req_msg, msg_in_chan, msg_out_chan)
 
-	rcvmsg := protocol.ReadMsg(rw)
-
-	log.Println("rcvmsg ", rcvmsg)
+	log.Println("rcvmsg ", response)
 
 	return nil
 }
@@ -169,21 +157,6 @@ func readdns() {
 
 }
 
-func requestLoop(rw *bufio.ReadWriter, msg_in_chan chan string, msg_out_chan chan string) {
-	for {
-
-		//take from channel and request
-		request := <-msg_in_chan
-		fmt.Println("request ", request)
-
-		resp_msg := protocol.RequestReply(rw, request)
-		fmt.Println("resp_msg ", resp_msg)
-
-		msg_out_chan <- resp_msg
-
-	}
-}
-
 //start client and connect to the host
 func main() {
 
@@ -226,7 +199,7 @@ func main() {
 
 	msg_in_chan := make(chan string)
 	msg_out_chan := make(chan string)
-	go requestLoop(rw, msg_in_chan, msg_out_chan)
+	go protocol.RequestLoop(rw, msg_in_chan, msg_out_chan)
 
 	if *optionPtr == "createkeypair" {
 		//TODO read secret from cmd
@@ -249,7 +222,7 @@ func main() {
 		log.Println("getbalance")
 		//protocol.Server_address
 
-		Getbalance(rw)
+		Getbalance(msg_in_chan, msg_out_chan)
 
 	} else if *optionPtr == "faucet" {
 		log.Println("faucet")
@@ -258,13 +231,13 @@ func main() {
 		GetFaucet(msg_in_chan, msg_out_chan)
 
 	} else if *optionPtr == "txpool" {
-		err = Gettxpool(rw)
+		err = Gettxpool(msg_in_chan, msg_out_chan)
 		return
 	} else if *optionPtr == "pushtx" {
-		err = PushTx(rw)
+		err = PushTx(msg_in_chan, msg_out_chan)
 		return
 	} else if *optionPtr == "randomtx" {
-		err = MakeRandomTx(rw)
+		err = MakeRandomTx(msg_in_chan, msg_out_chan)
 		return
 	}
 	// else if *optionPtr == "pushtx" {
