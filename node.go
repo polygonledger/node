@@ -39,18 +39,19 @@ var Peers []protocol.Peer
 var nlog *log.Logger
 var logfile_name = "node.log"
 
-func addpeer(addr string) {
-	p := protocol.Peer{Address: addr}
+func addpeer(addr string) protocol.Peer {
+	p := protocol.Peer{Address: addr, Req_chan: make(chan protocol.Message), Rep_chan: make(chan protocol.Message)}
 	Peers = append(Peers, p)
 	nlog.Println("peers ", Peers)
+	return p
 }
 
 func setupPeer(addr string, conn net.Conn) {
-	addpeer(addr)
+	peer := addpeer(addr)
 
 	nlog.Println("setup channels for incoming requests")
 	//TODO peers chan
-	go channelNetwork(conn)
+	go channelNetwork(conn, peer)
 }
 
 // start listening on tcp and handle connection through channels
@@ -154,17 +155,13 @@ func HandleReqMsg(msg protocol.Message, rep_chan chan protocol.Message) {
 
 		rep_chan <- reply
 
-	case protocol.CMD_GETTXPOOL:
-		nlog.Println("get tx pool")
+	case protocol.CMD_BLOCKHEIGHT:
 
-		//TODO
-		data, _ := json.Marshal(chain.Tx_pool)
-		msg := protocol.EncodeMsg(protocol.REP, protocol.CMD_GETTXPOOL, string(data))
-		rep_chan <- msg
+		data, _ := json.Marshal(len(chain.Blocks))
+		reply := protocol.EncodeMsgBytes(protocol.REP, protocol.CMD_BLOCKHEIGHT, data)
+		log.Println("CMD_BLOCKHEIGHT >> ", reply)
 
-		//var Tx_pool []block.Tx
-
-	//case CMD_GETBLOCKS:
+		rep_chan <- reply
 
 	case protocol.CMD_TX:
 		nlog.Println("Handle tx")
@@ -181,6 +178,16 @@ func HandleReqMsg(msg protocol.Message, rep_chan chan protocol.Message) {
 		resp := chain.HandleTx(tx)
 		msg := protocol.EncodeMsg(protocol.REP, protocol.CMD_TX, resp)
 		rep_chan <- msg
+
+	case protocol.CMD_GETTXPOOL:
+		nlog.Println("get tx pool")
+
+		//TODO
+		data, _ := json.Marshal(chain.Tx_pool)
+		msg := protocol.EncodeMsg(protocol.REP, protocol.CMD_GETTXPOOL, string(data))
+		rep_chan <- msg
+
+		//var Tx_pool []block.Tx
 
 	// case protocol.CMD_RANDOM_ACCOUNT:
 	// 	nlog.Println("Handle random account")
@@ -243,11 +250,11 @@ func RequestReplyLoop(rw *bufio.ReadWriter, req_chan chan protocol.Message, rep_
 }
 
 //setup the network of channels
-func channelNetwork(conn net.Conn) {
+func channelNetwork(conn net.Conn, peer protocol.Peer) {
 
 	//TODO use msg types
-	req_chan := make(chan protocol.Message)
-	rep_chan := make(chan protocol.Message)
+	//req_chan := make(chan protocol.Message)
+	//rep_chan := make(chan protocol.Message)
 
 	rw := bufio.NewReadWriter(bufio.NewReader(conn), bufio.NewWriter(conn))
 	//could add max listen
@@ -260,7 +267,7 @@ func channelNetwork(conn net.Conn) {
 
 	//REQUEST<>REPLY protocol only so far
 
-	go RequestReplyLoop(rw, req_chan, rep_chan)
+	go RequestReplyLoop(rw, peer.Req_chan, peer.Rep_chan)
 
 	//go publishLoop(msg_in_chan, msg_out_chan)
 
@@ -276,6 +283,11 @@ func doEvery(d time.Duration, f func(time.Time)) {
 //HTTP
 func loadContent() string {
 	content := ""
+
+	content += fmt.Sprintf("<h2>Peers</h2>Peers: %d<br>", len(Peers))
+	for i := 0; i < len(Peers); i++ {
+		content += fmt.Sprintf("peer ip address: %s", Peers[i].Address)
+	}
 
 	content += fmt.Sprintf("<h2>TxPool</h2>%d<br>", len(chain.Tx_pool))
 

@@ -120,9 +120,11 @@ func main() {
 
 	if *optionPtr == "createkeys" {
 		createKeys()
+
 	} else if *optionPtr == "readkeys" {
 		kp := readKeys("keys.txt")
 		log.Println(kp)
+
 	} else if *optionPtr == "sign" {
 		reader := bufio.NewReader(os.Stdin)
 		fmt.Print("Enter message to sign: ")
@@ -135,6 +137,7 @@ func main() {
 
 		sighex := hex.EncodeToString(signature.Serialize())
 		log.Println("sighex ", sighex)
+
 	} else if *optionPtr == "createtx" {
 
 		createtx()

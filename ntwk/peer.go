@@ -11,10 +11,13 @@ import (
 type Peer struct {
 	Address string `json:"Address"`
 	//TODO chans
-
+	Req_chan chan Message
+	Rep_chan chan Message
+	Name     string //can set name
 }
 
 //peer functions
+//get peers
 //onReceiveBlock
 //validateBlockSlot
 //generateBlock

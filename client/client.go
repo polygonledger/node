@@ -88,14 +88,25 @@ func Getbalance(msg_in_chan chan protocol.Message, msg_out_chan chan protocol.Me
 	txJson, _ := json.Marshal(block.Account{AccountKey: addr})
 	req_msg := protocol.EncodeMsgString(protocol.REQ, protocol.CMD_BALANCE, string(txJson))
 	response := protocol.RequestReplyChan(req_msg, msg_in_chan, msg_out_chan)
-	//response := protocol.ParseMessage(response_string)
 	log.Println(response)
 	var balance int
 	if err := json.Unmarshal(response.Data, &balance); err != nil {
 		panic(err)
 	}
-	//x, _ := strconv.Atoi(string(response.Data))
 	log.Println("balance of account ", balance)
+
+	return nil
+}
+
+func Getblockheight(msg_in_chan chan protocol.Message, msg_out_chan chan protocol.Message) error {
+	req_msg := protocol.EncodeMsgString(protocol.REQ, protocol.CMD_BLOCKHEIGHT, "")
+	response := protocol.RequestReplyChan(req_msg, msg_in_chan, msg_out_chan)
+
+	var blockheight int
+	if err := json.Unmarshal(response.Data, &blockheight); err != nil {
+		panic(err)
+	}
+	log.Println("blockheight ", blockheight)
 
 	return nil
 }
@@ -204,6 +215,7 @@ func main() {
 		log.Println("ping")
 		//protocol.Server_address
 		MakePing(req_chan, rep_chan)
+
 	} else if *optionPtr == "pingall" {
 		//protocol.Server_address
 		for _, peer := range configuration.PeerAddresses {
@@ -211,6 +223,7 @@ func main() {
 
 		}
 		MakePing(req_chan, rep_chan)
+
 	} else if *optionPtr == "pingconnect" {
 		log.Println("ping continously")
 		//protocol.Server_address
@@ -225,6 +238,11 @@ func main() {
 
 		Getbalance(req_chan, rep_chan)
 
+	} else if *optionPtr == "blockheight" {
+		log.Println("blockheight")
+
+		Getblockheight(req_chan, rep_chan)
+
 	} else if *optionPtr == "faucet" {
 		log.Println("faucet")
 		//get coins
@@ -234,9 +252,11 @@ func main() {
 	} else if *optionPtr == "txpool" {
 		err = Gettxpool(req_chan, rep_chan)
 		return
+
 	} else if *optionPtr == "pushtx" {
 		err = PushTx(req_chan, rep_chan)
 		return
+
 	} else if *optionPtr == "randomtx" {
 		err = MakeRandomTx(req_chan, rep_chan)
 		return
