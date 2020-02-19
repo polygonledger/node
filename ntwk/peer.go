@@ -1,4 +1,4 @@
-package net
+package ntwk
 
 import (
 	"bufio"
@@ -10,10 +10,12 @@ import (
 
 type Peer struct {
 	Address string `json:"Address"`
-	//TODO chans
-	Req_chan chan Message
-	Rep_chan chan Message
-	Name     string //can set name
+
+	Req_chan     chan Message
+	Rep_chan     chan Message
+	Out_req_chan chan Message
+	Out_rep_chan chan Message
+	Name         string //can set name
 }
 
 //peer functions
@@ -24,6 +26,19 @@ type Peer struct {
 //loadBlocksFromPeer
 //loadBlocksOffset
 //getCommonBlock //Performs chain comparison with remote peer
+
+func OpenConn(addr string) net.Conn {
+	// Dial the remote process.
+	log.Println("Dial " + addr)
+	conn, err := net.Dial("tcp", addr)
+	if err != nil {
+		//return nil, errors.Wrap(err, "Dialing "+addr+" failed")
+	}
+	if err != nil {
+		log.Println("Error:", errors.WithStack(err))
+	}
+	return conn
+}
 
 // Open connects to a TCP Address
 // It returns a TCP connection with a timeout wrapped into a buffered ReadWriter.

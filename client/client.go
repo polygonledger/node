@@ -49,8 +49,7 @@ func MakeRandomTx(msg_in_chan chan protocol.Message, msg_out_chan chan protocol.
 	return nil
 }
 
-func PushTx(msg_in_chan chan protocol.Message, msg_out_chan chan protocol.Message) error {
-
+func CreateTx() {
 	// keypair := crypto.PairFromSecret("test")
 	// var tx block.Tx
 	// s := block.AccountFromString("Pa033f6528cc1")
@@ -60,6 +59,10 @@ func PushTx(msg_in_chan chan protocol.Message, msg_out_chan chan protocol.Messag
 	// sighex := hex.EncodeToString(signature.Serialize())
 	// tx.Signature = sighex
 	// tx.SenderPubkey = crypto.PubKeyToHex(keypair.PubKey)
+
+}
+
+func PushTx(msg_in_chan chan protocol.Message, msg_out_chan chan protocol.Message) error {
 
 	dat, _ := ioutil.ReadFile("tx.json")
 	var tx block.Tx

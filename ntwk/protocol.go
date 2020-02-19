@@ -1,4 +1,4 @@
-package net
+package ntwk
 
 // protocol layer
 //protocol operates on messages and channels not bytestreams

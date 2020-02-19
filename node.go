@@ -39,8 +39,13 @@ var Peers []protocol.Peer
 var nlog *log.Logger
 var logfile_name = "node.log"
 
+type Configuration struct {
+	PeerAddresses []string
+}
+
+//INBOUND
 func addpeer(addr string) protocol.Peer {
-	p := protocol.Peer{Address: addr, Req_chan: make(chan protocol.Message), Rep_chan: make(chan protocol.Message)}
+	p := protocol.Peer{Address: addr, Req_chan: make(chan protocol.Message), Rep_chan: make(chan protocol.Message), Out_req_chan: make(chan protocol.Message), Out_rep_chan: make(chan protocol.Message)}
 	Peers = append(Peers, p)
 	nlog.Println("peers ", Peers)
 	return p
@@ -74,6 +79,9 @@ func ListenAll() error {
 
 	for {
 		nlog.Println("Accept a connection request")
+
+		//TODO peer handshake
+		//TODO client handshake
 
 		conn, err := listener.Accept()
 		strRemoteAddr := conn.RemoteAddr().String()
@@ -219,7 +227,7 @@ func HandleMsg(req_chan chan protocol.Message, rep_chan chan protocol.Message) {
 	}
 }
 
-func RequestReplyLoop(rw *bufio.ReadWriter, req_chan chan protocol.Message, rep_chan chan protocol.Message) {
+func ReplyLoop(rw *bufio.ReadWriter, req_chan chan protocol.Message, rep_chan chan protocol.Message) {
 
 	//continously read for requests and respond with reply
 	for {
@@ -249,6 +257,15 @@ func RequestReplyLoop(rw *bufio.ReadWriter, req_chan chan protocol.Message, rep_
 	}
 }
 
+func ReqLoop(rw *bufio.ReadWriter, out_req_chan chan protocol.Message, out_rep_chan chan protocol.Message) {
+
+	//
+	for {
+		request := <-out_req_chan
+		log.Println("request ", request)
+	}
+}
+
 //setup the network of channels
 func channelNetwork(conn net.Conn, peer protocol.Peer) {
 
@@ -267,7 +284,9 @@ func channelNetwork(conn net.Conn, peer protocol.Peer) {
 
 	//REQUEST<>REPLY protocol only so far
 
-	go RequestReplyLoop(rw, peer.Req_chan, peer.Rep_chan)
+	go ReplyLoop(rw, peer.Req_chan, peer.Rep_chan)
+
+	go ReqLoop(rw, peer.Out_req_chan, peer.Out_rep_chan)
 
 	//go publishLoop(msg_in_chan, msg_out_chan)
 
@@ -339,8 +358,37 @@ func runweb() {
 
 }
 
+func connect_peers(PeerAddresses []string) {
+
+	//TODO
+
+	for _, peer := range PeerAddresses {
+		conn := protocol.OpenConn(peer + protocol.Port)
+		log.Println(conn)
+
+		rw := bufio.NewReadWriter(bufio.NewReader(conn), bufio.NewWriter(conn))
+		log.Println(rw)
+		out_req := make(chan protocol.Message)
+		out_rep := make(chan protocol.Message)
+		ReqLoop(rw, out_req, out_rep)
+		//log.Println("ping ", peer)
+		//MakePing(req_chan, rep_chan)
+
+	}
+}
+
 func run_node() {
 	nlog.Println("run node")
+
+	file, _ := os.Open("nodeconf.json")
+	defer file.Close()
+	decoder := json.NewDecoder(file)
+	configuration := Configuration{}
+	err := decoder.Decode(&configuration)
+	if err != nil {
+		fmt.Println("error:", err)
+	}
+	fmt.Println("PeerAddresses: ", configuration.PeerAddresses)
 
 	//TODO signatures of genesis
 	chain.InitAccounts()
@@ -352,6 +400,8 @@ func run_node() {
 	// create block every 10sec
 	blockTime := 10000 * time.Millisecond
 	go doEvery(blockTime, chain.MakeBlock)
+
+	//connect_peers(configuration.PeerAddresses)
 
 	go ListenAll()
 
