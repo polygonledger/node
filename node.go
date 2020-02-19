@@ -25,7 +25,6 @@ import (
 	"net"
 	"net/http"
 	"os"
-	"strconv"
 	"time"
 
 	"github.com/pkg/errors"
@@ -121,9 +120,11 @@ func HandleReqMsg(msg protocol.Message, rep_chan chan protocol.Message) {
 		nlog.Println("get balance for account ", account)
 
 		balance := chain.Accounts[account]
-		s := strconv.Itoa(balance)
-		reply := protocol.EncodeMsg(protocol.REP, protocol.CMD_BALANCE, s)
-		//rep_chan <- s
+		//s := strconv.Itoa(balance)
+		data, _ := json.Marshal(balance)
+		reply := protocol.EncodeMsgBytes(protocol.REP, protocol.CMD_BALANCE, data)
+		log.Println(">> ", reply)
+
 		rep_chan <- reply
 
 	case protocol.CMD_FAUCET:

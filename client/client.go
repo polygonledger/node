@@ -8,7 +8,6 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
-	"strconv"
 	"strings"
 	"time"
 
@@ -20,7 +19,7 @@ import (
 )
 
 //
-func MakeRandomTx(msg_in_chan chan protocol.Message, msg_out_chan chan string) error {
+func MakeRandomTx(msg_in_chan chan protocol.Message, msg_out_chan chan protocol.Message) error {
 	//make a random transaction by requesting random account from node
 	//get random account
 
@@ -29,7 +28,7 @@ func MakeRandomTx(msg_in_chan chan protocol.Message, msg_out_chan chan string) e
 	response := protocol.RequestReplyChan(req_msg, msg_in_chan, msg_out_chan)
 
 	var a block.Account
-	dataBytes := []byte(response)
+	dataBytes := []byte(response.Data)
 	if err := json.Unmarshal(dataBytes, &a); err != nil {
 		panic(err)
 	}
@@ -50,7 +49,7 @@ func MakeRandomTx(msg_in_chan chan protocol.Message, msg_out_chan chan string) e
 	return nil
 }
 
-func PushTx(msg_in_chan chan protocol.Message, msg_out_chan chan string) error {
+func PushTx(msg_in_chan chan protocol.Message, msg_out_chan chan protocol.Message) error {
 
 	// keypair := crypto.PairFromSecret("test")
 	// var tx block.Tx
@@ -80,7 +79,7 @@ func PushTx(msg_in_chan chan protocol.Message, msg_out_chan chan string) error {
 	return nil
 }
 
-func Getbalance(msg_in_chan chan protocol.Message, msg_out_chan chan string) error {
+func Getbalance(msg_in_chan chan protocol.Message, msg_out_chan chan protocol.Message) error {
 	reader := bufio.NewReader(os.Stdin)
 	fmt.Print("Enter address: ")
 	addr, _ := reader.ReadString('\n')
@@ -88,16 +87,20 @@ func Getbalance(msg_in_chan chan protocol.Message, msg_out_chan chan string) err
 
 	txJson, _ := json.Marshal(block.Account{AccountKey: addr})
 	req_msg := protocol.EncodeMsgString(protocol.REQ, protocol.CMD_BALANCE, string(txJson))
-	response_string := protocol.RequestReplyChan(req_msg, msg_in_chan, msg_out_chan)
-	response := protocol.ParseMessage(response_string)
-
-	x, _ := strconv.Atoi(string(response.Data))
-	log.Println("balance of account ", x)
+	response := protocol.RequestReplyChan(req_msg, msg_in_chan, msg_out_chan)
+	//response := protocol.ParseMessage(response_string)
+	log.Println(response)
+	var balance int
+	if err := json.Unmarshal(response.Data, &balance); err != nil {
+		panic(err)
+	}
+	//x, _ := strconv.Atoi(string(response.Data))
+	log.Println("balance of account ", balance)
 
 	return nil
 }
 
-func Gettxpool(msg_in_chan chan protocol.Message, msg_out_chan chan string) error {
+func Gettxpool(msg_in_chan chan protocol.Message, msg_out_chan chan protocol.Message) error {
 	req_msg := protocol.EncodeMsgString(protocol.REQ, protocol.CMD_GETTXPOOL, "")
 	log.Println("> ", req_msg)
 	response := protocol.RequestReplyChan(req_msg, msg_in_chan, msg_out_chan)
@@ -107,7 +110,7 @@ func Gettxpool(msg_in_chan chan protocol.Message, msg_out_chan chan string) erro
 	return nil
 }
 
-func GetFaucet(msg_in_chan chan protocol.Message, msg_out_chan chan string) error {
+func GetFaucet(msg_in_chan chan protocol.Message, msg_out_chan chan protocol.Message) error {
 	reader := bufio.NewReader(os.Stdin)
 	fmt.Print("Enter address: ")
 	addr, _ := reader.ReadString('\n')
@@ -121,7 +124,7 @@ func GetFaucet(msg_in_chan chan protocol.Message, msg_out_chan chan string) erro
 	return nil
 }
 
-func MakePing(msg_in_chan chan protocol.Message, msg_out_chan chan string) {
+func MakePing(msg_in_chan chan protocol.Message, msg_out_chan chan protocol.Message) {
 	emptydata := ""
 	req_msg := protocol.EncodeMsgString(protocol.REQ, protocol.CMD_PING, emptydata)
 	resp := protocol.RequestReplyChan(req_msg, msg_in_chan, msg_out_chan)
@@ -189,7 +192,7 @@ func main() {
 	}
 
 	req_chan := make(chan protocol.Message)
-	rep_chan := make(chan string)
+	rep_chan := make(chan protocol.Message)
 	go protocol.RequestLoop(rw, req_chan, rep_chan)
 
 	if *optionPtr == "createkeypair" {

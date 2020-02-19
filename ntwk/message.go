@@ -64,7 +64,6 @@ func EmptyMsg() Message {
 }
 
 func IsValidMsgType(msgType string) bool {
-	//fmt.Println("test ", msgType)
 	switch msgType {
 	case
 		REQ,
@@ -93,6 +92,12 @@ func ReplyMessage() Message {
 	return Message{MessageType: REP}
 }
 
+type MessageBalance struct {
+	MessageType string
+	Command     string
+	Balance     int
+}
+
 type MessageTx struct {
 	MessageType string
 	Command     string
@@ -119,6 +124,11 @@ func EncodeMsgString(msgType string, cmd string, data string) string {
 
 func EncodeMsg(msgType string, cmd string, data string) Message {
 	m := Message{MessageType: msgType, Command: cmd, Data: []byte(data)}
+	return m
+}
+
+func EncodeMsgBytes(msgType string, cmd string, data []byte) Message {
+	m := Message{MessageType: msgType, Command: cmd, Data: data}
 	return m
 }
 
