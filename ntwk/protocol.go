@@ -95,7 +95,7 @@ func EncodeMessageTx(txJson []byte) string {
 	return msg
 }
 
-func RequestLoop(rw *bufio.ReadWriter, msg_in_chan chan string, msg_out_chan chan string) {
+func RequestLoop(rw *bufio.ReadWriter, msg_in_chan chan Message, msg_out_chan chan string) {
 	for {
 
 		//take from channel and request
@@ -111,9 +111,10 @@ func RequestLoop(rw *bufio.ReadWriter, msg_in_chan chan string, msg_out_chan cha
 }
 
 //TODO convert to chan
-func RequestReply(rw *bufio.ReadWriter, req_msg string) string {
+func RequestReply(rw *bufio.ReadWriter, req_msg Message) string {
 	//REQUEST
-	NetworkWrite(rw, req_msg)
+	req_msg_string := MsgString(req_msg)
+	NetworkWrite(rw, req_msg_string)
 
 	//REPLY
 	resp_msg := ReadMsg(rw)
@@ -158,7 +159,8 @@ func ConstructMessage(cmd string) string {
 }
 
 //generic request<->reply
-func RequestReplyChan(request string, msg_in_chan chan string, msg_out_chan chan string) string {
+func RequestReplyChan(request_string string, msg_in_chan chan Message, msg_out_chan chan string) string {
+	request := ParseMessage(request_string)
 	msg_in_chan <- request
 	resp := <-msg_out_chan
 	return resp
