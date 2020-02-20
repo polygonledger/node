@@ -70,7 +70,7 @@ func ListenAll(node_port int) error {
 	listener, err = net.Listen("tcp", strconv.Itoa(node_port))
 	if err != nil {
 		nlog.Println(err)
-		return errors.Wrapf(err, "Unable to listen on port %s\n", node_port) //protocol.Port
+		return errors.Wrapf(err, "Unable to listen on port %d\n", node_port) //protocol.Port
 	}
 
 	addr := listener.Addr().String()
