@@ -23,7 +23,7 @@ import (
 const (
 	// Port is the port number that the server listens to.
 	Server_address string = "127.0.0.1"
-	Port                  = ":8888"
+	//Port                  = ":8888"
 	//TODO move to message type
 	Genesis_Address string = "P0614579c42f2"
 	DELIM           byte   = '|'

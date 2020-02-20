@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"log"
 	"net"
+	"strconv"
 
 	"github.com/pkg/errors"
 )
@@ -55,7 +56,7 @@ func Open(addr string) (*bufio.ReadWriter, error) {
 	return bufio.NewReadWriter(bufio.NewReader(conn), bufio.NewWriter(conn)), nil
 }
 
-func OpenOut(ip string) *bufio.ReadWriter {
-	rw, _ := Open(ip + Port)
+func OpenOut(ip string, Port int) *bufio.ReadWriter {
+	rw, _ := Open(ip + strconv.Itoa(Port))
 	return rw
 }

@@ -25,6 +25,7 @@ import (
 	"net"
 	"net/http"
 	"os"
+	"strconv"
 	"time"
 
 	"github.com/pkg/errors"
@@ -41,6 +42,8 @@ var logfile_name = "node.log"
 
 type Configuration struct {
 	PeerAddresses []string
+	node_port     int
+	web_port      int
 }
 
 //INBOUND
@@ -60,14 +63,14 @@ func setupPeer(addr string, conn net.Conn) {
 }
 
 // start listening on tcp and handle connection through channels
-func ListenAll() error {
+func ListenAll(node_port int) error {
 	nlog.Println("listen all")
 	var err error
 	var listener net.Listener
-	listener, err = net.Listen("tcp", protocol.Port)
+	listener, err = net.Listen("tcp", strconv.Itoa(node_port))
 	if err != nil {
 		nlog.Println(err)
-		return errors.Wrapf(err, "Unable to listen on port %s\n", protocol.Port)
+		return errors.Wrapf(err, "Unable to listen on port %s\n", node_port) //protocol.Port
 	}
 
 	addr := listener.Addr().String()
@@ -343,7 +346,7 @@ func loadContent() string {
 	return content
 }
 
-func runweb() {
+func runweb(webport int) {
 	//webserver to access node state through browser
 	// HTTP
 	nlog.Println("start webserver")
@@ -354,16 +357,16 @@ func runweb() {
 		fmt.Fprintf(w, "<h1>Polygon chain</h1><div>%s</div>", p)
 	})
 
-	nlog.Fatal(http.ListenAndServe(":8080", nil))
+	nlog.Fatal(http.ListenAndServe(":"+strconv.Itoa(webport), nil))
 
 }
 
-func connect_peers(PeerAddresses []string) {
+func connect_peers(node_port int, PeerAddresses []string) {
 
 	//TODO
 
 	for _, peer := range PeerAddresses {
-		conn := protocol.OpenConn(peer + protocol.Port)
+		conn := protocol.OpenConn(peer + strconv.Itoa(node_port))
 		log.Println(conn)
 
 		rw := bufio.NewReadWriter(bufio.NewReader(conn), bufio.NewWriter(conn))
@@ -377,18 +380,8 @@ func connect_peers(PeerAddresses []string) {
 	}
 }
 
-func run_node() {
+func run_node(node_port int) {
 	nlog.Println("run node")
-
-	file, _ := os.Open("nodeconf.json")
-	defer file.Close()
-	decoder := json.NewDecoder(file)
-	configuration := Configuration{}
-	err := decoder.Decode(&configuration)
-	if err != nil {
-		fmt.Println("error:", err)
-	}
-	fmt.Println("PeerAddresses: ", configuration.PeerAddresses)
 
 	//TODO signatures of genesis
 	chain.InitAccounts()
@@ -403,7 +396,7 @@ func run_node() {
 
 	//connect_peers(configuration.PeerAddresses)
 
-	go ListenAll()
+	go ListenAll(node_port)
 
 }
 
@@ -436,10 +429,20 @@ func main() {
 
 	setupLogfile()
 
-	run_node()
+	file, _ := os.Open("nodeconf.json")
+	defer file.Close()
+	decoder := json.NewDecoder(file)
+	configuration := Configuration{}
+	err := decoder.Decode(&configuration)
+	if err != nil {
+		fmt.Println("error:", err)
+	}
+	fmt.Println("PeerAddresses: ", configuration.PeerAddresses)
+
+	run_node(configuration.node_port)
 
 	nlog.Println("node running")
 
-	runweb()
+	runweb(configuration.web_port)
 
 }
