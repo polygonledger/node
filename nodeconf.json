@@ -1,7 +1,8 @@
 {
     "PeerAddresses": ["54.162.206.72", "3.93.218.181"],
     
-    "Nodeport": 8888,
+    "NodePort": 8888,
 
-    "Webport": 8080
+    "WebPort": 8080
+    
 }

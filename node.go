@@ -42,8 +42,8 @@ var logfile_name = "node.log"
 
 type Configuration struct {
 	PeerAddresses []string
-	node_port     int
-	web_port      int
+	NodePort      int
+	WebPort       int
 }
 
 //INBOUND
@@ -67,7 +67,9 @@ func ListenAll(node_port int) error {
 	nlog.Println("listen all")
 	var err error
 	var listener net.Listener
-	listener, err = net.Listen("tcp", strconv.Itoa(node_port))
+	p := strconv.Itoa(node_port)
+	log.Println("listen on ", p)
+	listener, err = net.Listen("tcp", p)
 	if err != nil {
 		nlog.Println(err)
 		return errors.Wrapf(err, "Unable to listen on port %d\n", node_port) //protocol.Port
@@ -424,25 +426,34 @@ func setupLogfile() *log.Logger {
 
 }
 
+func LoadConfiguration(file string) Configuration {
+	var config Configuration
+	configFile, err := os.Open(file)
+	defer configFile.Close()
+	if err != nil {
+		log.Println(err.Error())
+	}
+	jsonParser := json.NewDecoder(configFile)
+	jsonParser.Decode(&config)
+	return config
+}
+
 // start node listening for incoming requests
 func main() {
 
 	setupLogfile()
 
-	file, _ := os.Open("nodeconf.json")
-	defer file.Close()
-	decoder := json.NewDecoder(file)
-	configuration := Configuration{}
-	err := decoder.Decode(&configuration)
-	if err != nil {
-		fmt.Println("error:", err)
-	}
-	fmt.Println("PeerAddresses: ", configuration.PeerAddresses)
+	//file, _ := os.Open("nodeconf.json")
 
-	run_node(configuration.node_port)
+	config := LoadConfiguration("nodeconf.json")
 
-	nlog.Println("node running")
+	fmt.Println("PeerAddresses: ", config.PeerAddresses)
 
-	runweb(configuration.web_port)
+	log.Println("run node on ", config.NodePort)
+
+	run_node(config.NodePort)
+	//nlog.Println("node running")
+	log.Println("run web on ", config.WebPort)
+	runweb(config.WebPort)
 
 }
