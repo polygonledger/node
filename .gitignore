@@ -1,3 +1,4 @@
 *.el
 *.log
 
+.idea
