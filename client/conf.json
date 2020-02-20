@@ -1,7 +1,6 @@
 {
-    "ServerAddress": "127.0.0.1",
     
-    "PeerAddresses": ["3.93.218.181"],
+    "PeerAddresses": ["127.0.0.1"],
     
     "Nodeport": 8888,
 

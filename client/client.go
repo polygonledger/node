@@ -158,7 +158,6 @@ func client(ip string) (*bufio.ReadWriter, error) {
 }
 
 type Configuration struct {
-	ServerAddress string
 	PeerAddresses []string
 }
 
@@ -188,7 +187,6 @@ func main() {
 	if err != nil {
 		fmt.Println("error:", err)
 	}
-	fmt.Println("ServerAddress: ", configuration.ServerAddress)
 	fmt.Println("PeerAddresses: ", configuration.PeerAddresses)
 
 	//if exists
@@ -200,7 +198,8 @@ func main() {
 	flag.Parse()
 	fmt.Println("option:", *optionPtr)
 
-	rw, err := client(configuration.ServerAddress)
+	mainPeer := configuration.PeerAddresses[0]
+	rw, err := client(mainPeer)
 	if err != nil {
 		log.Println("Error:", errors.WithStack(err))
 	}
