@@ -1,5 +1,7 @@
 package main
 
+//client based application to request information from peers
+
 import (
 	"bufio"
 	"encoding/json"
@@ -15,6 +17,14 @@ import (
 	"github.com/polygonledger/node/crypto"
 	protocol "github.com/polygonledger/node/ntwk"
 )
+
+var Peers []protocol.Peer
+
+type Configuration struct {
+	PeerAddresses []string
+	NodePort      int
+	WebPort       int
+}
 
 //
 func MakeRandomTx(msg_in_chan chan protocol.Message, msg_out_chan chan protocol.Message) error {
@@ -146,16 +156,10 @@ func MakePing(msg_in_chan chan protocol.Message, msg_out_chan chan protocol.Mess
 func client(ip string, NodePort int) *bufio.ReadWriter {
 
 	// Open a connection to the server.
-	log.Println(">>>>>>>>> ", ip, NodePort)
+	log.Println(">>> ", ip, NodePort)
 	rw := protocol.OpenOut(ip, NodePort)
 
 	return rw
-}
-
-type Configuration struct {
-	PeerAddresses []string
-	NodePort      int
-	WebPort       int
 }
 
 func readdns() {
@@ -169,6 +173,15 @@ func readdns() {
 	// 	fmt.Printf(domain+". IN A %s\n", ip.String())
 	// }
 
+}
+
+func addPeer(peer string, node_port int) {
+
+	rw := client(peer)
+
+	req_chan := make(chan protocol.Message)
+	rep_chan := make(chan protocol.Message)
+	go protocol.RequestLoop(rw, req_chan, rep_chan)
 }
 
 //start client and connect to the host
@@ -197,11 +210,8 @@ func main() {
 
 	mainPeer := configuration.PeerAddresses[0]
 	log.Println("client to mainPeer ", mainPeer)
-	rw := client(mainPeer, configuration.NodePort)
 
-	req_chan := make(chan protocol.Message)
-	rep_chan := make(chan protocol.Message)
-	go protocol.RequestLoop(rw, req_chan, rep_chan)
+	addPeer(mainPeer, configuration.NodePort)
 
 	if *optionPtr == "createkeypair" {
 		//TODO read secret from cmd

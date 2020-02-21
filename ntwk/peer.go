@@ -29,7 +29,7 @@ type Peer struct {
 //getCommonBlock //Performs chain comparison with remote peer
 
 func OpenConn(addr string) net.Conn {
-	// Dial the remote process.
+	// Dial the remote process
 	log.Println("Dial " + addr)
 	conn, err := net.Dial("tcp", addr)
 	if err != nil {
@@ -41,8 +41,7 @@ func OpenConn(addr string) net.Conn {
 	return conn
 }
 
-// Open connects to a TCP Address
-// It returns a TCP connection with a timeout wrapped into a buffered ReadWriter.
+// connects to a TCP Address
 func Open(addr string) (*bufio.ReadWriter, error) {
 	// Dial the remote process.
 	log.Println("Dial " + addr)
