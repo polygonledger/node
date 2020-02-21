@@ -95,7 +95,6 @@ func VerifyMessageSign(signature btcec.Signature, keypair Keypair, message strin
 
 	messageHash := MsgHash(message)
 	verified := signature.Verify(messageHash, &keypair.PubKey)
-	//log.Println("?? ", message, verified)
 	return verified
 }
 

@@ -40,6 +40,12 @@ var Peers []protocol.Peer
 var nlog *log.Logger
 var logfile_name = "node.log"
 
+type Configuration struct {
+	PeerAddresses []string
+	NodePort      int
+	WebPort       int
+}
+
 //INBOUND
 func addpeer(addr string) protocol.Peer {
 	p := protocol.Peer{Address: addr, Req_chan: make(chan protocol.Message), Rep_chan: make(chan protocol.Message), Out_req_chan: make(chan protocol.Message), Out_rep_chan: make(chan protocol.Message)}
@@ -61,8 +67,8 @@ func ListenAll(node_port int) error {
 	nlog.Println("listen all")
 	var err error
 	var listener net.Listener
-	p := strconv.Itoa(node_port)
-	log.Println("listen on ", p)
+	p := ":" + strconv.Itoa(node_port)
+	nlog.Println("listen on ", p)
 	listener, err = net.Listen("tcp", p)
 	if err != nil {
 		nlog.Println(err)
@@ -376,8 +382,10 @@ func connect_peers(node_port int, PeerAddresses []string) {
 	}
 }
 
-func run_node(node_port int) {
-	nlog.Println("run node")
+func run_node(config Configuration) {
+	nlog.Println("run node ", config.NodePort)
+
+	nlog.Println("PeerAddresses: ", config.PeerAddresses)
 
 	//TODO signatures of genesis
 	chain.InitAccounts()
@@ -392,7 +400,7 @@ func run_node(node_port int) {
 
 	//connect_peers(configuration.PeerAddresses)
 
-	go ListenAll(node_port)
+	go ListenAll(config.NodePort)
 
 }
 
@@ -409,7 +417,6 @@ func setupLogfile() *log.Logger {
 	mw := io.MultiWriter(os.Stdout, logFile)
 	log.SetOutput(mw)
 
-	//logger := log.New(logFile, "", log.LstdFlags)
 	logger := log.New(logFile, "node ", log.LstdFlags)
 	logger.SetOutput(mw)
 
@@ -418,12 +425,6 @@ func setupLogfile() *log.Logger {
 	nlog = logger
 	return logger
 
-}
-
-type Configuration struct {
-	PeerAddresses []string
-	NodePort      int
-	WebPort       int
 }
 
 func LoadConfiguration(file string) Configuration {
@@ -438,20 +439,18 @@ func LoadConfiguration(file string) Configuration {
 	return config
 }
 
-// start node listening for incoming requests
 func main() {
 
 	setupLogfile()
 
 	config := LoadConfiguration("nodeconf.json")
 
-	fmt.Println("PeerAddresses: ", config.PeerAddresses)
+	nlog.Println("run node with config ", config)
 
-	log.Println("run node on ", config.NodePort)
-
-	run_node(config.NodePort)
+	run_node(config)
 
 	log.Println("run web on ", config.WebPort)
+
 	runweb(config.WebPort)
 
 }
