@@ -1,4 +1,4 @@
-module polygon/node
+module polygonledger/node
 
 go 1.13
 
