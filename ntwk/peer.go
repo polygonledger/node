@@ -57,6 +57,8 @@ func Open(addr string) (*bufio.ReadWriter, error) {
 }
 
 func OpenOut(ip string, Port int) *bufio.ReadWriter {
-	rw, _ := Open(ip + strconv.Itoa(Port))
+	addr := ip + ":" + strconv.Itoa(Port)
+	log.Println("??? > open out address ", addr)
+	rw, _ := Open(addr)
 	return rw
 }
