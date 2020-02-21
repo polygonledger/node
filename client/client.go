@@ -11,8 +11,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/pkg/errors"
-
 	"github.com/polygonledger/node/block"
 	"github.com/polygonledger/node/crypto"
 	protocol "github.com/polygonledger/node/ntwk"
@@ -145,20 +143,19 @@ func MakePing(msg_in_chan chan protocol.Message, msg_out_chan chan protocol.Mess
 	log.Println("resp ", resp)
 }
 
-func client(ip string) (*bufio.ReadWriter, error) {
+func client(ip string, NodePort int) *bufio.ReadWriter {
 
 	// Open a connection to the server.
-	rw, err := protocol.Open(ip + protocol.Port)
-	//log.Println(rw)
-	if err != nil {
-		return nil, errors.Wrap(err, "Client: Failed to open connection to "+ip+protocol.Port)
-	}
+	log.Println(">>>>>>>>> ", ip, NodePort)
+	rw := protocol.OpenOut(ip, NodePort)
 
-	return rw, err
+	return rw
 }
 
 type Configuration struct {
 	PeerAddresses []string
+	NodePort      int
+	WebPort       int
 }
 
 func readdns() {
@@ -196,13 +193,11 @@ func main() {
 
 	optionPtr := flag.String("option", "createkeypair", "the command to be performed")
 	flag.Parse()
-	fmt.Println("option:", *optionPtr)
+	//fmt.Println("option:", *optionPtr)
 
 	mainPeer := configuration.PeerAddresses[0]
-	rw, err := client(mainPeer)
-	if err != nil {
-		log.Println("Error:", errors.WithStack(err))
-	}
+	log.Println("client to mainPeer ", mainPeer)
+	rw := client(mainPeer, configuration.NodePort)
 
 	req_chan := make(chan protocol.Message)
 	rep_chan := make(chan protocol.Message)

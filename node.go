@@ -40,12 +40,6 @@ var Peers []protocol.Peer
 var nlog *log.Logger
 var logfile_name = "node.log"
 
-type Configuration struct {
-	PeerAddresses []string
-	NodePort      int
-	WebPort       int
-}
-
 //INBOUND
 func addpeer(addr string) protocol.Peer {
 	p := protocol.Peer{Address: addr, Req_chan: make(chan protocol.Message), Rep_chan: make(chan protocol.Message), Out_req_chan: make(chan protocol.Message), Out_rep_chan: make(chan protocol.Message)}
@@ -426,6 +420,12 @@ func setupLogfile() *log.Logger {
 
 }
 
+type Configuration struct {
+	PeerAddresses []string
+	NodePort      int
+	WebPort       int
+}
+
 func LoadConfiguration(file string) Configuration {
 	var config Configuration
 	configFile, err := os.Open(file)
@@ -443,8 +443,6 @@ func main() {
 
 	setupLogfile()
 
-	//file, _ := os.Open("nodeconf.json")
-
 	config := LoadConfiguration("nodeconf.json")
 
 	fmt.Println("PeerAddresses: ", config.PeerAddresses)
@@ -452,7 +450,7 @@ func main() {
 	log.Println("run node on ", config.NodePort)
 
 	run_node(config.NodePort)
-	//nlog.Println("node running")
+
 	log.Println("run web on ", config.WebPort)
 	runweb(config.WebPort)
 
