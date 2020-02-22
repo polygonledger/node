@@ -32,6 +32,12 @@ const (
 	ERROR_READ             = "error_read"
 )
 
+func CreatePeer(ipAddress string, NodePort int) Peer {
+	//addr := ip
+	p := Peer{Address: ipAddress, NodePort: NodePort, Req_chan: make(chan Message), Rep_chan: make(chan Message), Out_req_chan: make(chan Message), Out_rep_chan: make(chan Message)}
+	return p
+}
+
 //given a sream read from it
 //TODO proper error handling
 func NetworkReadMessage(rw *bufio.ReadWriter) string {

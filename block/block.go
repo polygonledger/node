@@ -13,4 +13,6 @@ type Block struct {
 	Txs             []Tx
 	Timestamp       time.Time
 	Signature       btcec.Signature
+	//tx fees
+	//tr fees
 }

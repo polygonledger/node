@@ -1,19 +1,16 @@
 package block
 
-//chain "github.com/polygonledger/node/chain"
-
 //potential TransactionTypes
-// SEND_CASH
-// REGISTER_DELEGATE
 // VOTE_DELEGATE
-// REGISTER_USERNAME
+// REGISTER_NAME
 
 const (
-	SEND_CASH = iota
-	REGISTER_DELEGATE
+	TX_SEND_CASH      = "SEND_CASH" //iota
+	REGISTER_DELEGATE = "REGISTER_DELEGATE"
 )
 
 type Tx struct {
+	TxType       string   `json:"TxType"`
 	Nonce        int      `json:"Nonce"`
 	Amount       int      `json:"Amount"`
 	Sender       Account  `json:"Sender"`       //[32]byte
@@ -29,5 +26,3 @@ type Tx struct {
 	//confirmations
 	//height
 }
-
-//type TxSig struct {

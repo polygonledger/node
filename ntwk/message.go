@@ -24,14 +24,16 @@ const (
 )
 
 const (
-	CMD_PING           = "PING"    //ping
-	CMD_PONG           = "PONG"    //ping
-	CMD_BALANCE        = "BALANCE" //get balance of account
-	CMD_FAUCET         = "FAUCET"
-	CMD_TX             = "TX" //send transaction
-	CMD_BLOCKHEIGHT    = "BLOCKHEIGHT"
-	CMD_RANDOM_ACCOUNT = "RANACC" //get some random account
-	CMD_GETTXPOOL      = "GETTXPOOL"
+	CMD_PING             = "PING" //ping
+	CMD_PONG             = "PONG" //pong
+	CMD_HANDSHAKE_HELLO  = "HELLO"
+	CMD_HANDSHAKE_STABLE = "STABLE"
+	CMD_BALANCE          = "BALANCE" //get balance of account
+	CMD_FAUCET           = "FAUCET"
+	CMD_TX               = "TX" //send transaction
+	CMD_BLOCKHEIGHT      = "BLOCKHEIGHT"
+	CMD_RANDOM_ACCOUNT   = "RANACC" //get some random account
+	CMD_GETTXPOOL        = "GETTXPOOL"
 	//CMD_GETBLOCKS      = "GETBLOCKS"
 	EMPTY_DATA = "EMPTY"
 )

@@ -178,6 +178,34 @@ func MakePing(peer protocol.Peer) bool {
 	}
 }
 
+func Hearbeat(peer protocol.Peer) bool {
+	emptydata := ""
+	req_msg := protocol.EncodeMsgString(protocol.REQ, protocol.CMD_PING, emptydata)
+	resp := protocol.RequestReplyChan(req_msg, peer.Req_chan, peer.Rep_chan)
+	log.Println("resp ", resp)
+	if string(resp.Command) == "PONG" {
+		log.Println("ping success")
+		return true
+	} else {
+		log.Println("ping failed ", string(resp.Data))
+		return false
+	}
+}
+
+func MakeHandshake(peer protocol.Peer) bool {
+	emptydata := ""
+	req_msg := protocol.EncodeMsgString(protocol.REQ, protocol.CMD_HANDSHAKE_HELLO, emptydata)
+	resp := protocol.RequestReplyChan(req_msg, peer.Req_chan, peer.Rep_chan)
+	log.Println("resp ", resp)
+	if string(resp.Command) == protocol.CMD_HANDSHAKE_STABLE {
+		log.Println("handshake success")
+		return true
+	} else {
+		log.Println("handshake failed ", string(resp.Data))
+		return false
+	}
+}
+
 func readdns() {
 	// domain := "example.com"
 	// ips, err1 := net.LookupIP(domain)
@@ -297,10 +325,21 @@ func createtx() {
 	ioutil.WriteFile("tx.json", []byte(txJson), 0644)
 }
 
-func createPeer(ipAddress string, NodePort int) protocol.Peer {
-	//addr := ip
-	p := protocol.Peer{Address: ipAddress, NodePort: NodePort, Req_chan: make(chan protocol.Message), Rep_chan: make(chan protocol.Message), Out_req_chan: make(chan protocol.Message), Out_rep_chan: make(chan protocol.Message)}
-	return p
+func setupAllPeers(config Configuration) {
+
+	for _, peerAddress := range config.PeerAddresses {
+		log.Println("setup  peer ", peerAddress)
+		p := protocol.CreatePeer(peerAddress, config.NodePort)
+
+		err := setupPeerClient(p)
+		if err != nil {
+			log.Println("connect failed")
+			continue
+		} else {
+			MakePing(p)
+		}
+	}
+
 }
 
 //run client against multiple nodes
@@ -311,7 +350,7 @@ func runPeermode(option string, config Configuration) {
 
 	for _, peerAddress := range config.PeerAddresses {
 
-		p := createPeer(peerAddress, config.NodePort)
+		p := protocol.CreatePeer(peerAddress, config.NodePort)
 		log.Println("add peer ", p)
 
 		err := setupPeerClient(p)
@@ -330,9 +369,8 @@ func runPeermode(option string, config Configuration) {
 		defer track(runningtime("execute ping"))
 		successCount := 0
 		for _, peerAddress := range config.PeerAddresses {
-			//peerAddress := config.PeerAddresses[0]
 			log.Println("setup  peer ", peerAddress)
-			p := createPeer(peerAddress, config.NodePort)
+			p := protocol.CreatePeer(peerAddress, config.NodePort)
 
 			err := setupPeerClient(p)
 			if err != nil {
@@ -344,7 +382,6 @@ func runPeermode(option string, config Configuration) {
 					successCount++
 				}
 			}
-
 		}
 
 		log.Println("pinged peers ", len(config.PeerAddresses), " successCount:", successCount)
@@ -357,7 +394,7 @@ func runSingleMode(option string, config Configuration) {
 
 	mainPeerAddress := config.PeerAddresses[0]
 	log.Println("setup main peer ", mainPeerAddress)
-	mainPeer := createPeer(mainPeerAddress, config.NodePort)
+	mainPeer := protocol.CreatePeer(mainPeerAddress, config.NodePort)
 	log.Println("client with mainPeer ", mainPeer)
 
 	setupPeerClient(mainPeer)
@@ -369,12 +406,19 @@ func runSingleMode(option string, config Configuration) {
 		//protocol.Server_address
 		MakePing(mainPeer)
 
-	case "pingconnect":
-		log.Println("ping continously")
+	case "handshake":
+		log.Println("handshake")
 		//protocol.Server_address
-		for {
-			MakePing(mainPeer)
-			time.Sleep(10 * time.Second)
+		success := MakeHandshake(mainPeer)
+		log.Println("start heartbeat")
+		if success {
+			hTime := 2000 * time.Millisecond
+
+			for _ = range time.Tick(hTime) {
+				//log.Println(x)
+				Hearbeat(mainPeer)
+			}
+
 		}
 
 	case "getbalance":
@@ -486,7 +530,7 @@ func main() {
 
 	switch option {
 
-	case "ping", "pingconnect", "getbalance", "blockheight", "faucet", "txpool", "pushtx", "randomtx":
+	case "ping", "handshake", "getbalance", "blockheight", "faucet", "txpool", "pushtx", "randomtx":
 		runSingleMode(option, config)
 
 	case "createkeys", "sign", "createtx", "verify":

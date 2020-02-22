@@ -37,6 +37,8 @@ import (
 )
 
 var Peers []protocol.Peer
+
+//banned IPs
 var nlog *log.Logger
 var logfile_name = "node.log"
 
@@ -107,8 +109,12 @@ func putMsg(msg_in_chan chan protocol.Message, msg protocol.Message) {
 }
 
 func HandlePing(msg_out_chan chan protocol.Message) {
-	//reply := protocol.EncodeMsgString(protocol.REP, protocol.CMD_PONG, protocol.EMPTY_DATA)
 	reply := protocol.EncodeMsg(protocol.REP, protocol.CMD_PONG, protocol.EMPTY_DATA)
+	msg_out_chan <- reply
+}
+
+func HandleHandshake(msg_out_chan chan protocol.Message) {
+	reply := protocol.EncodeMsg(protocol.REP, protocol.CMD_HANDSHAKE_STABLE, protocol.EMPTY_DATA)
 	msg_out_chan <- reply
 }
 
@@ -120,6 +126,10 @@ func HandleReqMsg(msg protocol.Message, rep_chan chan protocol.Message) {
 	case protocol.CMD_PING:
 		nlog.Println("PING PONG")
 		HandlePing(rep_chan)
+
+	case protocol.CMD_HANDSHAKE_HELLO:
+		nlog.Println("handshake")
+		HandleHandshake(rep_chan)
 
 	case protocol.CMD_BALANCE:
 		nlog.Println("Handle balance")
