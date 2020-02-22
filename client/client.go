@@ -285,40 +285,89 @@ func createPeer(ipAddress string, NodePort int) protocol.Peer {
 	return p
 }
 
-//run client based on options
-func main() {
+//run client against multiple nodes
+func runPeermode(option string, config Configuration) {
+	switch option {
+	case "pingall":
+		//protocol.Server_address
+		for _, peerAddress := range config.PeerAddresses {
+			p := createPeer(peerAddress, config.NodePort)
+			log.Println("ping ", p)
+			//MakePing(mainPeer)
 
-	//read config
-
-	file, _ := os.Open("conf.json")
-	defer file.Close()
-	decoder := json.NewDecoder(file)
-	configuration := Configuration{}
-	err := decoder.Decode(&configuration)
-	if err != nil {
-		fmt.Println("error:", err)
+		}
 	}
-	fmt.Println("PeerAddresses: ", configuration.PeerAddresses)
 
-	optionPtr := flag.String("option", "createkeypair", "the command to be performed")
-	flag.Parse()
-	//fmt.Println("option:", *optionPtr)
+}
 
-	mainPeerAddress := configuration.PeerAddresses[0]
-	log.Println("setup peer ", mainPeerAddress)
-	mainPeer := createPeer(mainPeerAddress, configuration.NodePort)
-	log.Println("client to mainPeer ", mainPeer)
+//run client against single node, just use first IP address in peers
+func runSingleMode(option string, config Configuration) {
+
+	mainPeerAddress := config.PeerAddresses[0]
+	log.Println("setup main peer ", mainPeerAddress)
+	mainPeer := createPeer(mainPeerAddress, config.NodePort)
+	log.Println("client with mainPeer ", mainPeer)
 
 	setupPeerClient(mainPeer)
 
-	if *optionPtr == "createkeys" {
+	switch option {
+
+	case "ping":
+		log.Println("ping")
+		//protocol.Server_address
+		MakePing(mainPeer)
+
+	case "pingconnect":
+		log.Println("ping continously")
+		//protocol.Server_address
+		for {
+			MakePing(mainPeer)
+			time.Sleep(10 * time.Second)
+		}
+
+	case "getbalance":
+		log.Println("getbalance")
+		//protocol.Server_address
+
+		Getbalance(mainPeer)
+
+	case "blockheight":
+		log.Println("blockheight")
+
+		Getblockheight(mainPeer)
+
+	case "faucet":
+		log.Println("faucet")
+		//get coins
+		//GetFaucet(rw)
+		GetFaucet(mainPeer)
+
+	case "txpool":
+		_ = Gettxpool(mainPeer)
+		return
+
+	case "pushtx":
+		_ = PushTx(mainPeer)
+		return
+
+	case "randomtx":
+		_ = MakeRandomTx(mainPeer)
+		return
+	}
+}
+
+//run client without client or server
+func runOffline(option string, config Configuration) {
+
+	switch option {
+	case "createkeys":
 		createKeys()
 
-	} else if *optionPtr == "readkeys" {
+	case "readkeys":
 		kp := readKeys("keys.txt")
 		log.Println(kp)
 
-	} else if *optionPtr == "sign" {
+	case "sign":
 		reader := bufio.NewReader(os.Stdin)
 		fmt.Print("Enter message to sign: ")
 		msg, _ := reader.ReadString('\n')
@@ -331,16 +380,15 @@ func main() {
 		sighex := hex.EncodeToString(signature.Serialize())
 		log.Println("sighex ", sighex)
 
-	} else if *optionPtr == "createtx" {
-
+	case "createtx":
 		createtx()
 
-	} else if *optionPtr == "verify" {
+	case "verify":
 		reader := bufio.NewReader(os.Stdin)
-		fmt.Print("Enter message to verify: ")
+		log.Print("Enter message to verify: ")
 		msg, _ := reader.ReadString('\n')
 		msg = strings.Trim(msg, string('\n'))
-		fmt.Println(msg)
+		log.Println(msg)
 
 		fmt.Print("Enter signature to verify: ")
 		msgsig, _ := reader.ReadString('\n')
@@ -351,7 +399,7 @@ func main() {
 
 		fmt.Print("Enter pubkey to verify: ")
 		msgpub, _ := reader.ReadString('\n')
-		fmt.Println(msgpub)
+		log.Println(msgpub)
 		msgpub = strings.Trim(msgpub, string('\n'))
 
 		//msgpub = "039f6095ba1afa34c437a88fceb444bf177326eb9222d4938336387ecb4cbe7234"
@@ -361,72 +409,39 @@ func main() {
 		verified := cryptoutil.VerifyMessageSignPub(sign, pubkey, msg)
 		log.Println("verified ", verified)
 
-	} else if *optionPtr == "createkeypair" {
-		//TODO read secret from cmd
-		kp := cryptoutil.PairFromSecret("test")
-		log.Println("keypair ", kp)
-
-	} else if *optionPtr == "ping" {
-		log.Println("ping")
-		//protocol.Server_address
-		MakePing(mainPeer)
-
-	} else if *optionPtr == "pingall" {
-		//protocol.Server_address
-		for _, peer := range configuration.PeerAddresses {
-			log.Println("ping ", peer)
-
-		}
-		MakePing(mainPeer)
-
-	} else if *optionPtr == "pingconnect" {
-		log.Println("ping continously")
-		//protocol.Server_address
-		for {
-			MakePing(mainPeer)
-			time.Sleep(10 * time.Second)
-		}
-
-	} else if *optionPtr == "getbalance" {
-		log.Println("getbalance")
-		//protocol.Server_address
-
-		Getbalance(mainPeer)
-
-	} else if *optionPtr == "blockheight" {
-		log.Println("blockheight")
-
-		Getblockheight(mainPeer)
-
-	} else if *optionPtr == "faucet" {
-		log.Println("faucet")
-		//get coins
-		//GetFaucet(rw)
-		GetFaucet(mainPeer)
-
-	} else if *optionPtr == "txpool" {
-		err = Gettxpool(mainPeer)
-		return
-
-	} else if *optionPtr == "pushtx" {
-		err = PushTx(mainPeer)
-		return
-
-	} else if *optionPtr == "randomtx" {
-		err = MakeRandomTx(mainPeer)
-		return
 	}
-	// else if *optionPtr == "pushtx" {
-	// 	//read locally created tx file and push it to server
-	// 	data, _ := ioutil.ReadFile("tx.json")
-	// 	log.Println(string(data))
-	// 	var tx block.Tx
-	// 	if err := json.Unmarshal(data, &tx); err != nil {
-	// 		panic(err)
-	// 	}
-	// 	log.Println(">> ", tx)
+}
 
-	// 	return
-	// }
+//run client based on options
+func main() {
+
+	//read config
+
+	file, _ := os.Open("conf.json")
+	defer file.Close()
+	decoder := json.NewDecoder(file)
+	config := Configuration{}
+	err := decoder.Decode(&config)
+	if err != nil {
+		fmt.Println("error:", err)
+	}
+	//fmt.Println("PeerAddresses: ", config.PeerAddresses)
+
+	optionPtr := flag.String("option", "ping", "the command to be performed")
+	option := *optionPtr
+	flag.Parse()
+	log.Println("run client with option:", option)
+
+	switch option {
+
+	case "ping", "pingconnect", "getbalance", "blockheight", "faucet", "txpool", "pushtx", "randomtx":
+		runSingleMode(option, config)
+
+	case "createkeys", "sign", "createtx", "verify":
+		runOffline(option, config)
+
+	case "pingall":
+		runPeermode(option, config)
+	}
 
 }

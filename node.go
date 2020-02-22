@@ -310,7 +310,7 @@ func loadContent() string {
 
 	content += fmt.Sprintf("<h2>Peers</h2>Peers: %d<br>", len(Peers))
 	for i := 0; i < len(Peers); i++ {
-		content += fmt.Sprintf("peer ip address: %s", Peers[i].Address)
+		content += fmt.Sprintf("peer ip address: %s<br>", Peers[i].Address)
 	}
 
 	content += fmt.Sprintf("<h2>TxPool</h2>%d<br>", len(chain.Tx_pool))

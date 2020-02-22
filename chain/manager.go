@@ -2,7 +2,6 @@ package chain
 
 import (
 	"crypto/sha256"
-	"fmt"
 	"log"
 	"math/rand"
 	"strconv"
@@ -50,11 +49,13 @@ func InitAccounts() {
 //TODO check nonce
 func txValid(tx block.Tx) bool {
 
-	//TODO check receiver is valid address
+	//TODO check receiver has valid address format
 
 	sufficientBalance := Accounts[tx.Sender] >= tx.Amount
 	if !sufficientBalance {
-		fmt.Println("insufficientBalance ")
+		log.Println("insufficientBalance")
+	} else {
+		log.Println("suffcientBalance")
 	}
 	// log.Println("sufficientBalance ", sufficientBalance, tx.Sender, Accounts[tx.Sender], tx.Amount)
 	//TODO and signature
@@ -64,7 +65,7 @@ func txValid(tx block.Tx) bool {
 
 	verified := crypto.VerifyTxSig(tx)
 	btxValid := sufficientBalance && verified
-	fmt.Println("sigvalid ", verified)
+	log.Println("sigvalid ", verified)
 	//TODO check sig
 	return btxValid
 	//return true
