@@ -385,11 +385,25 @@ func runPeermode(option string, config Configuration) {
 		}
 
 		log.Println("pinged peers ", len(config.PeerAddresses), " successCount:", successCount)
+
+	case "blockheight":
+
+		for _, peerAddress := range config.PeerAddresses {
+			log.Println("setup  peer ", peerAddress)
+			p := protocol.CreatePeer(peerAddress, config.NodePort)
+
+			err := setupPeerClient(p)
+			if err == nil {
+				log.Println("block height ", p)
+				Getblockheight(p)
+			}
+		}
+
 	}
 
 }
 
-//run client against single node, just use first IP address in peers
+//run client against single node, just use first IP address in peers i.e. mainpeer
 func runSingleMode(option string, config Configuration) {
 
 	mainPeerAddress := config.PeerAddresses[0]
@@ -403,12 +417,10 @@ func runSingleMode(option string, config Configuration) {
 
 	case "ping":
 		log.Println("ping")
-		//protocol.Server_address
 		MakePing(mainPeer)
 
 	case "handshake":
 		log.Println("handshake")
-		//protocol.Server_address
 		success := MakeHandshake(mainPeer)
 		log.Println("start heartbeat")
 		if success {
@@ -423,7 +435,6 @@ func runSingleMode(option string, config Configuration) {
 
 	case "getbalance":
 		log.Println("getbalance")
-		//protocol.Server_address
 
 		Getbalance(mainPeer)
 
@@ -530,13 +541,13 @@ func main() {
 
 	switch option {
 
-	case "ping", "handshake", "getbalance", "blockheight", "faucet", "txpool", "pushtx", "randomtx":
+	case "ping", "handshake", "getbalance", "faucet", "txpool", "pushtx", "randomtx":
 		runSingleMode(option, config)
 
 	case "createkeys", "sign", "createtx", "verify":
 		runOffline(option, config)
 
-	case "pingall":
+	case "pingall", "blockheight":
 		runPeermode(option, config)
 	}
 
