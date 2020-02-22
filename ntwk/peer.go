@@ -10,7 +10,9 @@ import (
 )
 
 type Peer struct {
-	Address string `json:"Address"`
+	//TODO IpAddress (v4)
+	Address  string `json:"Address"`
+	NodePort int
 
 	Req_chan     chan Message
 	Rep_chan     chan Message

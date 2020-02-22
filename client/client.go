@@ -4,17 +4,20 @@ package main
 
 import (
 	"bufio"
+	"encoding/hex"
 	"encoding/json"
 	"flag"
 	"fmt"
 	"io/ioutil"
 	"log"
 	"os"
+	"strconv"
 	"strings"
 	"time"
 
 	"github.com/polygonledger/node/block"
-	"github.com/polygonledger/node/crypto"
+	//"github.com/polygonledger/node/crypto"
+	cryptoutil "github.com/polygonledger/node/crypto"
 	protocol "github.com/polygonledger/node/ntwk"
 )
 
@@ -27,13 +30,13 @@ type Configuration struct {
 }
 
 //
-func MakeRandomTx(msg_in_chan chan protocol.Message, msg_out_chan chan protocol.Message) error {
+func MakeRandomTx(peer protocol.Peer) error {
 	//make a random transaction by requesting random account from node
 	//get random account
 
 	req_msg := protocol.EncodeMsgString(protocol.REQ, protocol.CMD_RANDOM_ACCOUNT, "emptydata")
 
-	response := protocol.RequestReplyChan(req_msg, msg_in_chan, msg_out_chan)
+	response := protocol.RequestReplyChan(req_msg, peer.Req_chan, peer.Rep_chan)
 
 	var a block.Account
 	dataBytes := []byte(response.Data)
@@ -51,13 +54,13 @@ func MakeRandomTx(msg_in_chan chan protocol.Message, msg_out_chan chan protocol.
 
 	req_msg = protocol.EncodeMessageTx(txJson)
 
-	response = protocol.RequestReplyChan(req_msg, msg_in_chan, msg_out_chan)
+	response = protocol.RequestReplyChan(req_msg, peer.Req_chan, peer.Rep_chan)
 	log.Print("response msg ", response)
 
 	return nil
 }
 
-func CreateTx() {
+func CreateTx(peer protocol.Peer) {
 	// keypair := crypto.PairFromSecret("test")
 	// var tx block.Tx
 	// s := block.AccountFromString("Pa033f6528cc1")
@@ -70,7 +73,7 @@ func CreateTx() {
 
 }
 
-func PushTx(msg_in_chan chan protocol.Message, msg_out_chan chan protocol.Message) error {
+func PushTx(peer protocol.Peer) error {
 
 	dat, _ := ioutil.ReadFile("tx.json")
 	var tx block.Tx
@@ -84,13 +87,13 @@ func PushTx(msg_in_chan chan protocol.Message, msg_out_chan chan protocol.Messag
 	log.Println("txJson ", string(txJson))
 
 	req_msg := protocol.EncodeMessageTx(txJson)
-	response := protocol.RequestReplyChan(req_msg, msg_in_chan, msg_out_chan)
+	response := protocol.RequestReplyChan(req_msg, peer.Req_chan, peer.Rep_chan)
 	log.Print("reply msg ", response)
 
 	return nil
 }
 
-func Getbalance(msg_in_chan chan protocol.Message, msg_out_chan chan protocol.Message) error {
+func Getbalance(peer protocol.Peer) error {
 	reader := bufio.NewReader(os.Stdin)
 	fmt.Print("Enter address: ")
 	addr, _ := reader.ReadString('\n')
@@ -98,7 +101,7 @@ func Getbalance(msg_in_chan chan protocol.Message, msg_out_chan chan protocol.Me
 
 	txJson, _ := json.Marshal(block.Account{AccountKey: addr})
 	req_msg := protocol.EncodeMsgString(protocol.REQ, protocol.CMD_BALANCE, string(txJson))
-	response := protocol.RequestReplyChan(req_msg, msg_in_chan, msg_out_chan)
+	response := protocol.RequestReplyChan(req_msg, peer.Req_chan, peer.Rep_chan)
 	log.Println(response)
 	var balance int
 	if err := json.Unmarshal(response.Data, &balance); err != nil {
@@ -109,9 +112,9 @@ func Getbalance(msg_in_chan chan protocol.Message, msg_out_chan chan protocol.Me
 	return nil
 }
 
-func Getblockheight(msg_in_chan chan protocol.Message, msg_out_chan chan protocol.Message) error {
+func Getblockheight(peer protocol.Peer) error {
 	req_msg := protocol.EncodeMsgString(protocol.REQ, protocol.CMD_BLOCKHEIGHT, "")
-	response := protocol.RequestReplyChan(req_msg, msg_in_chan, msg_out_chan)
+	response := protocol.RequestReplyChan(req_msg, peer.Req_chan, peer.Rep_chan)
 
 	var blockheight int
 	if err := json.Unmarshal(response.Data, &blockheight); err != nil {
@@ -122,17 +125,17 @@ func Getblockheight(msg_in_chan chan protocol.Message, msg_out_chan chan protoco
 	return nil
 }
 
-func Gettxpool(msg_in_chan chan protocol.Message, msg_out_chan chan protocol.Message) error {
+func Gettxpool(peer protocol.Peer) error {
 	req_msg := protocol.EncodeMsgString(protocol.REQ, protocol.CMD_GETTXPOOL, "")
 	log.Println("> ", req_msg)
-	response := protocol.RequestReplyChan(req_msg, msg_in_chan, msg_out_chan)
+	resp := protocol.RequestReplyChan(req_msg, peer.Req_chan, peer.Rep_chan)
 
-	log.Println("rcvmsg ", response)
+	log.Println("rcvmsg ", resp)
 
 	return nil
 }
 
-func GetFaucet(msg_in_chan chan protocol.Message, msg_out_chan chan protocol.Message) error {
+func GetFaucet(peer protocol.Peer) error {
 	reader := bufio.NewReader(os.Stdin)
 	fmt.Print("Enter address: ")
 	addr, _ := reader.ReadString('\n')
@@ -140,26 +143,17 @@ func GetFaucet(msg_in_chan chan protocol.Message, msg_out_chan chan protocol.Mes
 
 	accountJson, _ := json.Marshal(block.Account{AccountKey: addr})
 	req_msg := protocol.EncodeMsgString(protocol.REQ, protocol.CMD_FAUCET, string(accountJson))
-	protocol.RequestReplyChan(req_msg, msg_in_chan, msg_out_chan)
-	//log.Println("resp ", resp)
+	resp := protocol.RequestReplyChan(req_msg, peer.Req_chan, peer.Rep_chan)
+	log.Println("resp ", resp)
 
 	return nil
 }
 
-func MakePing(msg_in_chan chan protocol.Message, msg_out_chan chan protocol.Message) {
+func MakePing(peer protocol.Peer) {
 	emptydata := ""
 	req_msg := protocol.EncodeMsgString(protocol.REQ, protocol.CMD_PING, emptydata)
-	resp := protocol.RequestReplyChan(req_msg, msg_in_chan, msg_out_chan)
+	resp := protocol.RequestReplyChan(req_msg, peer.Req_chan, peer.Rep_chan)
 	log.Println("resp ", resp)
-}
-
-func client(ip string, NodePort int) *bufio.ReadWriter {
-
-	// Open a connection to the server.
-	log.Println(">>> ", ip, NodePort)
-	rw := protocol.OpenOut(ip, NodePort)
-
-	return rw
 }
 
 func readdns() {
@@ -175,16 +169,123 @@ func readdns() {
 
 }
 
-func addPeer(peer string, node_port int) {
+func client(ip string, NodePort int) *bufio.ReadWriter {
 
-	rw := client(peer)
+	// Open a connection to the server.
+	log.Println(">>> ", ip, NodePort)
+	rw := protocol.OpenOut(ip, NodePort)
 
-	req_chan := make(chan protocol.Message)
-	rep_chan := make(chan protocol.Message)
-	go protocol.RequestLoop(rw, req_chan, rep_chan)
+	return rw
 }
 
-//start client and connect to the host
+//setup connection to a peer from client side for requests
+func setupPeerClient(peer protocol.Peer) {
+
+	rw := client(peer.Address, peer.NodePort)
+
+	go protocol.RequestLoop(rw, peer.Req_chan, peer.Rep_chan)
+}
+
+func readKeys(keysfile string) cryptoutil.Keypair {
+
+	dat, _ := ioutil.ReadFile(keysfile)
+	s := strings.Split(string(dat), string("\n"))
+
+	pubkeyHex := s[0]
+	log.Println("pub ", pubkeyHex)
+
+	privHex := s[1]
+	log.Println("privHex ", privHex)
+
+	return cryptoutil.Keypair{PubKey: cryptoutil.PubKeyFromHex(pubkeyHex), PrivKey: cryptoutil.PrivKeyFromHex(privHex)}
+}
+
+func writeKeys(kp cryptoutil.Keypair, keysfile string) {
+
+	pubkeyHex := cryptoutil.PubKeyToHex(kp.PubKey)
+	log.Println("pub ", pubkeyHex)
+
+	privHex := cryptoutil.PrivKeyToHex(kp.PrivKey)
+	log.Println("privHex ", privHex)
+
+	address := cryptoutil.Address(pubkeyHex)
+
+	t := pubkeyHex + "\n" + privHex + "\n" + address
+	//log.Println("address ", address)
+	ioutil.WriteFile(keysfile, []byte(t), 0644)
+}
+
+func createKeys() {
+
+	log.Println("create keypair")
+
+	reader := bufio.NewReader(os.Stdin)
+	fmt.Print("Enter password: ")
+	pw, _ := reader.ReadString('\n')
+	pw = strings.Trim(pw, string('\n'))
+	fmt.Println(pw)
+
+	//check if exists
+	//dat, _ := ioutil.ReadFile("keys.txt")
+	//check(err)
+
+	kp := cryptoutil.PairFromSecret(pw)
+	log.Println("keypair ", kp)
+
+	writeKeys(kp, "keys.txt")
+
+}
+
+func createtx() {
+	kp := readKeys("keys.txt")
+
+	// reader := bufio.NewReader(os.Stdin)
+	// fmt.Print("Enter password: ")
+	// pw, _ := reader.ReadString('\n')
+	// pw = strings.Trim(pw, string('\n'))
+
+	// keypair := crypto.PairFromSecret(pw)
+
+	pubk := cryptoutil.PubKeyToHex(kp.PubKey)
+	addr := cryptoutil.Address(pubk)
+	s := block.AccountFromString(addr)
+	log.Println("using account ", s)
+
+	reader := bufio.NewReader(os.Stdin)
+	fmt.Print("Enter amount: ")
+	amount, _ := reader.ReadString('\n')
+	amount = strings.Trim(amount, string('\n'))
+	amount_int, _ := strconv.Atoi(amount)
+
+	reader = bufio.NewReader(os.Stdin)
+	fmt.Print("Enter recipient: ")
+	recv, _ := reader.ReadString('\n')
+	recv = strings.Trim(recv, string('\n'))
+
+	tx := block.Tx{Nonce: 1, Amount: amount_int, Sender: block.Account{AccountKey: addr}, Receiver: block.Account{AccountKey: recv}}
+	log.Println(tx)
+
+	signature := cryptoutil.SignTx(tx, kp)
+	sighex := hex.EncodeToString(signature.Serialize())
+
+	tx.Signature = sighex
+	tx.SenderPubkey = cryptoutil.PubKeyToHex(kp.PubKey)
+	log.Println(tx)
+
+	txJson, _ := json.Marshal(tx)
+	// //write to file
+	// log.Println(txJson)
+
+	ioutil.WriteFile("tx.json", []byte(txJson), 0644)
+}
+
+func createPeer(ipAddress string, NodePort int) protocol.Peer {
+	//addr := ip
+	p := protocol.Peer{Address: ipAddress, NodePort: NodePort, Req_chan: make(chan protocol.Message), Rep_chan: make(chan protocol.Message), Out_req_chan: make(chan protocol.Message), Out_rep_chan: make(chan protocol.Message)}
+	return p
+}
+
+//run client based on options
 func main() {
 
 	//read config
@@ -199,29 +300,76 @@ func main() {
 	}
 	fmt.Println("PeerAddresses: ", configuration.PeerAddresses)
 
-	//if exists
-	// dat, _ := ioutil.ReadFile("keys.txt")
-	// //check(err)
-	// fmt.Print("keys ", string(dat))
-
 	optionPtr := flag.String("option", "createkeypair", "the command to be performed")
 	flag.Parse()
 	//fmt.Println("option:", *optionPtr)
 
-	mainPeer := configuration.PeerAddresses[0]
+	mainPeerAddress := configuration.PeerAddresses[0]
+	log.Println("setup peer ", mainPeerAddress)
+	mainPeer := createPeer(mainPeerAddress, configuration.NodePort)
 	log.Println("client to mainPeer ", mainPeer)
 
-	addPeer(mainPeer, configuration.NodePort)
+	setupPeerClient(mainPeer)
 
-	if *optionPtr == "createkeypair" {
+	if *optionPtr == "createkeys" {
+		createKeys()
+
+	} else if *optionPtr == "readkeys" {
+		kp := readKeys("keys.txt")
+		log.Println(kp)
+
+	} else if *optionPtr == "sign" {
+		reader := bufio.NewReader(os.Stdin)
+		fmt.Print("Enter message to sign: ")
+		msg, _ := reader.ReadString('\n')
+		msg = strings.Trim(msg, string('\n'))
+		fmt.Println(msg)
+		kp := readKeys("keys.txt")
+		signature := cryptoutil.SignMsgHash(kp, msg)
+		log.Println("signature ", signature)
+
+		sighex := hex.EncodeToString(signature.Serialize())
+		log.Println("sighex ", sighex)
+
+	} else if *optionPtr == "createtx" {
+
+		createtx()
+
+	} else if *optionPtr == "verify" {
+		reader := bufio.NewReader(os.Stdin)
+		fmt.Print("Enter message to verify: ")
+		msg, _ := reader.ReadString('\n')
+		msg = strings.Trim(msg, string('\n'))
+		fmt.Println(msg)
+
+		fmt.Print("Enter signature to verify: ")
+		msgsig, _ := reader.ReadString('\n')
+		msgsig = strings.Trim(msgsig, string('\n'))
+		//examplesig := "3045022100dd2781cc37edb84c5ed21b3d8fc03d49ebddf5647d23a9132eeea8bd2b951bd1022041519c47b77803d528d1b428ccb4d84a90ce3b67a22662d5feaa84c4521e5759"
+
+		sign := cryptoutil.SignatureFromHex(msgsig)
+
+		fmt.Print("Enter pubkey to verify: ")
+		msgpub, _ := reader.ReadString('\n')
+		fmt.Println(msgpub)
+		msgpub = strings.Trim(msgpub, string('\n'))
+
+		//msgpub = "039f6095ba1afa34c437a88fceb444bf177326eb9222d4938336387ecb4cbe7234"
+
+		pubkey := cryptoutil.PubKeyFromHex(msgpub)
+
+		verified := cryptoutil.VerifyMessageSignPub(sign, pubkey, msg)
+		log.Println("verified ", verified)
+
+	} else if *optionPtr == "createkeypair" {
 		//TODO read secret from cmd
-		kp := crypto.PairFromSecret("test")
+		kp := cryptoutil.PairFromSecret("test")
 		log.Println("keypair ", kp)
 
 	} else if *optionPtr == "ping" {
 		log.Println("ping")
 		//protocol.Server_address
-		MakePing(req_chan, rep_chan)
+		MakePing(mainPeer)
 
 	} else if *optionPtr == "pingall" {
 		//protocol.Server_address
@@ -229,13 +377,13 @@ func main() {
 			log.Println("ping ", peer)
 
 		}
-		MakePing(req_chan, rep_chan)
+		MakePing(mainPeer)
 
 	} else if *optionPtr == "pingconnect" {
 		log.Println("ping continously")
 		//protocol.Server_address
 		for {
-			MakePing(req_chan, rep_chan)
+			MakePing(mainPeer)
 			time.Sleep(10 * time.Second)
 		}
 
@@ -243,29 +391,29 @@ func main() {
 		log.Println("getbalance")
 		//protocol.Server_address
 
-		Getbalance(req_chan, rep_chan)
+		Getbalance(mainPeer)
 
 	} else if *optionPtr == "blockheight" {
 		log.Println("blockheight")
 
-		Getblockheight(req_chan, rep_chan)
+		Getblockheight(mainPeer)
 
 	} else if *optionPtr == "faucet" {
 		log.Println("faucet")
 		//get coins
 		//GetFaucet(rw)
-		GetFaucet(req_chan, rep_chan)
+		GetFaucet(mainPeer)
 
 	} else if *optionPtr == "txpool" {
-		err = Gettxpool(req_chan, rep_chan)
+		err = Gettxpool(mainPeer)
 		return
 
 	} else if *optionPtr == "pushtx" {
-		err = PushTx(req_chan, rep_chan)
+		err = PushTx(mainPeer)
 		return
 
 	} else if *optionPtr == "randomtx" {
-		err = MakeRandomTx(req_chan, rep_chan)
+		err = MakeRandomTx(mainPeer)
 		return
 	}
 	// else if *optionPtr == "pushtx" {
