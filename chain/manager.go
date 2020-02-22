@@ -19,7 +19,7 @@ var Blocks []block.Block
 var Latest_block block.Block
 var Accounts map[block.Account]int
 
-const storageFile = "chain.json"
+const storageFile = "data/chain.json"
 
 //TODO fix circular import
 const (
@@ -39,7 +39,7 @@ func GenesisKeys() crypto.Keypair {
 func InitAccounts() {
 	Accounts = make(map[block.Account]int)
 
-	log.Println("init accounts %i", len(Accounts))
+	log.Printf("init accounts %d", len(Accounts))
 	//Genesis_Account := block.AccountFromString(Genesis_Address)
 	//set genesiss account, this is the amount that the genesis address receives
 	genesisAmount := 400
@@ -238,7 +238,7 @@ func ReadChain() bool {
 		panic(err)
 	}
 
-	log.Printf("read chain success. block height %d", len(Blocks))
+	log.Printf("read chain success from %s. block height %d", storageFile, len(Blocks))
 	return true
 
 }
