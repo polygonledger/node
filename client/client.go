@@ -191,21 +191,17 @@ func readdns() {
 
 }
 
-func setupClient(ip string, NodePort int) *bufio.ReadWriter {
-
-	// Open a connection to the server.
-	//log.Println(">>> ", ip, NodePort)
-	rw := protocol.OpenOut(ip, NodePort)
-
-	return rw
-}
-
 //setup connection to a peer from client side for requests
-func setupPeerClient(peer protocol.Peer) {
+func setupPeerClient(peer protocol.Peer) error {
 
-	rw := setupClient(peer.Address, peer.NodePort)
+	rw, err := protocol.OpenOut(peer.Address, peer.NodePort)
+	if err != nil {
+		log.Println("error open ", err)
+		return err
+	}
 
 	go protocol.RequestLoop(rw, peer.Req_chan, peer.Rep_chan)
+	return nil
 }
 
 func readKeys(keysfile string) cryptoutil.Keypair {
@@ -317,9 +313,14 @@ func runPeermode(option string, config Configuration) {
 
 		p := createPeer(peerAddress, config.NodePort)
 		log.Println("add peer ", p)
-		addPeerOut(p)
 
-		setupPeerClient(p)
+		err := setupPeerClient(p)
+		if err != nil {
+			//remove peer
+			log.Println("dont add peer to list")
+		} else {
+			addPeerOut(p)
+		}
 	}
 
 	switch option {
@@ -333,10 +334,15 @@ func runPeermode(option string, config Configuration) {
 			log.Println("setup  peer ", peerAddress)
 			p := createPeer(peerAddress, config.NodePort)
 
-			setupPeerClient(p)
-			success := MakePing(p)
-			if success {
-				successCount++
+			err := setupPeerClient(p)
+			if err != nil {
+				log.Println("connect failed")
+				continue
+			} else {
+				success := MakePing(p)
+				if success {
+					successCount++
+				}
 			}
 
 		}

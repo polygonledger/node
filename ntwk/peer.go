@@ -49,6 +49,8 @@ func Open(addr string) (*bufio.ReadWriter, error) {
 	log.Println("Dial " + addr)
 	conn, err := net.Dial("tcp", addr)
 	if err != nil {
+		//return nil, errors.Wrap(err, "Dialing "+addr+" failed")
+		log.Println("error ", err)
 		return nil, errors.Wrap(err, "Dialing "+addr+" failed")
 	}
 	if err != nil {
@@ -57,9 +59,9 @@ func Open(addr string) (*bufio.ReadWriter, error) {
 	return bufio.NewReadWriter(bufio.NewReader(conn), bufio.NewWriter(conn)), nil
 }
 
-func OpenOut(ip string, Port int) *bufio.ReadWriter {
+func OpenOut(ip string, Port int) (*bufio.ReadWriter, error) {
 	addr := ip + ":" + strconv.Itoa(Port)
 	log.Println("> open out address ", addr)
-	rw, _ := Open(addr)
-	return rw
+	rw, err := Open(addr)
+	return rw, err
 }
