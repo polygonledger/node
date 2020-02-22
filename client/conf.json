@@ -1,6 +1,6 @@
 {
     
-    "PeerAddresses": ["polygonnode.com", "54.162.206.72", "localhost"],
+    "PeerAddresses": ["localhost", "polygonnode.com", "54.162.206.72"],
     
     "Nodeport": 8888,
 

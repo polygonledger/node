@@ -147,6 +147,13 @@ func Gettxpool(peer protocol.Peer) error {
 	resp := protocol.RequestReplyChan(req_msg, peer.Req_chan, peer.Rep_chan)
 
 	log.Println("rcvmsg ", resp)
+	log.Println("data ", resp.Data)
+
+	var txp []block.Tx
+	if err := json.Unmarshal(resp.Data, &txp); err != nil {
+		panic(err)
+	}
+	log.Println("txp ", txp)
 
 	return nil
 }

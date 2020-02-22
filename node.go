@@ -42,6 +42,8 @@ var Peers []protocol.Peer
 var nlog *log.Logger
 var logfile_name = "node.log"
 
+var blockTime = 60000 * time.Millisecond
+
 type Configuration struct {
 	PeerAddresses []string
 	NodePort      int
@@ -405,7 +407,7 @@ func run_node(config Configuration) {
 	chain.AppendBlock(genBlock)
 
 	// create block every 10sec
-	blockTime := 10000 * time.Millisecond
+
 	go doEvery(blockTime, chain.MakeBlock)
 
 	//connect_peers(configuration.PeerAddresses)
