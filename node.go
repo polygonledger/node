@@ -404,6 +404,10 @@ func run_node(config Configuration) {
 
 	success := chain.ReadChain()
 
+	nlog.Println("genesis block ", chain.Blocks[0])
+
+	chain.WriteGenBlock(chain.Blocks[0])
+
 	//create new genesis block (demo)
 	createDemo := !success
 	if createDemo {

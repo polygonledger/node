@@ -252,8 +252,11 @@ func ReadState() {
 	//TODO
 }
 
-func WriteGenBlock(block.Block) {
+func WriteGenBlock(block block.Block) {
 	//TODO
+	dataJson, _ := json.Marshal(block)
+	//dataJson, _ := json.MarshalIndent(block, "", "    ")
+	ioutil.WriteFile(GenblockStorageFile, []byte(dataJson), 0644)
 }
 
 func ReadGenBlock() block.Block {
