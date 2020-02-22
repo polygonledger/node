@@ -2,6 +2,8 @@ package chain
 
 import (
 	"crypto/sha256"
+	"encoding/json"
+	"io/ioutil"
 	"log"
 	"math/rand"
 	"strconv"
@@ -211,6 +213,11 @@ func ApplyBlock(block block.Block) {
 	}
 }
 
+func writeChain() {
+	dataJson, _ := json.Marshal(Blocks)
+	ioutil.WriteFile("chain.json", []byte(dataJson), 0644)
+}
+
 // function to create blocks, called periodically
 // currently assumes we can create blocks at will and we don't sync
 func MakeBlock(t time.Time) {
@@ -233,6 +240,9 @@ func MakeBlock(t time.Time) {
 		EmptyPool()
 
 		Latest_block = new_block
+
+		writeChain()
+
 	} else {
 		log.Printf("no block to make")
 		//handle special case of no tx
