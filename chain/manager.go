@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"log"
 	"math/rand"
+	"os"
 	"strconv"
 	"time"
 
@@ -17,6 +18,8 @@ var Tx_pool []block.Tx
 var Blocks []block.Block
 var Latest_block block.Block
 var Accounts map[block.Account]int
+
+const storageFile = "chain.json"
 
 //TODO fix circular import
 const (
@@ -213,9 +216,31 @@ func ApplyBlock(block block.Block) {
 	}
 }
 
+//trivial json storage
 func writeChain() {
 	dataJson, _ := json.Marshal(Blocks)
-	ioutil.WriteFile("chain.json", []byte(dataJson), 0644)
+	ioutil.WriteFile(storageFile, []byte(dataJson), 0644)
+}
+
+//TODO error
+func ReadChain() bool {
+
+	if _, err := os.Stat(storageFile); os.IsNotExist(err) {
+		// path/to/whatever does not exist
+		log.Println("storage file does not exist")
+		return false
+	}
+
+	dat, _ := ioutil.ReadFile(storageFile)
+	//var tx block.Tx
+
+	if err := json.Unmarshal(dat, &Blocks); err != nil {
+		panic(err)
+	}
+
+	log.Printf("read chain success. block height %d", len(Blocks))
+	return true
+
 }
 
 // function to create blocks, called periodically

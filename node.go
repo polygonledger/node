@@ -402,9 +402,17 @@ func run_node(config Configuration) {
 	//TODO signatures of genesis
 	chain.InitAccounts()
 
-	genBlock := chain.MakeGenesisBlock()
-	chain.ApplyBlock(genBlock)
-	chain.AppendBlock(genBlock)
+	success := chain.ReadChain()
+
+	//create new genesis block (demo)
+	createDemo := !success
+	if createDemo {
+		genBlock := chain.MakeGenesisBlock()
+		chain.ApplyBlock(genBlock)
+		chain.AppendBlock(genBlock)
+	}
+
+	//if file exists read the chain
 
 	// create block every 10sec
 
