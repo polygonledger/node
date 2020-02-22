@@ -29,6 +29,21 @@ type Configuration struct {
 	WebPort       int
 }
 
+func addPeerOut(p protocol.Peer) {
+	Peers = append(Peers, p)
+	log.Println("peers now", Peers)
+}
+
+func runningtime(s string) (string, time.Time) {
+	log.Println("Start:	", s)
+	return s, time.Now()
+}
+
+func track(s string, startTime time.Time) {
+	endTime := time.Now()
+	log.Println("End measure time:", s, "took", endTime.Sub(startTime))
+}
+
 //
 func MakeRandomTx(peer protocol.Peer) error {
 	//make a random transaction by requesting random account from node
@@ -149,11 +164,18 @@ func GetFaucet(peer protocol.Peer) error {
 	return nil
 }
 
-func MakePing(peer protocol.Peer) {
+func MakePing(peer protocol.Peer) bool {
 	emptydata := ""
 	req_msg := protocol.EncodeMsgString(protocol.REQ, protocol.CMD_PING, emptydata)
 	resp := protocol.RequestReplyChan(req_msg, peer.Req_chan, peer.Rep_chan)
 	log.Println("resp ", resp)
+	if string(resp.Command) == "PONG" {
+		log.Println("ping success")
+		return true
+	} else {
+		log.Println("ping failed ", string(resp.Data))
+		return false
+	}
 }
 
 func readdns() {
@@ -169,10 +191,10 @@ func readdns() {
 
 }
 
-func client(ip string, NodePort int) *bufio.ReadWriter {
+func setupClient(ip string, NodePort int) *bufio.ReadWriter {
 
 	// Open a connection to the server.
-	log.Println(">>> ", ip, NodePort)
+	//log.Println(">>> ", ip, NodePort)
 	rw := protocol.OpenOut(ip, NodePort)
 
 	return rw
@@ -181,7 +203,7 @@ func client(ip string, NodePort int) *bufio.ReadWriter {
 //setup connection to a peer from client side for requests
 func setupPeerClient(peer protocol.Peer) {
 
-	rw := client(peer.Address, peer.NodePort)
+	rw := setupClient(peer.Address, peer.NodePort)
 
 	go protocol.RequestLoop(rw, peer.Req_chan, peer.Rep_chan)
 }
@@ -287,15 +309,39 @@ func createPeer(ipAddress string, NodePort int) protocol.Peer {
 
 //run client against multiple nodes
 func runPeermode(option string, config Configuration) {
+	log.Println("runPeermode")
+
+	log.Println("setup peers")
+
+	for _, peerAddress := range config.PeerAddresses {
+
+		p := createPeer(peerAddress, config.NodePort)
+		log.Println("add peer ", p)
+		addPeerOut(p)
+
+		setupPeerClient(p)
+	}
+
 	switch option {
+
 	case "pingall":
-		//protocol.Server_address
+
+		defer track(runningtime("execute ping"))
+		successCount := 0
 		for _, peerAddress := range config.PeerAddresses {
+			//peerAddress := config.PeerAddresses[0]
+			log.Println("setup  peer ", peerAddress)
 			p := createPeer(peerAddress, config.NodePort)
-			log.Println("ping ", p)
-			//MakePing(mainPeer)
+
+			setupPeerClient(p)
+			success := MakePing(p)
+			if success {
+				successCount++
+			}
 
 		}
+
+		log.Println("pinged peers ", len(config.PeerAddresses), " successCount:", successCount)
 	}
 
 }
@@ -427,9 +473,9 @@ func main() {
 	}
 	//fmt.Println("PeerAddresses: ", config.PeerAddresses)
 
-	optionPtr := flag.String("option", "ping", "the command to be performed")
-	option := *optionPtr
+	optionPtr := flag.String("option", "", "the command to be performed")
 	flag.Parse()
+	option := *optionPtr
 	log.Println("run client with option:", option)
 
 	switch option {
