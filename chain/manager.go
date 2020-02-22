@@ -19,7 +19,8 @@ var Blocks []block.Block
 var Latest_block block.Block
 var Accounts map[block.Account]int
 
-const storageFile = "data/chain.json"
+const ChainStorageFile = "data/chain.json"
+const GenblockStorageFile = "data/genesis.json"
 
 //TODO fix circular import
 const (
@@ -180,6 +181,7 @@ func GenesisTx() block.Tx {
 	gTx := block.Tx{Nonce: randNonce, Sender: Genesis_Account, Receiver: r_account, Amount: genesisAmount}
 	return gTx
 }
+
 func MakeGenesisBlock() block.Block {
 
 	emptyhash := [32]byte{}
@@ -219,28 +221,61 @@ func ApplyBlock(block block.Block) {
 //trivial json storage
 func writeChain() {
 	dataJson, _ := json.Marshal(Blocks)
-	ioutil.WriteFile(storageFile, []byte(dataJson), 0644)
+	ioutil.WriteFile(ChainStorageFile, []byte(dataJson), 0644)
 }
 
 //TODO error
 func ReadChain() bool {
 
-	if _, err := os.Stat(storageFile); os.IsNotExist(err) {
+	if _, err := os.Stat(ChainStorageFile); os.IsNotExist(err) {
 		// path/to/whatever does not exist
 		log.Println("storage file does not exist")
 		return false
 	}
 
-	dat, _ := ioutil.ReadFile(storageFile)
-	//var tx block.Tx
+	dat, _ := ioutil.ReadFile(ChainStorageFile)
 
 	if err := json.Unmarshal(dat, &Blocks); err != nil {
 		panic(err)
 	}
 
-	log.Printf("read chain success from %s. block height %d", storageFile, len(Blocks))
+	log.Printf("read chain success from %s. block height %d", ChainStorageFile, len(Blocks))
 	return true
 
+}
+
+func WriteState() {
+	//TODO
+}
+
+func ReadState() {
+	//TODO
+}
+
+func WriteGenBlock(block.Block) {
+	//TODO
+}
+
+func ReadGenBlock() block.Block {
+	//TODO
+
+	if _, err := os.Stat(GenblockStorageFile); os.IsNotExist(err) {
+		// path/to/whatever does not exist
+		log.Println("storage file does not exist")
+		//return nil
+	}
+
+	dat, _ := ioutil.ReadFile(GenblockStorageFile)
+
+	var newgenblock block.Block
+
+	if err := json.Unmarshal(dat, &newgenblock); err != nil {
+		panic(err)
+	}
+
+	log.Printf("read gen block success from %s", GenblockStorageFile)
+
+	return newgenblock
 }
 
 // function to create blocks, called periodically
