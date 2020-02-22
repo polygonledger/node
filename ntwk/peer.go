@@ -30,6 +30,56 @@ type Peer struct {
 //loadBlocksOffset
 //getCommonBlock //Performs chain comparison with remote peer
 
+func CreatePeer(ipAddress string, NodePort int) Peer {
+	//addr := ip
+	p := Peer{Address: ipAddress, NodePort: NodePort, Req_chan: make(chan Message), Rep_chan: make(chan Message), Out_req_chan: make(chan Message), Out_rep_chan: make(chan Message)}
+	return p
+}
+
+func MakePing(peer Peer) bool {
+	emptydata := ""
+	req_msg := EncodeMsgString(REQ, CMD_PING, emptydata)
+	resp := RequestReplyChan(req_msg, peer.Req_chan, peer.Rep_chan)
+	log.Println("resp ", resp)
+	if string(resp.Command) == "PONG" {
+		log.Println("ping success")
+		return true
+	} else {
+		log.Println("ping failed ", string(resp.Data))
+		return false
+	}
+}
+
+func Hearbeat(peer Peer) bool {
+	emptydata := ""
+	req_msg := EncodeMsgString(REQ, CMD_PING, emptydata)
+	resp := RequestReplyChan(req_msg, peer.Req_chan, peer.Rep_chan)
+	log.Println("resp ", resp)
+	if string(resp.Command) == "PONG" {
+		log.Println("ping success")
+		return true
+	} else {
+		log.Println("ping failed ", string(resp.Data))
+		return false
+	}
+}
+
+func MakeHandshake(peer Peer) bool {
+	emptydata := ""
+	req_msg := EncodeMsgString(REQ, CMD_HANDSHAKE_HELLO, emptydata)
+	resp := RequestReplyChan(req_msg, peer.Req_chan, peer.Rep_chan)
+	log.Println("resp ", resp)
+	if string(resp.Command) == CMD_HANDSHAKE_STABLE {
+		log.Println("handshake success")
+		return true
+	} else {
+		log.Println("handshake failed ", string(resp.Data))
+		return false
+	}
+}
+
+//--------network--------
+
 func OpenConn(addr string) net.Conn {
 	// Dial the remote process
 	log.Println("Dial " + addr)

@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
+	"net"
 	"os"
 	"strconv"
 	"strings"
@@ -164,48 +165,6 @@ func GetFaucet(peer protocol.Peer) error {
 	return nil
 }
 
-func MakePing(peer protocol.Peer) bool {
-	emptydata := ""
-	req_msg := protocol.EncodeMsgString(protocol.REQ, protocol.CMD_PING, emptydata)
-	resp := protocol.RequestReplyChan(req_msg, peer.Req_chan, peer.Rep_chan)
-	log.Println("resp ", resp)
-	if string(resp.Command) == "PONG" {
-		log.Println("ping success")
-		return true
-	} else {
-		log.Println("ping failed ", string(resp.Data))
-		return false
-	}
-}
-
-func Hearbeat(peer protocol.Peer) bool {
-	emptydata := ""
-	req_msg := protocol.EncodeMsgString(protocol.REQ, protocol.CMD_PING, emptydata)
-	resp := protocol.RequestReplyChan(req_msg, peer.Req_chan, peer.Rep_chan)
-	log.Println("resp ", resp)
-	if string(resp.Command) == "PONG" {
-		log.Println("ping success")
-		return true
-	} else {
-		log.Println("ping failed ", string(resp.Data))
-		return false
-	}
-}
-
-func MakeHandshake(peer protocol.Peer) bool {
-	emptydata := ""
-	req_msg := protocol.EncodeMsgString(protocol.REQ, protocol.CMD_HANDSHAKE_HELLO, emptydata)
-	resp := protocol.RequestReplyChan(req_msg, peer.Req_chan, peer.Rep_chan)
-	log.Println("resp ", resp)
-	if string(resp.Command) == protocol.CMD_HANDSHAKE_STABLE {
-		log.Println("handshake success")
-		return true
-	} else {
-		log.Println("handshake failed ", string(resp.Data))
-		return false
-	}
-}
-
 func readdns() {
 	// domain := "example.com"
 	// ips, err1 := net.LookupIP(domain)
@@ -336,7 +295,7 @@ func setupAllPeers(config Configuration) {
 			log.Println("connect failed")
 			continue
 		} else {
-			MakePing(p)
+			protocol.MakePing(p)
 		}
 	}
 
@@ -377,7 +336,7 @@ func runPeermode(option string, config Configuration) {
 				log.Println("connect failed")
 				continue
 			} else {
-				success := MakePing(p)
+				success := protocol.MakePing(p)
 				if success {
 					successCount++
 				}
@@ -417,18 +376,18 @@ func runSingleMode(option string, config Configuration) {
 
 	case "ping":
 		log.Println("ping")
-		MakePing(mainPeer)
+		protocol.MakePing(mainPeer)
 
 	case "handshake":
 		log.Println("handshake")
-		success := MakeHandshake(mainPeer)
+		success := protocol.MakeHandshake(mainPeer)
 		log.Println("start heartbeat")
 		if success {
 			hTime := 2000 * time.Millisecond
 
 			for _ = range time.Tick(hTime) {
 				//log.Println(x)
-				Hearbeat(mainPeer)
+				protocol.Hearbeat(mainPeer)
 			}
 
 		}
@@ -519,11 +478,36 @@ func runOffline(option string, config Configuration) {
 	}
 }
 
-//run client based on options
-func main() {
+//dns functions for later, as we can use txt records to get pubkey
+func dnslook() {
+	//domain := "test.polygonnode.com"
+	domain := "polygonnode.com"
 
-	//read config
+	txtrecords, _ := net.LookupTXT(domain)
+	// log.Println(txtrecords)
 
+	// for _, txt := range txtrecords {
+	// 	fmt.Println(txt)
+	// }
+
+	frec := txtrecords[0]
+	log.Println("pubkey ", frec)
+
+	// nameserver, _ := net.LookupNS(domain)
+	// for _, ns := range nameserver {
+	// 	fmt.Println(ns)
+	// }
+
+	// cname, _ := net.LookupCNAME(domain)
+	// fmt.Println(cname)
+
+	iprecords, _ := net.LookupIP(domain)
+	for _, ip := range iprecords {
+		fmt.Println("ip ", ip)
+	}
+}
+
+func getConfig() Configuration {
 	file, _ := os.Open("conf.json")
 	defer file.Close()
 	decoder := json.NewDecoder(file)
@@ -532,12 +516,25 @@ func main() {
 	if err != nil {
 		fmt.Println("error:", err)
 	}
-	//fmt.Println("PeerAddresses: ", config.PeerAddresses)
+	return config
+}
 
+func readOption() string {
 	optionPtr := flag.String("option", "", "the command to be performed")
 	flag.Parse()
 	option := *optionPtr
 	log.Println("run client with option:", option)
+	return option
+}
+
+//run client based on options
+func main() {
+
+	config := getConfig()
+
+	option := readOption()
+
+	//dnslook()
 
 	switch option {
 
@@ -549,6 +546,9 @@ func main() {
 
 	case "pingall", "blockheight":
 		runPeermode(option, config)
+
+	default:
+		log.Println("unknown option")
 	}
 
 }
