@@ -334,7 +334,7 @@ func runPeermode(option string, config Configuration) {
 		defer track(runningtime("execute ping"))
 		successCount := 0
 		for _, peerAddress := range config.PeerAddresses {
-			log.Println("setup  peer ", peerAddress)
+			log.Println("setup  peer ", peerAddress, config.NodePort)
 			p := protocol.CreatePeer(peerAddress, config.NodePort)
 
 			err := setupPeerClient(p)
@@ -372,7 +372,7 @@ func runPeermode(option string, config Configuration) {
 func runSingleMode(option string, config Configuration) {
 
 	mainPeerAddress := config.PeerAddresses[0]
-	log.Println("setup main peer ", mainPeerAddress)
+	log.Println("setup main peer ", mainPeerAddress, config.NodePort)
 	mainPeer := protocol.CreatePeer(mainPeerAddress, config.NodePort)
 	log.Println("client with mainPeer ", mainPeer)
 
@@ -428,6 +428,27 @@ func runSingleMode(option string, config Configuration) {
 	}
 }
 
+//client that only listens to events
+func runListenMode(option string, config Configuration) {
+	log.Println("listen")
+
+	mainPeerAddress := config.PeerAddresses[0]
+	log.Println("setup main peer ", mainPeerAddress)
+	mainPeer := protocol.CreatePeer(mainPeerAddress, config.NodePort)
+	success := protocol.MakeHandshake(mainPeer)
+	log.Println(success)
+	// log.Println("start heartbeat")
+	// if success {
+	// 	hTime := 2000 * time.Millisecond
+
+	// 	for _ = range time.Tick(hTime) {
+	// 		//log.Println(x)
+	// 		protocol.Hearbeat(mainPeer)
+	// 	}
+
+	// }
+}
+
 //run client without client or server
 func runOffline(option string, config Configuration) {
 
@@ -465,7 +486,6 @@ func runOffline(option string, config Configuration) {
 		fmt.Print("Enter signature to verify: ")
 		msgsig, _ := reader.ReadString('\n')
 		msgsig = strings.Trim(msgsig, string('\n'))
-		//examplesig := "3045022100dd2781cc37edb84c5ed21b3d8fc03d49ebddf5647d23a9132eeea8bd2b951bd1022041519c47b77803d528d1b428ccb4d84a90ce3b67a22662d5feaa84c4521e5759"
 
 		sign := cryptoutil.SignatureFromHex(msgsig)
 
@@ -473,8 +493,6 @@ func runOffline(option string, config Configuration) {
 		msgpub, _ := reader.ReadString('\n')
 		log.Println(msgpub)
 		msgpub = strings.Trim(msgpub, string('\n'))
-
-		//msgpub = "039f6095ba1afa34c437a88fceb444bf177326eb9222d4938336387ecb4cbe7234"
 
 		pubkey := cryptoutil.PubKeyFromHex(msgpub)
 
@@ -552,6 +570,9 @@ func main() {
 
 	case "pingall", "blockheight":
 		runPeermode(option, config)
+
+	case "listen":
+		runListenMode(option, config)
 
 	default:
 		log.Println("unknown option")

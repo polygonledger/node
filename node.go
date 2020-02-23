@@ -44,7 +44,9 @@ var Peers []protocol.Peer
 var nlog *log.Logger
 var logfile_name = "node.log"
 
-var blockTime = 60000 * time.Millisecond
+var blockTime = 10000 * time.Millisecond
+
+var tchan chan string
 
 type Configuration struct {
 	PeerAddresses []string
@@ -53,18 +55,22 @@ type Configuration struct {
 }
 
 //INBOUND
-func addpeer(addr string) protocol.Peer {
-	p := protocol.Peer{Address: addr, Req_chan: make(chan protocol.Message), Rep_chan: make(chan protocol.Message), Out_req_chan: make(chan protocol.Message), Out_rep_chan: make(chan protocol.Message)}
+func addpeer(addr string, nodeport int) protocol.Peer {
+	//p := protocol.Peer{Address: addr, Req_chan: make(chan protocol.Message), Rep_chan: make(chan protocol.Message), Out_req_chan: make(chan protocol.Message), Out_rep_chan: make(chan protocol.Message)}
+	//ignored
+
+	p := protocol.CreatePeer(addr, nodeport)
 	Peers = append(Peers, p)
 	nlog.Println("peers ", Peers)
 	return p
 }
 
-func setupPeer(addr string, conn net.Conn) {
-	peer := addpeer(addr)
+func setupPeer(addr string, nodeport int, conn net.Conn) {
+	peer := addpeer(addr, nodeport)
 
 	nlog.Println("setup channels for incoming requests")
 	//TODO peers chan
+	//TODO handshake
 	go channelNetwork(conn, peer)
 }
 
@@ -103,7 +109,7 @@ func ListenAll(node_port int) error {
 			continue
 		}
 
-		setupPeer(strRemoteAddr, conn)
+		setupPeer(strRemoteAddr, node_port, conn)
 
 	}
 }
@@ -233,9 +239,7 @@ func HandleReqMsg(msg protocol.Message, rep_chan chan protocol.Message) {
 //handle messages
 func HandleMsg(req_chan chan protocol.Message, rep_chan chan protocol.Message) {
 	req_msg := <-req_chan
-	//msgString := <-req_chan
-	//msgString :=
-	//	fmt.Println("handle msg string ", msgString)
+	//fmt.Println("handle msg string ", msgString)
 
 	fmt.Println("msg type ", req_msg.MessageType)
 
@@ -298,6 +302,7 @@ func channelNetwork(conn net.Conn, peer protocol.Peer) {
 	//conn.SetReadDeadline(time.Now().Add(timeoutDuration))
 
 	//TODO
+	//! handshake
 	//when close?
 	//defer conn.Close()
 
@@ -309,12 +314,22 @@ func channelNetwork(conn net.Conn, peer protocol.Peer) {
 
 	//go publishLoop(msg_in_chan, msg_out_chan)
 
+	go protocol.Subtime(tchan, "peer1")
+
+	go protocol.Subout(tchan, "peer1", peer.Rep_chan)
+
 }
 
 //basic threading helper
 func doEvery(d time.Duration, f func(time.Time)) {
 	for x := range time.Tick(d) {
 		f(x)
+	}
+}
+
+func doEveryX(d time.Duration, f func() <-chan string) {
+	for _ = range time.Tick(d) {
+		f()
 	}
 }
 
@@ -506,14 +521,26 @@ func rungin(webport int) {
 	router.Run(":" + strconv.Itoa(webport))
 }
 
+func printsub(t time.Time) {
+	log.Println("printsub")
+	x := protocol.TakeChan()
+
+	nlog.Println("> ", x)
+	//nlog.Println(len(protocol.Timechan))
+
+	// select {
+	// case <-protocol.Timechan:
+	// 	fmt.Println("Received from Timechan. bufsize ", len(protocol.Timechan))
+	//}
+}
+
 func main() {
 
-	setupLogfile()
+	//setup publisher
+	tchan = protocol.Publisher()
+	go protocol.Pubtime(tchan)
 
-	// go protocol.PublishLoop()
-	// x := protocol.TakeChan()
-	// nlog.Println(x)
-	//return
+	setupLogfile()
 
 	config := LoadConfiguration("nodeconf.json")
 
@@ -528,6 +555,3 @@ func main() {
 	Runweb(config.WebPort)
 
 }
-
-//my transactions
-//

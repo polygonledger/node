@@ -10,7 +10,6 @@ import (
 )
 
 type Peer struct {
-	//TODO IpAddress (v4)
 	Address  string `json:"Address"`
 	NodePort int
 
@@ -18,7 +17,11 @@ type Peer struct {
 	Rep_chan     chan Message
 	Out_req_chan chan Message
 	Out_rep_chan chan Message
-	Name         string //can set name
+	//wip
+	Pub_chan chan string
+	//----------------
+	//Name     string //can set name
+	//Domain string
 }
 
 //peer functions
@@ -30,9 +33,10 @@ type Peer struct {
 //loadBlocksOffset
 //getCommonBlock //Performs chain comparison with remote peer
 
-func CreatePeer(ipAddress string, NodePort int) Peer {
+func CreatePeer(ipAddress string, nodeport int) Peer {
 	//addr := ip
-	p := Peer{Address: ipAddress, NodePort: NodePort, Req_chan: make(chan Message), Rep_chan: make(chan Message), Out_req_chan: make(chan Message), Out_rep_chan: make(chan Message)}
+	//NodePort: NodePort,
+	p := Peer{Address: ipAddress, NodePort: nodeport, Req_chan: make(chan Message), Rep_chan: make(chan Message), Out_req_chan: make(chan Message), Out_rep_chan: make(chan Message), Pub_chan: make(chan string)}
 	return p
 }
 
