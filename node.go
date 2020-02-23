@@ -30,6 +30,8 @@ import (
 
 	"github.com/pkg/errors"
 
+	"github.com/gin-gonic/gin"
+
 	"github.com/polygonledger/node/block"
 	chain "github.com/polygonledger/node/chain"
 	"github.com/polygonledger/node/crypto"
@@ -316,65 +318,6 @@ func doEvery(d time.Duration, f func(time.Time)) {
 	}
 }
 
-//HTTP
-func loadContent() string {
-	content := ""
-
-	content += fmt.Sprintf("<h2>Peers</h2>Peers: %d<br>", len(Peers))
-	for i := 0; i < len(Peers); i++ {
-		content += fmt.Sprintf("peer ip address: %s<br>", Peers[i].Address)
-	}
-
-	content += fmt.Sprintf("<h2>TxPool</h2>%d<br>", len(chain.Tx_pool))
-
-	for i := 0; i < len(chain.Tx_pool); i++ {
-		//content += fmt.Sprintf("Nonce %d, Id %x<br>", chain.Tx_pool[i].Nonce, chain.Tx_pool[i].Id[:])
-		ctx := chain.Tx_pool[i]
-		content += fmt.Sprintf("%d from %s to %s %x<br>", ctx.Amount, ctx.Sender, ctx.Receiver, ctx.Id)
-	}
-
-	content += fmt.Sprintf("<h2>Accounts</h2>number of accounts: %d<br><br>", len(chain.Accounts))
-
-	for k, v := range chain.Accounts {
-		content += fmt.Sprintf("%s %d<br>", k, v)
-	}
-
-	content += fmt.Sprintf("<br><h2>Blocks</h2><i>number of blocks %d</i><br>", len(chain.Blocks))
-
-	for i := 0; i < len(chain.Blocks); i++ {
-		t := chain.Blocks[i].Timestamp
-		tsf := fmt.Sprintf("%d-%02d-%02dT%02d:%02d:%02d",
-			t.Year(), t.Month(), t.Day(),
-			t.Hour(), t.Minute(), t.Second())
-
-		//summary
-		content += fmt.Sprintf("<br><h3>Block %d</h3>timestamp %s<br>hash %x<br>prevhash %x\n", chain.Blocks[i].Height, tsf, chain.Blocks[i].Hash, chain.Blocks[i].Prev_Block_Hash)
-
-		content += fmt.Sprintf("<h4>Number of Tx %d</h4>", len(chain.Blocks[i].Txs))
-		for j := 0; j < len(chain.Blocks[i].Txs); j++ {
-			ctx := chain.Blocks[i].Txs[j]
-			content += fmt.Sprintf("%d from %s to %s %x<br>", ctx.Amount, ctx.Sender, ctx.Receiver, ctx.Id)
-		}
-	}
-
-	return content
-}
-
-func runweb(webport int) {
-	//webserver to access node state through browser
-	// HTTP
-	nlog.Println("start webserver")
-
-	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		p := loadContent()
-		//nlog.Print(p)
-		fmt.Fprintf(w, "<h1>Polygon chain</h1><div>%s</div>", p)
-	})
-
-	nlog.Fatal(http.ListenAndServe(":"+strconv.Itoa(webport), nil))
-
-}
-
 func connect_peers(node_port int, PeerAddresses []string) {
 
 	//TODO
@@ -404,9 +347,10 @@ func run_node(config Configuration) {
 
 	success := chain.ReadChain()
 
-	nlog.Println("genesis block ", chain.Blocks[0])
+	nlog.Printf("block height %d", len(chain.Blocks))
 
-	chain.WriteGenBlock(chain.Blocks[0])
+	//nlog.Println("genesis block ", chain.Blocks[0])
+	//chain.WriteGenBlock(chain.Blocks[0])
 
 	//create new genesis block (demo)
 	createDemo := !success
@@ -463,9 +407,113 @@ func LoadConfiguration(file string) Configuration {
 	return config
 }
 
+//HTTP
+func LoadContent(peers []protocol.Peer) string {
+	content := ""
+
+	content += fmt.Sprintf("<h2>Peers</h2>Peers: %d<br>", len(peers))
+	for i := 0; i < len(peers); i++ {
+		content += fmt.Sprintf("peer ip address: %s<br>", peers[i].Address)
+	}
+
+	content += fmt.Sprintf("<h2>TxPool</h2>%d<br>", len(chain.Tx_pool))
+
+	for i := 0; i < len(chain.Tx_pool); i++ {
+		//content += fmt.Sprintf("Nonce %d, Id %x<br>", chain.Tx_pool[i].Nonce, chain.Tx_pool[i].Id[:])
+		ctx := chain.Tx_pool[i]
+		content += fmt.Sprintf("%d from %s to %s %x<br>", ctx.Amount, ctx.Sender, ctx.Receiver, ctx.Id)
+	}
+
+	content += fmt.Sprintf("<h2>Accounts</h2>number of accounts: %d<br><br>", len(chain.Accounts))
+
+	for k, v := range chain.Accounts {
+		content += fmt.Sprintf("%s %d<br>", k, v)
+	}
+
+	content += fmt.Sprintf("<br><h2>Blocks</h2><i>number of blocks %d</i><br>", len(chain.Blocks))
+
+	for i := 0; i < len(chain.Blocks); i++ {
+		t := chain.Blocks[i].Timestamp
+		tsf := fmt.Sprintf("%d-%02d-%02dT%02d:%02d:%02d",
+			t.Year(), t.Month(), t.Day(),
+			t.Hour(), t.Minute(), t.Second())
+
+		//summary
+		content += fmt.Sprintf("<br><h3>Block %d</h3>timestamp %s<br>hash %x<br>prevhash %x\n", chain.Blocks[i].Height, tsf, chain.Blocks[i].Hash, chain.Blocks[i].Prev_Block_Hash)
+
+		content += fmt.Sprintf("<h4>Number of Tx %d</h4>", len(chain.Blocks[i].Txs))
+		for j := 0; j < len(chain.Blocks[i].Txs); j++ {
+			ctx := chain.Blocks[i].Txs[j]
+			content += fmt.Sprintf("%d from %s to %s %x<br>", ctx.Amount, ctx.Sender, ctx.Receiver, ctx.Id)
+		}
+	}
+
+	return content
+}
+
+func Runweb(webport int) {
+	//webserver to access node state through browser
+	// HTTP
+	nlog.Println("start webserver")
+
+	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		p := LoadContent(Peers)
+		//nlog.Print(p)
+		fmt.Fprintf(w, "<h1>Polygon chain</h1><div>%s</div>", p)
+	})
+
+	nlog.Fatal(http.ListenAndServe(":"+strconv.Itoa(webport), nil))
+
+}
+
+func rungin(webport int) {
+	// Set the router as the default one shipped with Gin
+	router := gin.Default()
+
+	// Serve frontend static files
+	//router.Use(static.Serve("/", static.LocalFile("./views", true)))
+
+	// Setup route group for the API
+	example := "test"
+	api := router.Group("/api")
+	{
+		api.GET("/", func(c *gin.Context) {
+			c.JSON(http.StatusOK, example)
+		})
+
+		api.GET("/peers", func(c *gin.Context) {
+			c.JSON(http.StatusOK, Peers)
+		})
+
+		api.GET("/txpool", func(c *gin.Context) {
+			c.JSON(http.StatusOK, chain.Tx_pool)
+		})
+
+		api.GET("/blockheight", func(c *gin.Context) {
+			c.JSON(http.StatusOK, len(chain.Blocks))
+		})
+
+		//json: unsupported type: map[block.Account]int
+		api.GET("/accounts", func(c *gin.Context) {
+			c.JSON(http.StatusOK, chain.Accounts)
+		})
+
+		//blocks
+
+	}
+
+	// Start and run the server
+	router.Run(":" + strconv.Itoa(webport))
+}
+
 func main() {
 
 	setupLogfile()
+
+	// go protocol.PublishLoop()
+	// x := protocol.TakeChan()
+	// nlog.Println(x)
+	//return
 
 	config := LoadConfiguration("nodeconf.json")
 
@@ -475,6 +523,11 @@ func main() {
 
 	log.Println("run web on ", config.WebPort)
 
-	runweb(config.WebPort)
+	//rungin(config.WebPort)
+
+	Runweb(config.WebPort)
 
 }
+
+//my transactions
+//

@@ -17,7 +17,6 @@ import (
 	"time"
 
 	"github.com/polygonledger/node/block"
-	//"github.com/polygonledger/node/crypto"
 	cryptoutil "github.com/polygonledger/node/crypto"
 	protocol "github.com/polygonledger/node/ntwk"
 )

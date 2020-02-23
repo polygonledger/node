@@ -33,9 +33,11 @@ const (
 	CMD_TX               = "TX" //send transaction
 	CMD_BLOCKHEIGHT      = "BLOCKHEIGHT"
 	CMD_RANDOM_ACCOUNT   = "RANACC" //get some random account
-	CMD_GETTXPOOL        = "GETTXPOOL"
-	//CMD_GETBLOCKS      = "GETBLOCKS"
-	EMPTY_DATA = "EMPTY"
+	//GET
+	CMD_GETTXPOOL = "GETTXPOOL"
+	CMD_GETPEERS  = "GETPEERS"
+	CMD_GETBLOCKS = "GETBLOCKS"
+	EMPTY_DATA    = "EMPTY"
 )
 
 //TODO proper enums
