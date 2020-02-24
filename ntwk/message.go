@@ -18,6 +18,7 @@ import (
 const (
 	REQ = "REQ"
 	REP = "REP"
+	PUB = "PUB"
 	//PUB
 	//SUB
 	//HANDSHAKE

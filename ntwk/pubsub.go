@@ -42,6 +42,7 @@ func Subout(tchan chan string, name string, outchan chan Message) {
 
 		//TODO put in outchan
 		msg := EncodeMsg("TEST", x, "test")
+		log.Println("republish ", msg)
 		outchan <- msg
 
 	}

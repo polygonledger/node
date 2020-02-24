@@ -20,6 +20,11 @@ func NetworkRead(rw *bufio.ReadWriter) string {
 	return msg
 }
 
+//continous loop of processing reads
+func ReaderLoop(rw *bufio.ReadWriter, msg_in_chan chan Message, msg_out_chan chan Message) {
+	//
+}
+
 //given a sream read from it
 //TODO proper error handling
 func NetworkReadMessage(rw *bufio.ReadWriter) string {
@@ -45,7 +50,8 @@ func NetworkWrite(rw *bufio.ReadWriter, message string) error {
 	if err != nil {
 		return errors.Wrap(err, "Could not write data ("+strconv.Itoa(n)+" bytes written)")
 	} else {
-		log.Println(strconv.Itoa(n) + " bytes written")
+		//TODO log trace
+		//log.Println(strconv.Itoa(n) + " bytes written")
 	}
 	err = rw.Flush()
 	if err != nil {

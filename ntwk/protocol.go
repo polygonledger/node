@@ -23,6 +23,10 @@ const (
 	ERROR_READ             = "error_read"
 )
 
+func trace(msg string) {
+	fmt.Println(msg)
+}
+
 //parse message string into a message struct
 //delimiters of two kind:
 //* DELIM for delimiting the entire message
@@ -41,13 +45,19 @@ func ParseMessage(msgString string) Message {
 	dataJson := s[2] //data can empty but still we expect the delim to be there
 
 	msg.Data = []byte(dataJson)
-	fmt.Println(msg)
+	//trace(msg)
 	return msg
 }
 
 func EncodeReply(resp string) string {
 	//TODO header missing
 	msg := EncodeMsgString(REP, resp, "")
+	return msg
+}
+
+func EncodePub(resp string) string {
+	//TODO header missing
+	msg := EncodeMsgString(PUB, resp, "")
 	return msg
 }
 
@@ -78,16 +88,20 @@ func RequestLoop(rw *bufio.ReadWriter, msg_in_chan chan Message, msg_out_chan ch
 	for {
 		//take from channel and perform request
 		request := <-msg_in_chan
-		fmt.Println("request ", request)
+		//fmt.Println("request ", request)
 		resp := RequestReplyMsg(rw, request)
-		fmt.Println("resp ", resp)
-		msg_out_chan <- resp
+		//fmt.Println("resp ", resp, resp.MessageType)
+		//BUG MSG can be of type pub
+		if resp.MessageType == REP {
+			msg_out_chan <- resp
+		}
 	}
 }
 
 //request reply of messages
 func RequestReplyMsg(rw *bufio.ReadWriter, req_msg Message) Message {
 	req_msg_string := MsgString(req_msg)
+	//log.Println("> ", req_msg_string)
 	resp_msg_string := RequestReplyString(rw, req_msg_string)
 	resp_msg := ParseMessage(resp_msg_string)
 	return resp_msg
@@ -114,4 +128,11 @@ func ReadMessage(rw *bufio.ReadWriter) Message {
 	}
 	msg = ParseMessage(msgString)
 	return msg
+}
+
+func PubNetwork(rw *bufio.ReadWriter, resp Message) {
+	//rep_msg := EncodeReply(resp)
+	//resp_string := EncodePub(resp)
+	resp_string := EncodePub("TEST")
+	NetworkWrite(rw, resp_string)
 }

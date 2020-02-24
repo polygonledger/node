@@ -117,7 +117,7 @@ func Getbalance(peer protocol.Peer) error {
 	txJson, _ := json.Marshal(block.Account{AccountKey: addr})
 	req_msg := protocol.EncodeMsgString(protocol.REQ, protocol.CMD_BALANCE, string(txJson))
 	response := protocol.RequestReplyChan(req_msg, peer.Req_chan, peer.Rep_chan)
-	log.Println(response)
+	log.Println("response ", response)
 	var balance int
 	if err := json.Unmarshal(response.Data, &balance); err != nil {
 		panic(err)
@@ -274,14 +274,14 @@ func createtx() {
 	recv = strings.Trim(recv, string('\n'))
 
 	tx := block.Tx{Nonce: 1, Amount: amount_int, Sender: block.Account{AccountKey: addr}, Receiver: block.Account{AccountKey: recv}}
-	log.Println(tx)
+	log.Println("tx ", tx)
 
 	signature := cryptoutil.SignTx(tx, kp)
 	sighex := hex.EncodeToString(signature.Serialize())
 
 	tx.Signature = sighex
 	tx.SenderPubkey = cryptoutil.PubKeyToHex(kp.PubKey)
-	log.Println(tx)
+	log.Println("tx ", tx)
 
 	txJson, _ := json.Marshal(tx)
 	// //write to file
@@ -368,6 +368,10 @@ func runPeermode(option string, config Configuration) {
 
 }
 
+func heartbeat() {
+
+}
+
 //run client against single node, just use first IP address in peers i.e. mainpeer
 func runSingleMode(option string, config Configuration) {
 
@@ -384,18 +388,12 @@ func runSingleMode(option string, config Configuration) {
 		log.Println("ping")
 		protocol.MakePing(mainPeer)
 
-	case "handshake":
-		log.Println("handshake")
+	case "heartbeat":
+		log.Println("heartbeat")
 		success := protocol.MakeHandshake(mainPeer)
-		log.Println("start heartbeat")
 		if success {
-			hTime := 2000 * time.Millisecond
-
-			for _ = range time.Tick(hTime) {
-				//log.Println(x)
-				protocol.Hearbeat(mainPeer)
-			}
-
+			log.Println("start heartbeat")
+			protocol.Hearbeat(mainPeer)
 		}
 
 	case "getbalance":
@@ -562,7 +560,7 @@ func main() {
 
 	switch option {
 
-	case "ping", "handshake", "getbalance", "faucet", "txpool", "pushtx", "randomtx":
+	case "ping", "heartbeat", "getbalance", "faucet", "txpool", "pushtx", "randomtx":
 		runSingleMode(option, config)
 
 	case "createkeys", "sign", "createtx", "verify":

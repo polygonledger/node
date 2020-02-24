@@ -289,6 +289,18 @@ func ReqLoop(rw *bufio.ReadWriter, out_req_chan chan protocol.Message, out_rep_c
 	}
 }
 
+func PubLoop(rw *bufio.ReadWriter, Pub_chan chan protocol.Message) {
+	for {
+		pubmsg := <-Pub_chan
+		log.Println("pubchan.. todo relay ", pubmsg)
+		var msg protocol.Message
+		msg.MessageType = protocol.PUB
+		msg.Command = "test"
+		//msg.Data := bytes("")
+		protocol.PubNetwork(rw, msg)
+	}
+}
+
 //setup the network of channels
 func channelNetwork(conn net.Conn, peer protocol.Peer) {
 
@@ -312,11 +324,14 @@ func channelNetwork(conn net.Conn, peer protocol.Peer) {
 
 	go ReqLoop(rw, peer.Out_req_chan, peer.Out_rep_chan)
 
+	//TODO pubsub
 	//go publishLoop(msg_in_chan, msg_out_chan)
 
-	go protocol.Subtime(tchan, "peer1")
+	// go protocol.Subtime(tchan, "peer1")
 
-	go protocol.Subout(tchan, "peer1", peer.Rep_chan)
+	// go protocol.Subout(tchan, "peer1", peer.Pub_chan)
+
+	// go PubLoop(rw, peer.Pub_chan)
 
 }
 
@@ -537,8 +552,8 @@ func printsub(t time.Time) {
 func main() {
 
 	//setup publisher
-	tchan = protocol.Publisher()
-	go protocol.Pubtime(tchan)
+	//tchan = protocol.Publisher()
+	//go protocol.Pubtime(tchan)
 
 	setupLogfile()
 
