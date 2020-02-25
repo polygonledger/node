@@ -503,7 +503,7 @@ func runOffline(option string, config Configuration) {
 //dns functions for later, as we can use txt records to get pubkey
 func dnslook() {
 	//domain := "test.polygonnode.com"
-	domain := "polygonnode.com"
+	domain := "swix.io"
 
 	txtrecords, _ := net.LookupTXT(domain)
 	// log.Println(txtrecords)
@@ -552,28 +552,28 @@ func readOption() string {
 //run client based on options
 func main() {
 
-	config := getConfig()
+	//config := getConfig()
 
-	option := readOption()
+	//option := readOption()
 
-	//dnslook()
+	dnslook()
 
-	switch option {
+	// switch option {
 
-	case "ping", "heartbeat", "getbalance", "faucet", "txpool", "pushtx", "randomtx":
-		runSingleMode(option, config)
+	// case "ping", "heartbeat", "getbalance", "faucet", "txpool", "pushtx", "randomtx":
+	// 	runSingleMode(option, config)
 
-	case "createkeys", "sign", "createtx", "verify":
-		runOffline(option, config)
+	// case "createkeys", "sign", "createtx", "verify":
+	// 	runOffline(option, config)
 
-	case "pingall", "blockheight":
-		runPeermode(option, config)
+	// case "pingall", "blockheight":
+	// 	runPeermode(option, config)
 
-	case "listen":
-		runListenMode(option, config)
+	// case "listen":
+	// 	runListenMode(option, config)
 
-	default:
-		log.Println("unknown option")
-	}
+	// default:
+	// 	log.Println("unknown option")
+	// }
 
 }

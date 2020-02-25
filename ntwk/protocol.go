@@ -8,7 +8,6 @@ package ntwk
 //heartbeat
 
 import (
-	"bufio"
 	"fmt"
 	"strings"
 )
@@ -84,12 +83,12 @@ func RequestReplyChan(request_string string, msg_in_chan chan Message, msg_out_c
 }
 
 //continous loop of processing requests
-func RequestLoop(rw *bufio.ReadWriter, msg_in_chan chan Message, msg_out_chan chan Message) {
+func RequestLoop(ntchan Ntchan, msg_in_chan chan Message, msg_out_chan chan Message) {
 	for {
 		//take from channel and perform request
 		request := <-msg_in_chan
 		//fmt.Println("request ", request)
-		resp := RequestReplyMsg(rw, request)
+		resp := RequestReplyMsg(ntchan, request)
 		//fmt.Println("resp ", resp, resp.MessageType)
 		//BUG MSG can be of type pub
 		if resp.MessageType == REP {
@@ -99,30 +98,30 @@ func RequestLoop(rw *bufio.ReadWriter, msg_in_chan chan Message, msg_out_chan ch
 }
 
 //request reply of messages
-func RequestReplyMsg(rw *bufio.ReadWriter, req_msg Message) Message {
+func RequestReplyMsg(ntchan Ntchan, req_msg Message) Message {
 	req_msg_string := MsgString(req_msg)
 	//log.Println("> ", req_msg_string)
-	resp_msg_string := RequestReplyString(rw, req_msg_string)
+	resp_msg_string := RequestReplyString(ntchan, req_msg_string)
 	resp_msg := ParseMessage(resp_msg_string)
 	return resp_msg
 }
 
 //request reply on network level
-func RequestReplyString(rw *bufio.ReadWriter, req_msg_string string) string {
-	NetworkWrite(rw, req_msg_string)
-	resp_msg := NetworkRead(rw)
+func RequestReplyString(ntchan Ntchan, req_msg_string string) string {
+	NetworkWrite(ntchan, req_msg_string)
+	resp_msg := NetworkRead(ntchan)
 	return resp_msg
 }
 
-func ReplyNetwork(rw *bufio.ReadWriter, resp Message) {
+func ReplyNetwork(ntchan Ntchan, resp Message) {
 	//rep_msg := EncodeReply(resp)
 	resp_string := MsgString(resp)
-	NetworkWrite(rw, resp_string)
+	NetworkWrite(ntchan, resp_string)
 }
 
-func ReadMessage(rw *bufio.ReadWriter) Message {
+func ReadMessage(ntchan Ntchan) Message {
 	var msg Message
-	msgString := NetworkReadMessage(rw)
+	msgString := NetworkReadMessage(ntchan)
 	if msgString == EMPTY_MSG {
 		return EmptyMsg()
 	}
@@ -130,9 +129,9 @@ func ReadMessage(rw *bufio.ReadWriter) Message {
 	return msg
 }
 
-func PubNetwork(rw *bufio.ReadWriter, resp Message) {
+func PubNetwork(ntchan Ntchan, resp Message) {
 	//rep_msg := EncodeReply(resp)
 	//resp_string := EncodePub(resp)
 	resp_string := EncodePub("TEST")
-	NetworkWrite(rw, resp_string)
+	NetworkWrite(ntchan, resp_string)
 }

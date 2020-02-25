@@ -17,7 +17,6 @@ package main
 //newWallet
 
 import (
-	"bufio"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -65,6 +64,7 @@ func addpeer(addr string, nodeport int) protocol.Peer {
 	return p
 }
 
+//inbound
 func setupPeer(addr string, nodeport int, conn net.Conn) {
 	peer := addpeer(addr, nodeport)
 
@@ -250,13 +250,13 @@ func HandleMsg(req_chan chan protocol.Message, rep_chan chan protocol.Message) {
 	}
 }
 
-func ReplyLoop(rw *bufio.ReadWriter, req_chan chan protocol.Message, rep_chan chan protocol.Message) {
+func ReplyLoop(ntchan protocol.Ntchan, req_chan chan protocol.Message, rep_chan chan protocol.Message) {
 
 	//continously read for requests and respond with reply
 	for {
 
 		// read from network
-		msgString := protocol.NetworkReadMessage(rw)
+		msgString := protocol.NetworkReadMessage(ntchan)
 		if msgString == protocol.EMPTY_MSG {
 			//log.Println("empty message, ignore")
 			time.Sleep(500 * time.Millisecond)
@@ -275,21 +275,21 @@ func ReplyLoop(rw *bufio.ReadWriter, req_chan chan protocol.Message, rep_chan ch
 		//take from reply channel and send over network
 		reply := <-rep_chan
 		fmt.Println("msg out ", reply)
-		protocol.ReplyNetwork(rw, reply)
+		protocol.ReplyNetwork(ntchan, reply)
 
 	}
 }
 
-func ReqLoop(rw *bufio.ReadWriter, out_req_chan chan protocol.Message, out_rep_chan chan protocol.Message) {
+func ReqLoop(ntchan protocol.Ntchan, out_req_chan chan protocol.Message, out_rep_chan chan protocol.Message) {
 
-	//
+	//TODO
 	for {
 		request := <-out_req_chan
 		log.Println("request ", request)
 	}
 }
 
-func PubLoop(rw *bufio.ReadWriter, Pub_chan chan protocol.Message) {
+func PubLoop(ntchan protocol.Ntchan, Pub_chan chan protocol.Message) {
 	for {
 		pubmsg := <-Pub_chan
 		log.Println("pubchan.. todo relay ", pubmsg)
@@ -297,7 +297,7 @@ func PubLoop(rw *bufio.ReadWriter, Pub_chan chan protocol.Message) {
 		msg.MessageType = protocol.PUB
 		msg.Command = "test"
 		//msg.Data := bytes("")
-		protocol.PubNetwork(rw, msg)
+		protocol.PubNetwork(ntchan, msg)
 	}
 }
 
@@ -308,7 +308,8 @@ func channelNetwork(conn net.Conn, peer protocol.Peer) {
 	//req_chan := make(chan protocol.Message)
 	//rep_chan := make(chan protocol.Message)
 
-	rw := bufio.NewReadWriter(bufio.NewReader(conn), bufio.NewWriter(conn))
+	ntchan := protocol.ConnNtchan(conn)
+
 	//could add max listen
 	//timeoutDuration := 5 * time.Second
 	//conn.SetReadDeadline(time.Now().Add(timeoutDuration))
@@ -320,9 +321,9 @@ func channelNetwork(conn net.Conn, peer protocol.Peer) {
 
 	//REQUEST<>REPLY protocol only so far
 
-	go ReplyLoop(rw, peer.Req_chan, peer.Rep_chan)
+	go ReplyLoop(ntchan, peer.Req_chan, peer.Rep_chan)
 
-	go ReqLoop(rw, peer.Out_req_chan, peer.Out_rep_chan)
+	go ReqLoop(ntchan, peer.Out_req_chan, peer.Out_rep_chan)
 
 	//TODO pubsub
 	//go publishLoop(msg_in_chan, msg_out_chan)
@@ -353,14 +354,13 @@ func connect_peers(node_port int, PeerAddresses []string) {
 	//TODO
 
 	for _, peer := range PeerAddresses {
-		conn := protocol.OpenConn(peer + strconv.Itoa(node_port))
-		log.Println(conn)
+		addr := peer + strconv.Itoa(node_port)
 
-		rw := bufio.NewReadWriter(bufio.NewReader(conn), bufio.NewWriter(conn))
-		log.Println(rw)
+		ntchan := protocol.OpenNtchan(addr)
+
 		out_req := make(chan protocol.Message)
 		out_rep := make(chan protocol.Message)
-		ReqLoop(rw, out_req, out_rep)
+		ReqLoop(ntchan, out_req, out_rep)
 		//log.Println("ping ", peer)
 		//MakePing(req_chan, rep_chan)
 

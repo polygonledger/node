@@ -6,29 +6,36 @@ package ntwk
 import (
 	"bufio"
 	"log"
+	"net"
 	"strconv"
 	"strings"
 
 	"github.com/pkg/errors"
 )
 
+//network channel, wrapper around ReadWriter
+type Ntchan struct {
+	Rw *bufio.ReadWriter
+	//chan?
+}
+
 //read a message from network
-func NetworkRead(rw *bufio.ReadWriter) string {
+func NetworkRead(nt Ntchan) string {
 	//TODO handle err
-	msg, _ := rw.ReadString(DELIM)
+	msg, _ := nt.Rw.ReadString(DELIM)
 	msg = strings.Trim(msg, string(DELIM))
 	return msg
 }
 
 //continous loop of processing reads
-func ReaderLoop(rw *bufio.ReadWriter, msg_in_chan chan Message, msg_out_chan chan Message) {
+func ReaderLoop(nt Ntchan, msg_in_chan chan Message, msg_out_chan chan Message) {
 	//
 }
 
 //given a sream read from it
 //TODO proper error handling
-func NetworkReadMessage(rw *bufio.ReadWriter) string {
-	msg, err := rw.ReadString(DELIM)
+func NetworkReadMessage(nt Ntchan) string {
+	msg, err := nt.Rw.ReadString(DELIM)
 	//log.Println("msg > ", msg)
 	if err != nil {
 		//issue
@@ -45,17 +52,64 @@ func NetworkReadMessage(rw *bufio.ReadWriter) string {
 	return msg
 }
 
-func NetworkWrite(rw *bufio.ReadWriter, message string) error {
-	n, err := rw.WriteString(message)
+func NetworkWrite(nt Ntchan, message string) error {
+	n, err := nt.Rw.WriteString(message)
 	if err != nil {
 		return errors.Wrap(err, "Could not write data ("+strconv.Itoa(n)+" bytes written)")
 	} else {
 		//TODO log trace
 		//log.Println(strconv.Itoa(n) + " bytes written")
 	}
-	err = rw.Flush()
+	err = nt.Rw.Flush()
 	if err != nil {
 		return errors.Wrap(err, "Flush failed.")
 	}
 	return nil
+}
+
+func OpenConn(addr string) net.Conn {
+	// Dial the remote process
+	log.Println("Dial " + addr)
+	conn, err := net.Dial("tcp", addr)
+	if err != nil {
+		//return nil, errors.Wrap(err, "Dialing "+addr+" failed")
+	}
+	if err != nil {
+		log.Println("Error:", errors.WithStack(err))
+	}
+	return conn
+}
+
+// connects to a TCP Address
+func Open(addr string) (*bufio.ReadWriter, error) {
+	// Dial the remote process.
+	log.Println("Dial " + addr)
+	conn, err := net.Dial("tcp", addr)
+	if err != nil {
+		//return nil, errors.Wrap(err, "Dialing "+addr+" failed")
+		log.Println("error ", err)
+		return nil, errors.Wrap(err, "Dialing "+addr+" failed")
+	}
+	if err != nil {
+		log.Println("Error:", errors.WithStack(err))
+	}
+	return bufio.NewReadWriter(bufio.NewReader(conn), bufio.NewWriter(conn)), nil
+}
+
+func OpenOut(ip string, Port int) (*bufio.ReadWriter, error) {
+	addr := ip + ":" + strconv.Itoa(Port)
+	log.Println("> open out address ", addr)
+	rw, err := Open(addr)
+	return rw, err
+}
+
+//wrap connection in Ntchan
+func ConnNtchan(conn net.Conn) Ntchan {
+	rw := bufio.NewReadWriter(bufio.NewReader(conn), bufio.NewWriter(conn))
+	return Ntchan{Rw: rw}
+}
+
+func OpenNtchan(addr string) Ntchan {
+	conn := OpenConn(addr)
+	return ConnNtchan(conn)
 }
