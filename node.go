@@ -302,6 +302,7 @@ func PubLoop(ntchan protocol.Ntchan, Pub_chan chan protocol.Message) {
 }
 
 //setup the network of channels
+//the main junction for managing message flow between types of messages
 func channelNetwork(conn net.Conn, peer protocol.Peer) {
 
 	//TODO use msg types
@@ -309,6 +310,42 @@ func channelNetwork(conn net.Conn, peer protocol.Peer) {
 	//rep_chan := make(chan protocol.Message)
 
 	ntchan := protocol.ConnNtchan(conn)
+
+	//continously read
+	go func() {
+		//for {
+		protocol.NetworkReadMessageChan(ntchan)
+		//TODO timer
+		//}
+	}()
+
+	//only once??
+	//msg := <-ntchan.Reader_queue
+	//log.Println("got msg ", msg)
+
+	//continously write
+	go func() {
+		for {
+			log.Println("loop writer")
+			msg := <-ntchan.Writer_queue
+			log.Println("got msg to write", msg)
+			//TODO
+			protocol.NetworkWrite(ntchan, msg)
+		}
+
+	}()
+
+	//heartbeat
+	go func() {
+		for {
+			log.Println("write test")
+			ntchan.Writer_queue <- "test" + string(protocol.DELIM)
+			time.Sleep(1 * time.Second)
+
+			//msg := <-ntchan.Writer_queue
+			//log.Println("XX got msg to write", msg)
+		}
+	}()
 
 	//could add max listen
 	//timeoutDuration := 5 * time.Second
@@ -321,10 +358,11 @@ func channelNetwork(conn net.Conn, peer protocol.Peer) {
 
 	//REQUEST<>REPLY protocol only so far
 
-	go ReplyLoop(ntchan, peer.Req_chan, peer.Rep_chan)
+	//go ReplyLoop(ntchan, peer.Req_chan, peer.Rep_chan)
 
-	go ReqLoop(ntchan, peer.Out_req_chan, peer.Out_rep_chan)
+	//go ReqLoop(ntchan, peer.Out_req_chan, peer.Out_rep_chan)
 
+	//----------------
 	//TODO pubsub
 	//go publishLoop(msg_in_chan, msg_out_chan)
 

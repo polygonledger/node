@@ -17,6 +17,8 @@ import (
 type Ntchan struct {
 	Rw *bufio.ReadWriter
 	//chan?
+	Reader_queue chan string
+	Writer_queue chan string
 }
 
 //read a message from network
@@ -27,7 +29,7 @@ func NetworkRead(nt Ntchan) string {
 	return msg
 }
 
-//continous loop of processing reads
+//TODO continous loop of processing reads
 func ReaderLoop(nt Ntchan, msg_in_chan chan Message, msg_out_chan chan Message) {
 	//
 }
@@ -52,7 +54,30 @@ func NetworkReadMessage(nt Ntchan) string {
 	return msg
 }
 
+func NetworkReadMessageChan(nt Ntchan) {
+	log.Println("read")
+	msg, err := nt.Rw.ReadString(DELIM)
+	log.Println("msg ", msg)
+	//log.Println("msg > ", msg)
+	if err != nil {
+		//issue
+		//special case is empty message if client disconnects?
+		if len(msg) == 0 {
+			//log.Println("empty message")
+
+		} else {
+			log.Println("Failed ", err)
+			//log.Println(err.)
+
+		}
+	}
+	//log.Println(len(nt.Reader_queue))
+	nt.Reader_queue <- msg
+	//log.Println(len(nt.Reader_queue))
+}
+
 func NetworkWrite(nt Ntchan, message string) error {
+	log.Println("network -> write ", message)
 	n, err := nt.Rw.WriteString(message)
 	if err != nil {
 		return errors.Wrap(err, "Could not write data ("+strconv.Itoa(n)+" bytes written)")
@@ -103,10 +128,15 @@ func OpenOut(ip string, Port int) (*bufio.ReadWriter, error) {
 	return rw, err
 }
 
+func OpenNtchanOut(ip string, Port int) Ntchan {
+	fulladdr := ip + ":" + strconv.Itoa(Port)
+	return OpenNtchan(fulladdr)
+}
+
 //wrap connection in Ntchan
 func ConnNtchan(conn net.Conn) Ntchan {
 	rw := bufio.NewReadWriter(bufio.NewReader(conn), bufio.NewWriter(conn))
-	return Ntchan{Rw: rw}
+	return Ntchan{Rw: rw, Reader_queue: make(chan string), Writer_queue: make(chan string)}
 }
 
 func OpenNtchan(addr string) Ntchan {

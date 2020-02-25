@@ -187,13 +187,14 @@ func readdns() {
 //setup connection to a peer from client side for requests
 func setupPeerClient(peer protocol.Peer) error {
 
-	rw, err := protocol.OpenOut(peer.Address, peer.NodePort)
-	if err != nil {
-		log.Println("error open ", err)
-		return err
-	}
+	//rw, err := protocol.OpenOut()
+	ntchan := protocol.OpenNtchanOut(peer.Address, peer.NodePort)
+	// if err != nil {
+	// 	log.Println("error open ", err)
+	// 	return err
+	// }
 
-	go protocol.RequestLoop(rw, peer.Req_chan, peer.Rep_chan)
+	go protocol.RequestLoop(ntchan, peer.Req_chan, peer.Rep_chan)
 	return nil
 }
 
@@ -380,9 +381,20 @@ func runSingleMode(option string, config Configuration) {
 	mainPeer := protocol.CreatePeer(mainPeerAddress, config.NodePort)
 	log.Println("client with mainPeer ", mainPeer)
 
-	setupPeerClient(mainPeer)
+	//setupPeerClient(mainPeer)
 
 	switch option {
+
+	case "test":
+		log.Println("test")
+		ntchan := protocol.OpenNtchanOut(mainPeer.Address, mainPeer.NodePort)
+		//ntchan := protocol.OpenNtchanOut(mainPeer.Address, mainPeer.NodePort)
+		for {
+			log.Println("read")
+			resp_msg := protocol.NetworkRead(ntchan)
+			log.Println(resp_msg)
+			time.Sleep(400 * time.Millisecond)
+		}
 
 	case "ping":
 		log.Println("ping")
@@ -552,28 +564,28 @@ func readOption() string {
 //run client based on options
 func main() {
 
-	//config := getConfig()
+	config := getConfig()
 
-	//option := readOption()
+	option := readOption()
 
-	dnslook()
+	//dnslook()
 
-	// switch option {
+	switch option {
 
-	// case "ping", "heartbeat", "getbalance", "faucet", "txpool", "pushtx", "randomtx":
-	// 	runSingleMode(option, config)
+	case "test", "ping", "heartbeat", "getbalance", "faucet", "txpool", "pushtx", "randomtx":
+		runSingleMode(option, config)
 
-	// case "createkeys", "sign", "createtx", "verify":
-	// 	runOffline(option, config)
+	case "createkeys", "sign", "createtx", "verify":
+		runOffline(option, config)
 
-	// case "pingall", "blockheight":
-	// 	runPeermode(option, config)
+	case "pingall", "blockheight":
+		runPeermode(option, config)
 
-	// case "listen":
-	// 	runListenMode(option, config)
+	case "listen":
+		runListenMode(option, config)
 
-	// default:
-	// 	log.Println("unknown option")
-	// }
+	default:
+		log.Println("unknown option")
+	}
 
 }

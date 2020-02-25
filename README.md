@@ -1,8 +1,9 @@
 # polygon
 
-new blockchain. delegated proof-of-asset algorithm
+polygon is new blockchain written in golang. It uses a delegated proof-of-asset algorithm
 
-architecture: accounts, not UTXO. transaction types, scripting through transaction multiplexing
+The basic architecture is the use of accounts, not UTXO. Transactions are typed. The scripting occurs through transaction multiplexing,
+which is means there are several modes of transactions.
 
 current status: experimental
 
@@ -11,7 +12,7 @@ current status: experimental
 node:
 ```go run node.go```
 
-the node will run a peer on 8888 and a webserver at the same time
+the node will run a peer on port 8888 and a webserver at the same time
 
 with browser go to http://localhost:8080
 
@@ -24,11 +25,11 @@ client:
 
 create keys
 
-```cd client/wallet && go run utils.go -option=createkeys```
+```cd client && go run client.go -option=createkeys```
 
  verify signature
  
- ```go run utils.go -option=verify```
+ ```go run client.go -option=verify```
 
 ## testing
 
