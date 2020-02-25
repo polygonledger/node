@@ -22,6 +22,24 @@ type Ntchan struct {
 	Writer_queue chan string
 }
 
+func ReaderWriterConnector(ntchan Ntchan) {
+
+	read_loop_time := 300 * time.Millisecond
+	read_time_chan := 300 * time.Millisecond
+	write_time_chan := 300 * time.Millisecond
+	write_processor_time := 300 * time.Millisecond
+
+	//reader
+	go ReadLoop(ntchan, read_loop_time)
+
+	go ReadProcessor(ntchan, read_time_chan)
+
+	//writer
+	go WriteLoop(ntchan, write_time_chan)
+
+	go WriteProcessor(ntchan, write_processor_time)
+}
+
 //continous network reads with sleep
 func ReadLoop(ntchan Ntchan, d time.Duration) {
 	msg_reader_total := 0
@@ -40,10 +58,13 @@ func ReadProcessor(ntchan Ntchan, d time.Duration) {
 
 	msg_reader_processed := 0
 	for {
-		msg := <-ntchan.Reader_queue
+		msgString := <-ntchan.Reader_queue
 		//log.Println("got msg on reader ", msg)
-		if len(msg) > 0 {
-			log.Println("ReadProcessor: got msg ", msg, len(msg), " ### read msg ", msg_reader_processed)
+		if len(msgString) > 0 {
+			log.Println("ReadProcessor: got msg ", msgString, len(msgString), " ### read msg ", msg_reader_processed)
+			msg := ParseMessage(msgString)
+			log.Println(msg.MessageType)
+			//TODO handler
 			msg_reader_processed++
 		} else {
 			//empty message

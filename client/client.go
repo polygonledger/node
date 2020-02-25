@@ -378,16 +378,7 @@ func testing(mainPeerAddress string, nodePort int) {
 	conn := ntwk.OpenConn(mainPeerAddress + ":" + strconv.Itoa(nodePort))
 	ntchan := ntwk.ConnNtchan(conn)
 
-	go ntwk.ReadLoop(ntchan, 200*time.Millisecond)
-
-	go ntwk.ReadProcessor(ntchan, 200*time.Millisecond)
-
-	write_processor_time := 300 * time.Millisecond
-
-	go ntwk.WriteProcessor(ntchan, write_processor_time)
-
-	write_time_chan := 300 * time.Millisecond
-	go ntwk.WriteLoop(ntchan, write_time_chan)
+	ntwk.ReaderWriterConnector(ntchan)
 
 	heartbeat_time := 400 * time.Millisecond
 	log.Println("??")
