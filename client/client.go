@@ -386,6 +386,9 @@ func testing(mainPeerAddress string, nodePort int) {
 
 	go ntwk.WriteProcessor(ntchan, write_processor_time)
 
+	write_time_chan := 300 * time.Millisecond
+	go ntwk.WriteLoop(ntchan, write_time_chan)
+
 	heartbeat_time := 400 * time.Millisecond
 	log.Println("??")
 	go func() {

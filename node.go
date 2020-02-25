@@ -32,7 +32,7 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"github.com/polygonledger/node/block"
-	chain "github.com/polygonledger/node/chain"
+	"github.com/polygonledger/node/chain"
 	"github.com/polygonledger/node/crypto"
 	"github.com/polygonledger/node/ntwk"
 )
@@ -328,6 +328,7 @@ func channelPeerNetwork(conn net.Conn, peer ntwk.Peer) {
 
 	go ntwk.WriteProcessor(ntchan, write_processor_time)
 
+	//TODO! hearbeat function
 	//heartbeat
 	heartbeat_time := 400 * time.Millisecond
 	go func() {
@@ -382,10 +383,12 @@ func channelPeerNetworkClient(conn net.Conn, peer ntwk.Peer) {
 	go ntwk.ReadProcessor(ntchan, read_time_chan)
 
 	//continously write
-	write_time_chan := 200 * time.Millisecond
+	write_time_chan := 300 * time.Millisecond
 	go ntwk.WriteLoop(ntchan, write_time_chan)
 
-	//TODO write processor
+	write_processor_time := 300 * time.Millisecond
+
+	go ntwk.WriteProcessor(ntchan, write_processor_time)
 }
 
 //basic threading helper
