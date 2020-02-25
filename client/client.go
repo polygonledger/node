@@ -380,6 +380,19 @@ func testing(mainPeerAddress string, nodePort int) {
 
 	ntwk.ReaderWriterConnector(ntchan)
 
+	//TODO! producers
+
+	req_msg := ntwk.EncodeMsgString(ntwk.REQ, ntwk.CMD_PING, "")
+	//resp := ntwk.RequestReplyChan(req_msg, peer.Req_chan, peer.Rep_chan)
+	log.Println("put writer q", req_msg)
+	ntchan.Writer_queue <- req_msg
+	for {
+		log.Println("????")
+		resp_string := <-ntchan.Reader_queue
+		msg := ntwk.ParseMessage(resp_string)
+		log.Println("response ", msg.MessageType)
+	}
+
 	heartbeat_time := 400 * time.Millisecond
 	log.Println("??")
 	go func() {

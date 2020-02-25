@@ -26,8 +26,8 @@ func ReaderWriterConnector(ntchan Ntchan) {
 
 	read_loop_time := 300 * time.Millisecond
 	read_time_chan := 300 * time.Millisecond
-	write_time_chan := 300 * time.Millisecond
-	write_processor_time := 300 * time.Millisecond
+	write_loop_time := 300 * time.Millisecond
+	//write_processor_time := 300 * time.Millisecond
 
 	//reader
 	go ReadLoop(ntchan, read_loop_time)
@@ -35,9 +35,9 @@ func ReaderWriterConnector(ntchan Ntchan) {
 	go ReadProcessor(ntchan, read_time_chan)
 
 	//writer
-	go WriteLoop(ntchan, write_time_chan)
+	go WriteLoop(ntchan, write_loop_time)
 
-	go WriteProcessor(ntchan, write_processor_time)
+	//go WriteProcessor(ntchan, write_processor_time)
 }
 
 //continous network reads with sleep
@@ -45,8 +45,7 @@ func ReadLoop(ntchan Ntchan, d time.Duration) {
 	msg_reader_total := 0
 	for {
 		log.Println("ReadLoop ### read loop", msg_reader_total)
-		//TODO! check should read here
-		//msg <-
+		//read from network and put in channel
 		NetworkReadMessageChan(ntchan)
 		time.Sleep(d)
 		msg_reader_total++
@@ -80,6 +79,8 @@ func WriteLoop(ntchan Ntchan, d time.Duration) {
 	msg_writer_total := 0
 	for {
 		//log.Println("loop writer")
+		//TODO! bug both reading
+		//take from channel and write
 		msg := <-ntchan.Writer_queue
 		log.Println("WriteLoop: got msg to write", msg, " ### ", msg_writer_total)
 
@@ -90,11 +91,14 @@ func WriteLoop(ntchan Ntchan, d time.Duration) {
 	}
 }
 
-//read from reader queue and process
+//maybe not needed
 func WriteProcessor(ntchan Ntchan, d time.Duration) {
 	msg_write_processed := 0
 	for {
-		msg := <-ntchan.Writer_queue
+		//TODO gather produced writes from other channels
+		msg := "test"
+
+		ntchan.Writer_queue <- msg
 		//log.Println("got msg on reader ", msg)
 		if len(msg) > 0 {
 			log.Println("WriteProcessor: got msg ", msg, len(msg), " ### ", msg_write_processed)
@@ -157,6 +161,7 @@ func NetworkReadMessageChan(nt Ntchan) {
 		//log.Println(len(nt.Reader_queue))
 
 	} else {
+		log.Println("empty msg")
 		//log.Println("Failed ", err)
 		//log.Println(err.)
 
