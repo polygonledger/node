@@ -301,6 +301,23 @@ func PubLoop(ntchan ntwk.Ntchan, Pub_chan chan ntwk.Message) {
 	}
 }
 
+func ReaderWriterConnector(ntchan ntwk.Ntchan) {
+
+	read_loop_time := 300 * time.Millisecond
+	read_time_chan := 300 * time.Millisecond
+	write_time_chan := 300 * time.Millisecond
+	write_processor_time := 300 * time.Millisecond
+
+	go ntwk.ReadLoop(ntchan, read_loop_time)
+
+	go ntwk.ReadProcessor(ntchan, read_time_chan)
+
+	//continously write what is in queue
+	go ntwk.WriteLoop(ntchan, write_time_chan)
+
+	go ntwk.WriteProcessor(ntchan, write_processor_time)
+}
+
 //setup the network of channels
 //the main junction for managing message flow between types of messages
 func channelPeerNetwork(conn net.Conn, peer ntwk.Peer) {
@@ -311,22 +328,7 @@ func channelPeerNetwork(conn net.Conn, peer ntwk.Peer) {
 
 	ntchan := ntwk.ConnNtchan(conn)
 
-	read_loop_time := 300 * time.Millisecond
-
-	go ntwk.ReadLoop(ntchan, read_loop_time)
-
-	read_time_chan := 300 * time.Millisecond
-
-	go ntwk.ReadProcessor(ntchan, read_time_chan)
-
-	write_time_chan := 300 * time.Millisecond
-
-	//continously write what is in queue
-	go ntwk.WriteLoop(ntchan, write_time_chan)
-
-	write_processor_time := 300 * time.Millisecond
-
-	go ntwk.WriteProcessor(ntchan, write_processor_time)
+	ReaderWriterConnector(ntchan)
 
 	//TODO! hearbeat function
 	//heartbeat
@@ -375,20 +377,8 @@ func channelPeerNetworkClient(conn net.Conn, peer ntwk.Peer) {
 
 	ntchan := ntwk.ConnNtchan(conn)
 
-	//continously read
-	read_time := 300 * time.Millisecond
-	go ntwk.ReadLoop(ntchan, read_time)
+	ReaderWriterConnector(ntchan)
 
-	read_time_chan := 300 * time.Millisecond
-	go ntwk.ReadProcessor(ntchan, read_time_chan)
-
-	//continously write
-	write_time_chan := 300 * time.Millisecond
-	go ntwk.WriteLoop(ntchan, write_time_chan)
-
-	write_processor_time := 300 * time.Millisecond
-
-	go ntwk.WriteProcessor(ntchan, write_processor_time)
 }
 
 //basic threading helper

@@ -24,19 +24,27 @@ type Ntchan struct {
 
 //continous network reads with sleep
 func ReadLoop(ntchan Ntchan, d time.Duration) {
+	msg_reader_total := 0
 	for {
+		log.Println("ReadLoop ### read loop", msg_reader_total)
+		//TODO! check should read here
+		//msg <-
 		NetworkReadMessageChan(ntchan)
 		time.Sleep(d)
+		msg_reader_total++
 	}
 }
 
 //read from reader queue and process
 func ReadProcessor(ntchan Ntchan, d time.Duration) {
+
+	msg_reader_processed := 0
 	for {
 		msg := <-ntchan.Reader_queue
 		//log.Println("got msg on reader ", msg)
 		if len(msg) > 0 {
-			log.Println("READER: got msg ", msg, len(msg))
+			log.Println("ReadProcessor: got msg ", msg, len(msg), " ### read msg ", msg_reader_processed)
+			msg_reader_processed++
 		} else {
 			//empty message
 		}
@@ -48,24 +56,28 @@ func ReadProcessor(ntchan Ntchan, d time.Duration) {
 }
 
 func WriteLoop(ntchan Ntchan, d time.Duration) {
+	msg_writer_total := 0
 	for {
 		//log.Println("loop writer")
 		msg := <-ntchan.Writer_queue
-		log.Println("WRITER: got msg to write", msg)
+		log.Println("WriteLoop: got msg to write", msg, " ### ", msg_writer_total)
 
 		NetworkWrite(ntchan, msg)
 
 		time.Sleep(d)
+		msg_writer_total++
 	}
 }
 
 //read from reader queue and process
 func WriteProcessor(ntchan Ntchan, d time.Duration) {
+	msg_write_processed := 0
 	for {
 		msg := <-ntchan.Writer_queue
 		//log.Println("got msg on reader ", msg)
 		if len(msg) > 0 {
-			log.Println("READER: got msg ", msg, len(msg))
+			log.Println("WriteProcessor: got msg ", msg, len(msg), " ### ", msg_write_processed)
+			msg_write_processed++
 		} else {
 			//empty message
 		}
@@ -119,7 +131,7 @@ func NetworkReadMessageChan(nt Ntchan) {
 		//log.Println("empty message")
 
 		//log.Println(len(nt.Reader_queue))
-		log.Println("put msg into reader ", msg)
+		//log.Println("put msg into reader ", msg)
 		nt.Reader_queue <- msg
 		//log.Println(len(nt.Reader_queue))
 
@@ -131,7 +143,7 @@ func NetworkReadMessageChan(nt Ntchan) {
 }
 
 func NetworkWrite(nt Ntchan, message string) error {
-	log.Println("network -> write ", message)
+	//log.Println("network -> write ", message)
 	n, err := nt.Rw.WriteString(message)
 	if err != nil {
 		return errors.Wrap(err, "Could not write data ("+strconv.Itoa(n)+" bytes written)")

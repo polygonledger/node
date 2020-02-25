@@ -395,7 +395,7 @@ func testing(mainPeerAddress string, nodePort int) {
 		for {
 			//msg := "test" + string(protocol.DELIM)
 			msg := ntwk.EncodeHeartbeat("client")
-			log.Println("> ", msg)
+			//log.Println("heartbeat > ", msg)
 			ntchan.Writer_queue <- msg
 			time.Sleep(heartbeat_time)
 
