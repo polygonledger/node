@@ -53,7 +53,7 @@ type Configuration struct {
 	WebPort       int
 }
 
-//INBOUND
+//inbound
 func addpeer(addr string, nodeport int) protocol.Peer {
 	//p := protocol.Peer{Address: addr, Req_chan: make(chan protocol.Message), Rep_chan: make(chan protocol.Message), Out_req_chan: make(chan protocol.Message), Out_rep_chan: make(chan protocol.Message)}
 	//ignored
@@ -71,7 +71,7 @@ func setupPeer(addr string, nodeport int, conn net.Conn) {
 	nlog.Println("setup channels for incoming requests")
 	//TODO peers chan
 	//TODO handshake
-	go channelNetwork(conn, peer)
+	go channelPeerNetwork(conn, peer)
 }
 
 // start listening on tcp and handle connection through channels
@@ -303,7 +303,7 @@ func PubLoop(ntchan protocol.Ntchan, Pub_chan chan protocol.Message) {
 
 //setup the network of channels
 //the main junction for managing message flow between types of messages
-func channelNetwork(conn net.Conn, peer protocol.Peer) {
+func channelPeerNetwork(conn net.Conn, peer protocol.Peer) {
 
 	//TODO use msg types
 	//req_chan := make(chan protocol.Message)
@@ -312,16 +312,21 @@ func channelNetwork(conn net.Conn, peer protocol.Peer) {
 	ntchan := protocol.ConnNtchan(conn)
 
 	//continously read
+	//TODO
 	go func() {
-		//for {
-		protocol.NetworkReadMessageChan(ntchan)
-		//TODO timer
-		//}
+		for {
+			protocol.NetworkReadMessageChan(ntchan)
+			//TODO timer
+			time.Sleep(300 * time.Millisecond)
+		}
 	}()
 
-	//only once??
-	//msg := <-ntchan.Reader_queue
-	//log.Println("got msg ", msg)
+	go func() {
+		for {
+			msg := <-ntchan.Reader_queue
+			log.Println("got msg ", msg)
+		}
+	}()
 
 	//continously write
 	go func() {
@@ -339,8 +344,10 @@ func channelNetwork(conn net.Conn, peer protocol.Peer) {
 	go func() {
 		for {
 			log.Println("write test")
-			ntchan.Writer_queue <- "test" + string(protocol.DELIM)
-			time.Sleep(1 * time.Second)
+			//msg := "test" + string(protocol.DELIM)
+			msg := protocol.EncodeHeartbeat()
+			ntchan.Writer_queue <- msg
+			time.Sleep(2 * time.Second)
 
 			//msg := <-ntchan.Writer_queue
 			//log.Println("XX got msg to write", msg)
@@ -371,6 +378,38 @@ func channelNetwork(conn net.Conn, peer protocol.Peer) {
 	// go protocol.Subout(tchan, "peer1", peer.Pub_chan)
 
 	// go PubLoop(rw, peer.Pub_chan)
+
+}
+
+func channelPeerNetworkClient(conn net.Conn, peer protocol.Peer) {
+
+	ntchan := protocol.ConnNtchan(conn)
+
+	//continously read
+	go func() {
+		//for {
+		protocol.NetworkReadMessageChan(ntchan)
+		//TODO timer
+		//}
+	}()
+
+	go func() {
+		msg := <-ntchan.Reader_queue
+		log.Println("got msg ", msg)
+
+	}()
+
+	//continously write
+	go func() {
+		for {
+			log.Println("loop writer")
+			msg := <-ntchan.Writer_queue
+			log.Println("got msg to write", msg)
+			//TODO
+			protocol.NetworkWrite(ntchan, msg)
+		}
+
+	}()
 
 }
 

@@ -72,6 +72,7 @@ func NetworkReadMessageChan(nt Ntchan) {
 		}
 	}
 	//log.Println(len(nt.Reader_queue))
+	log.Println("put msg into reader ", msg)
 	nt.Reader_queue <- msg
 	//log.Println(len(nt.Reader_queue))
 }

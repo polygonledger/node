@@ -60,6 +60,12 @@ func EncodePub(resp string) string {
 	return msg
 }
 
+func EncodeHeartbeat() string {
+	//TODO time
+	msg := EncodePub(CMD_HEARTBEAT)
+	return msg
+}
+
 func EncodeMessageTx(txJson []byte) string {
 	//emptyData := ""
 	msgCmd := "TX"
