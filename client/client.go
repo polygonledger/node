@@ -373,18 +373,37 @@ func heartbeat() {
 
 }
 
-func ReadLoop(ntchan ntwk.Ntchan) {
-	for {
-		ntwk.NetworkReadMessageChan(ntchan)
-		time.Sleep(100 * time.Millisecond)
-	}
-}
+func testing(mainPeerAddress string, nodePort int) {
+	//example of client which connects and reads/writes for 10sec
+	conn := ntwk.OpenConn(mainPeerAddress + ":" + strconv.Itoa(nodePort))
+	ntchan := ntwk.ConnNtchan(conn)
 
-func ReadProcessor(ntchan ntwk.Ntchan) {
-	for {
-		msg := <-ntchan.Reader_queue
-		log.Println("got msg on reader ", msg)
-	}
+	go ntwk.ReadLoop(ntchan, 200*time.Millisecond)
+
+	go ntwk.ReadProcessor(ntchan, 200*time.Millisecond)
+
+	write_processor_time := 300 * time.Millisecond
+
+	go ntwk.WriteProcessor(ntchan, write_processor_time)
+
+	heartbeat_time := 400 * time.Millisecond
+	log.Println("??")
+	go func() {
+		for {
+			//msg := "test" + string(protocol.DELIM)
+			msg := ntwk.EncodeHeartbeat("client")
+			log.Println("> ", msg)
+			ntchan.Writer_queue <- msg
+			time.Sleep(heartbeat_time)
+
+			//msg := <-ntchan.Writer_queue
+			//log.Println("XX got msg to write", msg)
+		}
+	}()
+
+	log.Println("??")
+
+	time.Sleep(10 * time.Second)
 }
 
 //run client against single node, just use first IP address in peers i.e. mainpeer
@@ -401,38 +420,10 @@ func runSingleMode(option string, config Configuration) {
 
 	case "test":
 		log.Println("test")
-		conn := ntwk.OpenConn(mainPeerAddress + ":" + strconv.Itoa(config.NodePort))
-		ntchan := ntwk.ConnNtchan(conn)
 
-		go ReadLoop(ntchan)
-
-		go ReadProcessor(ntchan)
-
-		//continously read
-		// go func() {
-		// 	for {
-		// 		log.Println("....")
-		// 		ntwk.NetworkReadMessageChan(ntchan)
-		// 		log.Println("###")
-		// 		//TODO timer
-		// 	}
-		// }()
-		log.Println("?")
-
-		time.Sleep(10 * time.Second)
-
-		log.Println("??")
+		testing(mainPeerAddress, config.NodePort)
 
 		//channelPeerNetworkClient()
-
-		// ntchan := ntwk.OpenNtchanOut(mainPeer.Address, mainPeer.NodePort)
-		// //ntchan := ntwk.OpenNtchanOut(mainPeer.Address, mainPeer.NodePort)
-		// for {
-		// 	log.Println("read")
-		// 	resp_msg := ntwk.NetworkRead(ntchan)
-		// 	log.Println(resp_msg)
-		// 	time.Sleep(400 * time.Millisecond)
-		// }
 
 	case "ping":
 		log.Println("ping")

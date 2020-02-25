@@ -9,6 +9,7 @@ import (
 	"net"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/pkg/errors"
 )
@@ -21,17 +22,66 @@ type Ntchan struct {
 	Writer_queue chan string
 }
 
+//continous network reads with sleep
+func ReadLoop(ntchan Ntchan, d time.Duration) {
+	for {
+		NetworkReadMessageChan(ntchan)
+		time.Sleep(d)
+	}
+}
+
+//read from reader queue and process
+func ReadProcessor(ntchan Ntchan, d time.Duration) {
+	for {
+		msg := <-ntchan.Reader_queue
+		//log.Println("got msg on reader ", msg)
+		if len(msg) > 0 {
+			log.Println("READER: got msg ", msg, len(msg))
+		} else {
+			//empty message
+		}
+
+		//TODO! handle
+
+		time.Sleep(d)
+	}
+}
+
+func WriteLoop(ntchan Ntchan, d time.Duration) {
+	for {
+		//log.Println("loop writer")
+		msg := <-ntchan.Writer_queue
+		log.Println("WRITER: got msg to write", msg)
+
+		NetworkWrite(ntchan, msg)
+
+		time.Sleep(d)
+	}
+}
+
+//read from reader queue and process
+func WriteProcessor(ntchan Ntchan, d time.Duration) {
+	for {
+		msg := <-ntchan.Writer_queue
+		//log.Println("got msg on reader ", msg)
+		if len(msg) > 0 {
+			log.Println("READER: got msg ", msg, len(msg))
+		} else {
+			//empty message
+		}
+
+		//TODO! handle
+
+		time.Sleep(d)
+	}
+}
+
 //read a message from network
 func NetworkRead(nt Ntchan) string {
 	//TODO handle err
 	msg, _ := nt.Rw.ReadString(DELIM)
 	msg = strings.Trim(msg, string(DELIM))
 	return msg
-}
-
-//TODO continous loop of processing reads
-func ReaderLoop(nt Ntchan, msg_in_chan chan Message, msg_out_chan chan Message) {
-	//
 }
 
 //given a sream read from it
@@ -55,26 +105,29 @@ func NetworkReadMessage(nt Ntchan) string {
 }
 
 func NetworkReadMessageChan(nt Ntchan) {
-	log.Println("read")
+	//log.Println("try read")
 	msg, err := nt.Rw.ReadString(DELIM)
-	log.Println("msg ", msg)
-	//log.Println("msg > ", msg)
+	//log.Println("msg ", msg)
+
 	if err != nil {
 		//issue
 		//special case is empty message if client disconnects?
-		if len(msg) == 0 {
-			//log.Println("empty message")
 
-		} else {
-			log.Println("Failed ", err)
-			//log.Println(err.)
-
-		}
 	}
-	//log.Println(len(nt.Reader_queue))
-	log.Println("put msg into reader ", msg)
-	nt.Reader_queue <- msg
-	//log.Println(len(nt.Reader_queue))
+
+	if len(msg) > 0 {
+		//log.Println("empty message")
+
+		//log.Println(len(nt.Reader_queue))
+		log.Println("put msg into reader ", msg)
+		nt.Reader_queue <- msg
+		//log.Println(len(nt.Reader_queue))
+
+	} else {
+		//log.Println("Failed ", err)
+		//log.Println(err.)
+
+	}
 }
 
 func NetworkWrite(nt Ntchan, message string) error {

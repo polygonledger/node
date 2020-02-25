@@ -54,15 +54,15 @@ func EncodeReply(resp string) string {
 	return msg
 }
 
-func EncodePub(resp string) string {
+func EncodePub(resp string, name string) string {
 	//TODO header missing
-	msg := EncodeMsgString(PUB, resp, "")
+	msg := EncodeMsgString(PUB, resp, name)
 	return msg
 }
 
-func EncodeHeartbeat() string {
+func EncodeHeartbeat(name string) string {
 	//TODO time
-	msg := EncodePub(CMD_HEARTBEAT)
+	msg := EncodePub(CMD_HEARTBEAT, name)
 	return msg
 }
 
@@ -138,6 +138,6 @@ func ReadMessage(ntchan Ntchan) Message {
 func PubNetwork(ntchan Ntchan, resp Message) {
 	//rep_msg := EncodeReply(resp)
 	//resp_string := EncodePub(resp)
-	resp_string := EncodePub("TEST")
+	resp_string := EncodePub("TEST", "")
 	NetworkWrite(ntchan, resp_string)
 }
