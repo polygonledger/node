@@ -1,7 +1,28 @@
 package ntwk
 
-//functions relating to network stack
-//using bufio.ReadWriter stream
+// functions relating to network stack
+
+// network layer (NTL)
+
+// golang has the native net package. as TCP only deals with byte streams we need some form
+// to delinate distinct messages to implement the equivalent of actors. since we have
+// channels as the major building block for the network we wrap the bufio readwriter in
+// defined set of channels with equivalent set of messages.
+
+// the struct ntchan is the struct wraps the native readwriter with reads and write queues
+// as channels.
+
+// network reads happen in distinct units of messages which are delimited by the DELIM byte
+// messages have types to indicate the flow of message direction and commands
+// an open question is use of priorities, timing etc.
+
+// the P2P network or any network connection really has different behaviour based on the
+// types of messages going through it. a request-reply for example will have a single read
+// and single write in order, publish-subscribe will  push messages from producers to
+// consumers, etc.
+
+// since we always have only one single two-way channel available as we are on a single
+// socket we need to coordinate the reads
 
 import (
 	"bufio"
@@ -14,20 +35,21 @@ import (
 	"github.com/pkg/errors"
 )
 
-//network channel, wrapper around ReadWriter
+//network channel
 type Ntchan struct {
-	Rw *bufio.ReadWriter
-	//chan?
+	Rw           *bufio.ReadWriter
+	Name         string
 	Reader_queue chan string
 	Writer_queue chan string
 }
 
 func ReaderWriterConnector(ntchan Ntchan) {
+	//func (ntchan Ntchan) ReaderWriterConnector() {
 
 	read_loop_time := 300 * time.Millisecond
 	read_time_chan := 300 * time.Millisecond
 	write_loop_time := 300 * time.Millisecond
-	//write_processor_time := 300 * time.Millisecond
+	write_processor_time := 300 * time.Millisecond
 
 	//reader
 	go ReadLoop(ntchan, read_loop_time)
@@ -37,16 +59,25 @@ func ReaderWriterConnector(ntchan Ntchan) {
 	//writer
 	go WriteLoop(ntchan, write_loop_time)
 
-	//go WriteProcessor(ntchan, write_processor_time)
+	go WriteProducer(ntchan, write_processor_time)
+}
+
+func logmsg(name string, src string, msg string, total int) {
+	log.Printf("%s [%s] ### %v  %d", name, src, msg, total)
 }
 
 //continous network reads with sleep
 func ReadLoop(ntchan Ntchan, d time.Duration) {
 	msg_reader_total := 0
 	for {
-		log.Println("ReadLoop ### read loop", msg_reader_total)
+		logmsg(ntchan.Name, "ReadLoop", " read ", msg_reader_total)
 		//read from network and put in channel
-		NetworkReadMessageChan(ntchan)
+		msg := NetworkReadMessage(ntchan)
+		//handle cases
+		if len(msg) > 0 {
+			ntchan.Reader_queue <- msg
+		}
+
 		time.Sleep(d)
 		msg_reader_total++
 	}
@@ -57,16 +88,24 @@ func ReadProcessor(ntchan Ntchan, d time.Duration) {
 
 	msg_reader_processed := 0
 	for {
+		log.Println("ReadProcessor in")
 		msgString := <-ntchan.Reader_queue
 		//log.Println("got msg on reader ", msg)
 		if len(msgString) > 0 {
-			log.Println("ReadProcessor: got msg ", msgString, len(msgString), " ### read msg ", msg_reader_processed)
+			logmsg(ntchan.Name, "ReadProcessor", msgString, msg_reader_processed)
 			msg := ParseMessage(msgString)
 			log.Println(msg.MessageType)
-			//TODO handler
+
+			if msg.MessageType == REQ {
+				//TODO proper handler
+				reply := EncodeMsgString(REP, CMD_PONG, EMPTY_DATA)
+				ntchan.Writer_queue <- reply
+			}
+
 			msg_reader_processed++
 		} else {
 			//empty message
+			logmsg(ntchan.Name, "ReadProcessor", "empty", msg_reader_processed)
 		}
 
 		//TODO! handle
@@ -82,7 +121,7 @@ func WriteLoop(ntchan Ntchan, d time.Duration) {
 		//TODO! bug both reading
 		//take from channel and write
 		msg := <-ntchan.Writer_queue
-		log.Println("WriteLoop: got msg to write", msg, " ### ", msg_writer_total)
+		logmsg(ntchan.Name, "WriteLoop", msg, msg_writer_total)
 
 		NetworkWrite(ntchan, msg)
 
@@ -91,8 +130,7 @@ func WriteLoop(ntchan Ntchan, d time.Duration) {
 	}
 }
 
-//maybe not needed
-func WriteProcessor(ntchan Ntchan, d time.Duration) {
+func WriteProducer(ntchan Ntchan, d time.Duration) {
 	msg_write_processed := 0
 	for {
 		//TODO gather produced writes from other channels
@@ -101,7 +139,7 @@ func WriteProcessor(ntchan Ntchan, d time.Duration) {
 		ntchan.Writer_queue <- msg
 		//log.Println("got msg on reader ", msg)
 		if len(msg) > 0 {
-			log.Println("WriteProcessor: got msg ", msg, len(msg), " ### ", msg_write_processed)
+			logmsg(ntchan.Name, "WriteProducer", msg, msg_write_processed)
 			msg_write_processed++
 		} else {
 			//empty message
@@ -139,33 +177,6 @@ func NetworkReadMessage(nt Ntchan) string {
 		}
 	}
 	return msg
-}
-
-func NetworkReadMessageChan(nt Ntchan) {
-	//log.Println("try read")
-	msg, err := nt.Rw.ReadString(DELIM)
-	//log.Println("msg ", msg)
-
-	if err != nil {
-		//issue
-		//special case is empty message if client disconnects?
-
-	}
-
-	if len(msg) > 0 {
-		//log.Println("empty message")
-
-		//log.Println(len(nt.Reader_queue))
-		//log.Println("put msg into reader ", msg)
-		nt.Reader_queue <- msg
-		//log.Println(len(nt.Reader_queue))
-
-	} else {
-		log.Println("empty msg")
-		//log.Println("Failed ", err)
-		//log.Println(err.)
-
-	}
 }
 
 func NetworkWrite(nt Ntchan, message string) error {
@@ -226,12 +237,14 @@ func OpenNtchanOut(ip string, Port int) Ntchan {
 }
 
 //wrap connection in Ntchan
-func ConnNtchan(conn net.Conn) Ntchan {
+func ConnNtchan(conn net.Conn, name string) Ntchan {
 	rw := bufio.NewReadWriter(bufio.NewReader(conn), bufio.NewWriter(conn))
-	return Ntchan{Rw: rw, Reader_queue: make(chan string), Writer_queue: make(chan string)}
+
+	return Ntchan{Rw: rw, Name: name, Reader_queue: make(chan string), Writer_queue: make(chan string)}
 }
 
 func OpenNtchan(addr string) Ntchan {
 	conn := OpenConn(addr)
-	return ConnNtchan(conn)
+	name := addr
+	return ConnNtchan(conn, name)
 }

@@ -59,6 +59,8 @@ type Message struct {
 	MessageType string //type of message i.e. the communications protocol
 	Command     string //Specific message command
 	Data        []byte
+	//SRC
+	//DEST
 	//Signature       btcec.Signature
 }
 

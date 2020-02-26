@@ -305,7 +305,7 @@ func PubLoop(ntchan ntwk.Ntchan, Pub_chan chan ntwk.Message) {
 //the main junction for managing message flow between types of messages
 func channelPeerNetwork(conn net.Conn, peer ntwk.Peer) {
 
-	ntchan := ntwk.ConnNtchan(conn)
+	ntchan := ntwk.ConnNtchan(conn, peer.Address)
 
 	//main reader and writer setup
 	ntwk.ReaderWriterConnector(ntchan)
@@ -355,7 +355,7 @@ func channelPeerNetwork(conn net.Conn, peer ntwk.Peer) {
 //channel network optimised for client
 func channelPeerNetworkClient(conn net.Conn, peer ntwk.Peer) {
 
-	ntchan := ntwk.ConnNtchan(conn)
+	ntchan := ntwk.ConnNtchan(conn, peer.Address)
 
 	ntwk.ReaderWriterConnector(ntchan)
 

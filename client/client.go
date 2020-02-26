@@ -369,29 +369,31 @@ func runPeermode(option string, config Configuration) {
 
 }
 
-func heartbeat() {
-
-}
-
 func testing(mainPeerAddress string, nodePort int) {
 	//example of client which connects and reads/writes for 10sec
 	conn := ntwk.OpenConn(mainPeerAddress + ":" + strconv.Itoa(nodePort))
-	ntchan := ntwk.ConnNtchan(conn)
+	ntchan := ntwk.ConnNtchan(conn, mainPeerAddress)
 
 	ntwk.ReaderWriterConnector(ntchan)
 
 	//TODO! producers
 
+	//for {
+	//single REQUEST <-> REPLY
 	req_msg := ntwk.EncodeMsgString(ntwk.REQ, ntwk.CMD_PING, "")
 	//resp := ntwk.RequestReplyChan(req_msg, peer.Req_chan, peer.Rep_chan)
 	log.Println("put writer q", req_msg)
 	ntchan.Writer_queue <- req_msg
-	for {
-		log.Println("????")
-		resp_string := <-ntchan.Reader_queue
-		msg := ntwk.ParseMessage(resp_string)
-		log.Println("response ", msg.MessageType)
+
+	//TODO! need to get from reply chan, not reader
+	resp_string := <-ntchan.Reader_queue
+	msg := ntwk.ParseMessage(resp_string)
+	log.Println("response ", msg.MessageType)
+	if msg.MessageType == ntwk.REP {
+		//need to match to know this is the same request ID?
+		log.Println("REPLY ", msg)
 	}
+	//}
 
 	heartbeat_time := 400 * time.Millisecond
 	log.Println("??")
