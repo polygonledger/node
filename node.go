@@ -307,7 +307,7 @@ func channelPeerNetwork(conn net.Conn, peer ntwk.Peer) {
 	ntchan := ntwk.ConnNtchan(conn, peer.Address)
 
 	//main reader and writer setup
-	ntwk.ReaderWriterConnector(ntchan)
+	go ntwk.ReaderWriterConnector(ntchan)
 
 	//Request handler
 	// go func() {
@@ -425,7 +425,10 @@ func run_node(config Configuration) {
 
 	// create block every 10sec
 
-	go doEvery(blockTime, chain.MakeBlock)
+	delegation_enabled := false
+	if delegation_enabled {
+		go doEvery(blockTime, chain.MakeBlock)
+	}
 
 	//connect_peers(configuration.PeerAddresses)
 

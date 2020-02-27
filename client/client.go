@@ -369,30 +369,34 @@ func runPeermode(option string, config Configuration) {
 
 }
 
-func testing(mainPeerAddress string, nodePort int) {
-	//example of client which connects and reads/writes for 10sec
-	conn := ntwk.OpenConn(mainPeerAddress + ":" + strconv.Itoa(nodePort))
-	ntchan := ntwk.ConnNtchan(conn, mainPeerAddress)
-
-	ntwk.ReaderWriterConnector(ntchan)
-
-	//TODO! producers
-
-	//for {
-	//single REQUEST <-> REPLY
+func requestreply(ntchan ntwk.Ntchan) {
+	//basic request reply directly on reader/writer
 	req_msg := ntwk.EncodeMsgString(ntwk.REQ, ntwk.CMD_PING, "")
 	//resp := ntwk.RequestReplyChan(req_msg, peer.Req_chan, peer.Rep_chan)
 	log.Println("put writer q", req_msg)
+	//REQUEST
 	ntchan.Writer_queue <- req_msg
-
-	//TODO! need to get from reply chan, not reader
+	//REPLY
 	resp_string := <-ntchan.Reader_queue
+
 	msg := ntwk.ParseMessage(resp_string)
 	log.Println("response ", msg.MessageType)
 	if msg.MessageType == ntwk.REP {
 		//need to match to know this is the same request ID?
 		log.Println("REPLY ", msg)
 	}
+}
+
+func testing(mainPeerAddress string, nodePort int) {
+	//example of client which connects and reads/writes for 10sec
+	conn := ntwk.OpenConn(mainPeerAddress + ":" + strconv.Itoa(nodePort))
+	ntchan := ntwk.ConnNtchan(conn, mainPeerAddress)
+
+	ntwk.ReaderWriterConnector(ntchan)
+	requestreply(ntchan)
+
+	//TODO! go through REQ and REP chan
+
 	//}
 
 	// heartbeat_time := 400 * time.Millisecond
