@@ -8,7 +8,6 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
-	"log"
 
 	"github.com/btcsuite/btcd/btcec"
 	"github.com/btcsuite/btcd/chaincfg/chainhash"
@@ -60,7 +59,7 @@ func PubKeyToHex(pubkey btcec.PublicKey) string {
 func PubKeyFromHex(hexString string) btcec.PublicKey {
 	pubKeyBytes, err := hex.DecodeString(hexString)
 	if err != nil {
-		fmt.Println(err)
+		fmt.Println("err ", err)
 		//return
 	}
 	pubKey, _ := btcec.ParsePubKey(pubKeyBytes, btcec.S256())
@@ -73,7 +72,7 @@ func SignatureFromHex(hexString string) btcec.Signature {
 	sigBytes, err := hex.DecodeString(hexString)
 
 	if err != nil {
-		fmt.Println(err)
+		fmt.Println("err ", err)
 		//return
 	}
 	signature, err := btcec.ParseSignature(sigBytes, btcec.S256())
@@ -110,7 +109,7 @@ func SignMsgHash(keypair Keypair, message string) btcec.Signature {
 	messageHash := chainhash.DoubleHashB([]byte(message))
 	signature, err := keypair.PrivKey.Sign(messageHash)
 	if err != nil {
-		fmt.Println(err)
+		fmt.Println("err ", err)
 		//return
 	}
 	return *signature
@@ -125,7 +124,7 @@ func SignTx(tx block.Tx, keypair Keypair) btcec.Signature {
 	messageHash := chainhash.DoubleHashB([]byte(txJson))
 	signature, err := keypair.PrivKey.Sign(messageHash)
 	if err != nil {
-		fmt.Println(err)
+		fmt.Println("err ", err)
 		//return
 	}
 	return *signature
@@ -162,7 +161,7 @@ func VerifyTxSig(tx block.Tx) bool {
 	tx = RemovePubTx(tx)
 
 	txJson, _ := json.Marshal(tx)
-	log.Println("verify sig for tx ", string(txJson))
+	//log.Println("verify sig for tx ", string(txJson))
 	verified := VerifyMessageSignPub(sign, pubkey, string(txJson))
 	return verified
 

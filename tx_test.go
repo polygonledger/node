@@ -4,7 +4,6 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"io/ioutil"
-	"log"
 	"testing"
 
 	"github.com/polygonledger/node/block"
@@ -64,7 +63,7 @@ func TestSignTxBasic(t *testing.T) {
 
 	tx = crypto.SignTxAdd(tx, keypair)
 
-	log.Println(tx)
+	//log.Println(tx)
 
 	verified := crypto.VerifyTxSig(tx)
 
@@ -112,7 +111,7 @@ func TestTxFile(t *testing.T) {
 		panic(err)
 	}
 
-	log.Println(rtx.SenderPubkey)
+	//log.Println(rtx.SenderPubkey)
 
 	if !(rtx.Amount == 10) {
 		t.Error("amount wrong ")

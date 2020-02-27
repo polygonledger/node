@@ -157,11 +157,11 @@ func RandomAccount() block.Account {
 	}
 
 	rand.Seed(time.Now().UnixNano())
-	log.Println(lenk)
+
 	ran := rand.Intn(lenk)
 
 	randomAccount := keys[ran]
-	log.Println("random account ", randomAccount)
+	//	log.Println("random account ", randomAccount)
 	return randomAccount
 }
 
