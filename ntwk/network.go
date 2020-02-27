@@ -60,6 +60,7 @@ func CreateNtchan() Ntchan {
 	ntchan.Reader_queue = make(chan string)
 	ntchan.Writer_queue = make(chan string)
 	ntchan.Req_chan = make(chan Message)
+	ntchan.Rep_chan = make(chan Message)
 
 	ntchan.Reader_processed = 0
 	ntchan.Writer_processed = 0
@@ -113,6 +114,25 @@ func RequestProcessor(ntchan *Ntchan, d time.Duration) {
 	for {
 		request := <-ntchan.Req_chan
 		log.Println("request ", request)
+
+		//reply_string := EncodeMsgString(REP, CMD_PONG, EMPTY_DATA)
+		reply := EncodeMsg(REP, CMD_PONG, EMPTY_DATA)
+		//TODO reply goes through req_chan only
+		ntchan.Rep_chan <- reply
+		//ntchan.Writer_queue <- reply_string
+
+	}
+}
+
+//process replies
+func ReplyProcessor(ntchan *Ntchan, d time.Duration) {
+	log.Println("init ReplyProcessor ")
+	for {
+		reply := <-ntchan.Rep_chan
+		log.Println("reply ", reply)
+		reply_string := MsgString(reply)
+		ntchan.Writer_queue <- reply_string
+
 	}
 }
 
@@ -136,10 +156,7 @@ func ReadProcessor(ntchan *Ntchan, d time.Duration) {
 					ntchan.Req_chan <- msg
 					log.Println("put on req ", msg)
 				}()
-				reply := EncodeMsgString(REP, CMD_PONG, EMPTY_DATA)
 
-				//TODO reply goes through req_chan
-				ntchan.Writer_queue <- reply
 			}
 
 			//ntchan.Reader_processed++

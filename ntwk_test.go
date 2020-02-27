@@ -72,15 +72,12 @@ func SimulateRequests(ntchan *ntwk.Ntchan) {
 	}
 }
 
-func RequestReply(ntchan *ntwk.Ntchan) {
-
-}
-
 //ping pong
 func TestRequest(t *testing.T) {
 	ntchan := ntwk.CreateNtchan()
 	go SimulateRequests(&ntchan)
 	go ntwk.RequestProcessor(&ntchan, 1*time.Second)
+	go ntwk.ReplyProcessor(&ntchan, 1*time.Second)
 	read_time_chan := 300 * time.Millisecond
 	go ntwk.ReadProcessor(&ntchan, read_time_chan)
 	start := time.Now()
