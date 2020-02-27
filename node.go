@@ -55,7 +55,6 @@ type Configuration struct {
 
 //inbound
 func addpeer(addr string, nodeport int) ntwk.Peer {
-	//p := ntwk.Peer{Address: addr, Req_chan: make(chan ntwk.Message), Rep_chan: make(chan ntwk.Message), Out_req_chan: make(chan ntwk.Message), Out_rep_chan: make(chan ntwk.Message)}
 	//ignored
 
 	p := ntwk.CreatePeer(addr, nodeport)
@@ -310,20 +309,27 @@ func channelPeerNetwork(conn net.Conn, peer ntwk.Peer) {
 	//main reader and writer setup
 	ntwk.ReaderWriterConnector(ntchan)
 
+	//Request handler
+	// go func() {
+	// 	log.Println("handler ")
+	// 	msg := <-ntchan.Req_chan
+	// 	log.Println(">>> request ", msg)
+	// }()
+
 	//TODO! hearbeat function
 	//heartbeat
-	heartbeat_time := 400 * time.Millisecond
-	go func() {
-		for {
-			//msg := "test" + string(ntwk.DELIM)
-			msg := ntwk.EncodeHeartbeat("peer1")
-			ntchan.Writer_queue <- msg
-			time.Sleep(heartbeat_time)
+	// heartbeat_time := 400 * time.Millisecond
+	// go func() {
+	// 	for {
+	// 		//msg := "test" + string(ntwk.DELIM)
+	// 		msg := ntwk.EncodeHeartbeat("peer1")
+	// 		ntchan.Writer_queue <- msg
+	// 		time.Sleep(heartbeat_time)
 
-			//msg := <-ntchan.Writer_queue
-			//log.Println("XX got msg to write", msg)
-		}
-	}()
+	// 		//msg := <-ntchan.Writer_queue
+	// 		//log.Println("XX got msg to write", msg)
+	// 	}
+	// }()
 
 	//could add max listen
 	//timeoutDuration := 5 * time.Second

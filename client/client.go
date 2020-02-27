@@ -395,22 +395,22 @@ func testing(mainPeerAddress string, nodePort int) {
 	}
 	//}
 
-	heartbeat_time := 400 * time.Millisecond
-	log.Println("??")
-	go func() {
-		for {
-			//msg := "test" + string(protocol.DELIM)
-			msg := ntwk.EncodeHeartbeat("client")
-			//log.Println("heartbeat > ", msg)
-			ntchan.Writer_queue <- msg
-			time.Sleep(heartbeat_time)
+	// heartbeat_time := 400 * time.Millisecond
+	// log.Println("??")
+	// go func() {
+	// 	for {
+	// 		//msg := "test" + string(protocol.DELIM)
+	// 		msg := ntwk.EncodeHeartbeat("client")
+	// 		//log.Println("heartbeat > ", msg)
+	// 		ntchan.Writer_queue <- msg
+	// 		time.Sleep(heartbeat_time)
 
-			//msg := <-ntchan.Writer_queue
-			//log.Println("XX got msg to write", msg)
-		}
-	}()
+	// 		//msg := <-ntchan.Writer_queue
+	// 		//log.Println("XX got msg to write", msg)
+	// 	}
+	// }()
 
-	log.Println("??")
+	// log.Println("??")
 
 	time.Sleep(10 * time.Second)
 }

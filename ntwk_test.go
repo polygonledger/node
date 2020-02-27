@@ -79,7 +79,7 @@ func TestRequest(t *testing.T) {
 	go ntwk.RequestProcessor(&ntchan, 1*time.Second)
 	go ntwk.ReplyProcessor(&ntchan, 1*time.Second)
 	read_time_chan := 300 * time.Millisecond
-	go ntwk.ReadProcessor(&ntchan, read_time_chan)
+	go ntwk.ReadProcessor(ntchan, read_time_chan)
 	start := time.Now()
 
 	maxt := 300 * time.Millisecond
