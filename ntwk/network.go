@@ -44,7 +44,7 @@ import (
 type Ntchan struct {
 	Rw   *bufio.ReadWriter
 	Name string
-	//TODO! message type
+	//TODO message type
 	Reader_queue     chan string
 	Writer_queue     chan string
 	REQ_chan         chan string
@@ -54,6 +54,18 @@ type Ntchan struct {
 }
 
 // --- NTL layer ---
+
+func Reqprocessor(ntchan Ntchan) {
+	x := <-ntchan.REQ_chan
+	//x := <-xchan
+	logmsgd("REQ processor ", x)
+
+	//reply_string := "reply"
+	reply := EncodeMsg(REP, CMD_PONG, EMPTY_DATA)
+	repöy_string := MsgString(reply)
+
+	ntchan.Writer_queue <- repöy_string
+}
 
 func ReaderWriterConnector(ntchan Ntchan) {
 	//func (ntchan Ntchan) ReaderWriterConnector() {
@@ -74,24 +86,14 @@ func ReaderWriterConnector(ntchan Ntchan) {
 	go WriteLoop(ntchan, write_loop_time)
 
 	//REQ processor
-	go func() {
-		x := <-ntchan.REQ_chan
-		//x := <-xchan
-		logmsgd("REQ processor ", x)
-
-		//reply_string := "reply"
-		reply := EncodeMsg(REP, CMD_PONG, EMPTY_DATA)
-		repöy_string := MsgString(reply)
-
-		ntchan.Writer_queue <- repöy_string
-	}()
+	go Reqprocessor(ntchan)
 
 	// go func() {
 	// 	ntchan.REQ_chan <- "test"
 	// 	//xchan <- "test"
 	// }()
 
-	//TODO!
+	//TODO
 	//go WriteProducer(ntchan, write_processor_time)
 }
 
@@ -107,11 +109,11 @@ func logmsg(name string, src string, msg string, total int) {
 func ReadLoop(ntchan Ntchan, d time.Duration) {
 	msg_reader_total := 0
 	for {
-		logmsg(ntchan.Name, "ReadLoop", " read ", msg_reader_total)
 		//read from network and put in channel
 		msg := NetworkReadMessage(ntchan)
 		//handle cases
-		if len(msg) > 0 {
+		if len(msg) > 0 && msg != EMPTY_MSG {
+			logmsg(ntchan.Name, "ReadLoop", msg, msg_reader_total)
 			ntchan.Reader_queue <- msg
 		}
 
@@ -156,15 +158,14 @@ func ReadProcessor(ntchan Ntchan, d time.Duration) {
 		//log.Println("got msg on reader ", msg)
 		if len(msgString) > 0 {
 			logmsg(ntchan.Name, "ReadProcessor", msgString, ntchan.Reader_processed)
-			//TODO! try catch
+			//TODO try catch
 			msg := ParseMessage(msgString)
-			logmsg(ntchan.Name, "ReadProcessor", msg.MessageType, 0)
 
 			//REQUEST<->REPLY
 			if msg.MessageType == REQ {
 				//TODO proper handler
 				//log.Println("req ", msg.Command)
-				logmsg(ntchan.Name, "ReadProcessor", msg.Command, 0)
+				//logmsg(ntchan.Name, "ReadProcessor", msg.Command, 0)
 
 				msg_string := MsgString(msg)
 				ntchan.REQ_chan <- msg_string
@@ -206,7 +207,7 @@ func ReadProcessor(ntchan Ntchan, d time.Duration) {
 			logmsg(ntchan.Name, "ReadProcessor", "empty", ntchan.Reader_processed)
 		}
 
-		//TODO! handle
+		//TODO handle
 
 		time.Sleep(d)
 	}

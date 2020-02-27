@@ -300,6 +300,21 @@ func PubLoop(ntchan ntwk.Ntchan, Pub_chan chan ntwk.Message) {
 	}
 }
 
+func pubhearbeat(ntchan ntwk.Ntchan) {
+	heartbeat_time := 1000 * time.Millisecond
+
+	for {
+		//msg := "test" + string(ntwk.DELIM)
+		msg := ntwk.EncodeHeartbeat("peer1")
+		ntchan.Writer_queue <- msg
+		time.Sleep(heartbeat_time)
+
+		//msg := <-ntchan.Writer_queue
+		//log.Println("XX got msg to write", msg)
+	}
+
+}
+
 //setup the network of channels
 //the main junction for managing message flow between types of messages
 func channelPeerNetwork(conn net.Conn, peer ntwk.Peer) {
@@ -309,6 +324,8 @@ func channelPeerNetwork(conn net.Conn, peer ntwk.Peer) {
 	//main reader and writer setup
 	go ntwk.ReaderWriterConnector(ntchan)
 
+	go pubhearbeat(ntchan)
+
 	//Request handler
 	// go func() {
 	// 	log.Println("handler ")
@@ -316,20 +333,8 @@ func channelPeerNetwork(conn net.Conn, peer ntwk.Peer) {
 	// 	log.Println(">>> request ", msg)
 	// }()
 
-	//TODO! hearbeat function
+	//TODO hearbeat function
 	//heartbeat
-	// heartbeat_time := 400 * time.Millisecond
-	// go func() {
-	// 	for {
-	// 		//msg := "test" + string(ntwk.DELIM)
-	// 		msg := ntwk.EncodeHeartbeat("peer1")
-	// 		ntchan.Writer_queue <- msg
-	// 		time.Sleep(heartbeat_time)
-
-	// 		//msg := <-ntchan.Writer_queue
-	// 		//log.Println("XX got msg to write", msg)
-	// 	}
-	// }()
 
 	//could add max listen
 	//timeoutDuration := 5 * time.Second

@@ -395,9 +395,16 @@ func testing(mainPeerAddress string, nodePort int) {
 	ntwk.ReaderWriterConnector(ntchan)
 	requestreply(ntchan)
 
-	//TODO! go through REQ and REP chan
+	time.Sleep(2 * time.Second)
 
-	//}
+	log.Println("......")
+
+	// for {
+	// 	resp_string := <-ntchan.Reader_queue
+	// 	log.Println("response ", resp_string)
+	// }
+
+	//TODO! go through REQ and REP chan
 
 	// heartbeat_time := 400 * time.Millisecond
 	// log.Println("??")
