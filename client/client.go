@@ -385,24 +385,26 @@ func requestreply(ntchan ntwk.Ntchan, req_msg string) {
 
 	//TODO! use readloop and REQ/REP chans
 
-	log.Println("put writer q", req_msg)
+	log.Println("requestreply >> ", req_msg)
 	//REQUEST
-	//TODO! on req out
-	ntchan.Writer_queue <- req_msg
+	ntchan.REQ_out <- req_msg
+	//ntchan.REQ_out <- req_msg
 	//REPLY
-	log.Println("response in ....")
-	//TODO! read from REP_in
-	resp_string := <-ntchan.Reader_queue
-	//resp_string := <-ntchan.Req_chan_in
 
-	msg := ntwk.ParseMessage(resp_string)
-	log.Println("response ", msg.MessageType)
-	if msg.MessageType == ntwk.REP {
-		//need to match to know this is the same request ID?
-		log.Println("REPLY ", msg)
-	}
+	// resp_string := <-ntchan.Reader_queue
+	//todo! where is rep?
+	resp_string := <-ntchan.REP_in
+	log.Println("REP_in >> ", resp_string)
+
+	// msg := ntwk.ParseMessage(resp_string)
+	// log.Println("response ", msg.MessageType)
+	// if msg.MessageType == ntwk.REP {
+	// 	//need to match to know this is the same request ID?
+	// 	log.Println("REPLY ", msg)
+	// }
 }
 
+//TODO! move
 func ping(ntchan ntwk.Ntchan) {
 
 	req_msg := ntwk.EncodeMsgString(ntwk.REQ, ntwk.CMD_PING, "")
@@ -410,6 +412,14 @@ func ping(ntchan ntwk.Ntchan) {
 	requestreply(ntchan, req_msg)
 
 }
+
+// func ReplyInProcessor(ntchan ntwk.Ntchan) {
+// 	for {
+// 		log.Println("ReplyInProcessor ")
+// 		msg := <-ntchan.REP_in
+// 		log.Println("ReplyInProcessor >> ", msg)
+// 	}
+// }
 
 //run client against single node, just use first IP address in peers i.e. mainpeer
 func runSingleMode(option string, config Configuration) {
@@ -424,6 +434,7 @@ func runSingleMode(option string, config Configuration) {
 	conn := ntwk.OpenConn(mainPeerAddress + ":" + strconv.Itoa(config.NodePort))
 	ntchan := ntwk.ConnNtchan(conn, mainPeerAddress)
 	ntwk.ReaderWriterConnector(ntchan)
+	//go ReplyInProcessor(ntchan)
 
 	switch option {
 
@@ -435,8 +446,9 @@ func runSingleMode(option string, config Configuration) {
 
 	case "heartbeat":
 		log.Println("heartbeat")
+
 		for {
-			ping(ntchan)
+			go ping(ntchan)
 			time.Sleep(1 * time.Second)
 		}
 
