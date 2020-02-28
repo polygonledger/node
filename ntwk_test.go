@@ -111,7 +111,7 @@ func TestRequestOut(t *testing.T) {
 		fmt.Println("received message", msg)
 		t.Error("should not contain")
 	case <-time.After(100 * time.Millisecond):
-		fmt.Println("no message received")
+		//fmt.Println("no message received")
 	}
 
 	go func() {
@@ -119,7 +119,6 @@ func TestRequestOut(t *testing.T) {
 	}()
 
 	go func() {
-		//for {
 		x := <-ntchan.REQ_out
 		if x != "test" {
 			t.Error("should receive test")
@@ -134,7 +133,6 @@ func TestRequestOut(t *testing.T) {
 	go func() {
 		select {
 		case msg := <-ntchan.REQ_out:
-			fmt.Println("received message", msg)
 			if msg != "test" {
 				t.Error("wrong")
 			}
@@ -143,37 +141,53 @@ func TestRequestOut(t *testing.T) {
 		}
 	}()
 
-	//x := <-ntchan.REQ_out
-	//log.Println("x ", x)
-	//}()
-
-	// select {
-	// case msg := <-messages:
-	//     fmt.Println("received message", msg)
-	// default:
-	//     fmt.Println("no message received")
-	// }
-
-	// select {
-	// case req_out_msg_ := <-ntchan.REQ_out:
-	// 	log.Println("got ", req_out_msg_)
-	// 	if req_out_msg_ != req_out_msg {
-	// 		t.Error("TestRequestOut")
-	// 	}
-
-	// case <-time.After(100 * time.Millisecond):
-	// 	log.Println("timeout")
-	// 	t.Error("timeout")
-	// }
-
 }
 
 func TestReplyIn(t *testing.T) {
-	//t.Error("TestReplyIn")
+
+	ntchan := ntwk.ConnNtchanStub("")
+
+	go func() {
+		ntchan.REP_in <- "test"
+	}()
+
+	go func() {
+		select {
+		case msg := <-ntchan.REP_in:
+			if msg != "test" {
+				t.Error("wrong")
+			}
+		case <-time.After(100 * time.Millisecond):
+			t.Error("should contain")
+		}
+	}()
+
 }
 
-func TestReplyOut(t *testing.T) {
-	//t.Error("TestReplyOut")
+func TestRequestreply(t *testing.T) {
+
+	ntchan := ntwk.ConnNtchanStub("")
+
+	go func() {
+		ntchan.REQ_in <- "ping"
+	}()
+
+	go func() {
+		x := <-ntchan.REP_out
+		if x != "pong" {
+			t.Error("expect pong")
+		}
+	}()
+
+	go func() {
+		x := <-ntchan.REQ_in
+		if x != "ping" {
+			t.Error("req in")
+		}
+
+		ntchan.REP_out <- "pong"
+	}()
+
 }
 
 // func TestReader(t *testing.T) {
