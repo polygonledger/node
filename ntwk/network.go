@@ -60,21 +60,11 @@ type Ntchan struct {
 
 // --- NTL layer ---
 
-func Reqprocessor1(ntchan Ntchan) {
-	x := <-ntchan.REQ_in
-	//x := <-xchan
-	logmsgd("REQ processor ", x)
-
-	//reply_string := "reply"
-	reply := EncodeMsg(REP, CMD_PONG, EMPTY_DATA)
-	reply_string := MsgString(reply)
-
-	ntchan.Writer_queue <- reply_string
-}
-
+// setup of all read and write processes for a single connection
 func ReaderWriterConnector(ntchan Ntchan) {
 	//func (ntchan Ntchan) ReaderWriterConnector() {
 
+	//timers
 	read_loop_time := 300 * time.Millisecond
 	read_time_chan := 300 * time.Millisecond
 	write_loop_time := 300 * time.Millisecond
@@ -83,11 +73,14 @@ func ReaderWriterConnector(ntchan Ntchan) {
 	//any coordination between reader and writer
 
 	//init reader
+	//reads from the actual "physical" network
 	go ReadLoop(ntchan, read_loop_time)
 
+	//process of reads
 	go ReadProcessor(ntchan, read_time_chan)
 
 	//init writer
+	//write to network whatever is the reader queue
 	go WriteLoop(ntchan, write_loop_time)
 
 	//REQ processor
@@ -108,6 +101,19 @@ func logmsgd(src string, msg string) {
 
 func logmsg(name string, src string, msg string, total int) {
 	log.Printf("%s [%s] ### %v  %d", name, src, msg, total)
+}
+
+//old
+func Reqprocessor1(ntchan Ntchan) {
+	x := <-ntchan.REQ_in
+	//x := <-xchan
+	logmsgd("REQ processor ", x)
+
+	//reply_string := "reply"
+	reply := EncodeMsg(REP, CMD_PONG, EMPTY_DATA)
+	reply_string := MsgString(reply)
+
+	ntchan.Writer_queue <- reply_string
 }
 
 //continous network reads with sleep
