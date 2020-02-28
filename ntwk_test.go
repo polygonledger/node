@@ -8,30 +8,28 @@ import (
 	"github.com/polygonledger/node/ntwk"
 )
 
-func TestBasicNtwk(t *testing.T) {
+// func TestReader(t *testing.T) {
 
-	ntchan := ntwk.ConnNtchanStub("")
+// 	ntchan := ntwk.ConnNtchanStub("")
 
-	go ntwk.ReadProcessor(ntchan, 1*time.Millisecond)
-	if ntchan.Reader_processed != 0 {
-		t.Error("reader processed")
-	}
+// 	go ntwk.ReadProcessor(ntchan, 1*time.Millisecond)
+// 	if ntchan.Reader_processed != 0 {
+// 		t.Error("reader processed")
+// 	}
 
-	if len(ntchan.Reader_queue) != 0 {
-		t.Error("reader queue not empty")
-	}
+// 	if len(ntchan.Reader_queue) != 0 {
+// 		t.Error("reader queue not empty")
+// 	}
 
-	req_msg := ntwk.EncodeMsgString(ntwk.REQ, ntwk.CMD_PING, ntwk.EMPTY_DATA)
+// 	req_msg := ntwk.EncodeMsgString(ntwk.REQ, ntwk.CMD_PING, ntwk.EMPTY_DATA)
 
-	ntchan.Reader_queue <- req_msg
-	time.Sleep(5 * time.Millisecond)
-	if ntchan.Reader_processed != 1 {
-		t.Error("reader not processed")
-	}
+// 	// ntchan.Reader_queue <- req_msg
+// 	// time.Sleep(5 * time.Millisecond)
+// 	// if ntchan.Reader_processed != 1 {
+// 	// 	t.Error("reader not processed")
+// 	// }
 
-	log.Println(req_msg)
-
-}
+// }
 
 func SimulateNetworkInput(ntchan *ntwk.Ntchan) {
 	for {
@@ -64,20 +62,54 @@ func TestReaderin(t *testing.T) {
 	}
 }
 
-func SimulateRequests(ntchan *ntwk.Ntchan) {
-	for {
-		req_msg := ntwk.EncodeMsgString(ntwk.REQ, ntwk.CMD_PING, ntwk.EMPTY_DATA)
-		ntchan.Reader_queue <- req_msg
-		log.Println(len(ntchan.Reader_queue))
-		time.Sleep(100 * time.Millisecond)
+func SimulateRequest(ntchan *ntwk.Ntchan) {
+
+	req_msg := ntwk.EncodeMsgString(ntwk.REQ, ntwk.CMD_PING, ntwk.EMPTY_DATA)
+	ntchan.Reader_queue <- req_msg
+	log.Println(len(ntchan.Reader_queue))
+	time.Sleep(100 * time.Millisecond)
+
+}
+
+func isEmpty(c chan string, d time.Duration) bool {
+	select {
+	case ret := <-c:
+		log.Println("got ", ret)
+		return false
+
+	case <-time.After(d):
+		//ch <- false
+		log.Println("timeout")
+		return true
 	}
 }
 
-//ping pong
+// in reader should bet forwarded to req_chan
 func TestRequest(t *testing.T) {
 	ntchan := ntwk.ConnNtchanStub("")
 
-	go SimulateRequests(&ntchan)
+	go ntwk.ReadProcessor(ntchan, 100*time.Millisecond)
+
+	if !isEmpty(ntchan.Reader_queue, 1*time.Second) {
+		t.Error("channel full")
+	}
+
+	//put 1 request in reader
+	go SimulateRequest(&ntchan)
+
+	//wait
+	time.Sleep(100 * time.Millisecond)
+
+	//reader empty
+	if !isEmpty(ntchan.Reader_queue, 1*time.Second) {
+		t.Error("channel empty")
+	}
+
+	//req_in
+	if isEmpty(ntchan.REQ_in, 1*time.Second) {
+		t.Error("req channel empty")
+	}
+
 	// go ntwk.RequestProcessor(ntchan, 1*time.Second)
 	// go ntwk.ReplyProcessor(&ntchan, 1*time.Second)
 	// read_time_chan := 300 * time.Millisecond

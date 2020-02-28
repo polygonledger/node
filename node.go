@@ -235,74 +235,6 @@ func HandleReqMsg(msg ntwk.Message) ntwk.Message {
 	}
 }
 
-//handle messages
-// func HandleMsg(req_chan chan ntwk.Message, rep_chan chan ntwk.Message) {
-// 	req_msg := <-req_chan
-// 	//fmt.Println("handle msg string ", msgString)
-
-// 	fmt.Println("msg type ", req_msg.MessageType)
-
-// 	if req_msg.MessageType == ntwk.REQ {
-// 		HandleReqMsg(req_msg, rep_chan)
-// 	} else if req_msg.MessageType == ntwk.REP {
-// 		nlog.Println("handle reply")
-// 	}
-// }
-
-//old
-// func ReplyLoop(ntchan ntwk.Ntchan, req_chan chan ntwk.Message, rep_chan chan ntwk.Message) {
-
-// 	//continously read for requests and respond with reply
-// 	for {
-
-// 		// read from network
-// 		msgString := ntwk.NetworkReadMessage(ntchan)
-// 		if msgString == ntwk.EMPTY_MSG {
-// 			//log.Println("empty message, ignore")
-// 			time.Sleep(500 * time.Millisecond)
-// 			continue
-// 		}
-
-// 		msg := ntwk.ParseMessage(msgString)
-// 		nlog.Print("Receive message over network ", msgString)
-
-// 		//put in the channel
-// 		go putMsg(req_chan, msg)
-
-// 		//handle in channel and put reply in msg_out channel
-// 		go HandleMsg(req_chan, rep_chan)
-
-// 		//take from reply channel and send over network
-// 		reply := <-rep_chan
-// 		fmt.Println("msg out ", reply)
-// 		ntwk.ReplyNetwork(ntchan, reply)
-
-// 	}
-// }
-
-//old
-func ReqLoop(ntchan ntwk.Ntchan, out_req_chan chan ntwk.Message, out_rep_chan chan ntwk.Message) {
-
-	//TODO
-	for {
-		request := <-out_req_chan
-		log.Println("request ", request)
-	}
-}
-
-//old
-func PubLoop(ntchan ntwk.Ntchan, Pub_chan chan ntwk.Message) {
-	for {
-		pubmsg := <-Pub_chan
-		log.Println("pubchan.. todo relay ", pubmsg)
-		var msg ntwk.Message
-		msg.MessageType = ntwk.PUB
-		msg.Command = "test"
-		//msg.Data := bytes("")
-		ntwk.PubNetwork(ntchan, msg)
-	}
-}
-
 func pubhearbeat(ntchan ntwk.Ntchan) {
 	heartbeat_time := 1000 * time.Millisecond
 
@@ -316,7 +248,7 @@ func pubhearbeat(ntchan ntwk.Ntchan) {
 
 //process requests
 func Reqprocessor(ntchan ntwk.Ntchan) {
-	msg_string := <-ntchan.REQ_chan_in
+	msg_string := <-ntchan.REQ_in
 	//logmsgd("REQ processor ", x)
 
 	//reply_string := "reply"
@@ -362,8 +294,6 @@ func channelPeerNetwork(conn net.Conn, peer ntwk.Peer) {
 
 	//go ReplyLoop(ntchan, peer.Req_chan, peer.Rep_chan)
 
-	//go ReqLoop(ntchan, peer.Out_req_chan, peer.Out_rep_chan)
-
 	//----------------
 	//TODO pubsub
 	//go publishLoop(msg_in_chan, msg_out_chan)
@@ -371,8 +301,6 @@ func channelPeerNetwork(conn net.Conn, peer ntwk.Peer) {
 	// go ntwk.Subtime(tchan, "peer1")
 
 	// go ntwk.Subout(tchan, "peer1", peer.Pub_chan)
-
-	// go PubLoop(rw, peer.Pub_chan)
 
 }
 
@@ -400,16 +328,14 @@ func doEveryX(d time.Duration, f func() <-chan string) {
 
 func connect_peers(node_port int, PeerAddresses []string) {
 
-	//TODO
-
 	for _, peer := range PeerAddresses {
-		addr := peer + strconv.Itoa(node_port)
+		log.Println(peer)
+		//TODO old!
 
-		ntchan := ntwk.OpenNtchan(addr)
+		//addr := peer + strconv.Itoa(node_port)
 
-		out_req := make(chan ntwk.Message)
-		out_rep := make(chan ntwk.Message)
-		ReqLoop(ntchan, out_req, out_rep)
+		//ntchan := ntwk.OpenNtchan(addr)
+
 		//log.Println("ping ", peer)
 		//MakePingOld(req_chan, rep_chan)
 

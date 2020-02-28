@@ -5,11 +5,13 @@ import (
 	"time"
 )
 
+//TODO! redundant with Ntchan
 type Peer struct {
 	Address  string `json:"Address"`
 	NodePort int
 
-	//TODO! remove
+	//TODO! remove chans
+	//Ntchan ntchan
 	Req_chan     chan Message
 	Rep_chan     chan Message
 	Out_req_chan chan Message
