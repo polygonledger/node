@@ -302,7 +302,7 @@ func setupAllPeers(config Configuration) {
 			log.Println("connect failed")
 			continue
 		} else {
-			ntwk.MakePing(p)
+			ntwk.MakePingOld(p)
 		}
 	}
 
@@ -343,7 +343,7 @@ func runPeermode(option string, config Configuration) {
 				log.Println("connect failed")
 				continue
 			} else {
-				success := ntwk.MakePing(p)
+				success := ntwk.MakePingOld(p)
 				if success {
 					successCount++
 				}
@@ -369,15 +369,16 @@ func runPeermode(option string, config Configuration) {
 
 }
 
-func requestreply(ntchan ntwk.Ntchan) {
-	//basic request reply directly on reader/writer
-	req_msg := ntwk.EncodeMsgString(ntwk.REQ, ntwk.CMD_PING, "")
-	//resp := ntwk.RequestReplyChan(req_msg, peer.Req_chan, peer.Rep_chan)
+func requestreply(ntchan ntwk.Ntchan, req_msg string) {
+
+	//TODO! use readloop and REQ/REP chans
+
 	log.Println("put writer q", req_msg)
 	//REQUEST
 	ntchan.Writer_queue <- req_msg
 	//REPLY
 	resp_string := <-ntchan.Reader_queue
+	//resp_string := <-ntchan.Req_chan_in
 
 	msg := ntwk.ParseMessage(resp_string)
 	log.Println("response ", msg.MessageType)
@@ -387,43 +388,14 @@ func requestreply(ntchan ntwk.Ntchan) {
 	}
 }
 
-func testing(mainPeerAddress string, nodePort int) {
-	//example of client which connects and reads/writes for 10sec
-	conn := ntwk.OpenConn(mainPeerAddress + ":" + strconv.Itoa(nodePort))
-	ntchan := ntwk.ConnNtchan(conn, mainPeerAddress)
+func ping(ntchan ntwk.Ntchan) {
 
-	ntwk.ReaderWriterConnector(ntchan)
-	requestreply(ntchan)
+	req_msg := ntwk.EncodeMsgString(ntwk.REQ, ntwk.CMD_PING, "")
 
-	time.Sleep(2 * time.Second)
+	requestreply(ntchan, req_msg)
 
-	log.Println("......")
+	time.Sleep(1 * time.Second)
 
-	// for {
-	// 	resp_string := <-ntchan.Reader_queue
-	// 	log.Println("response ", resp_string)
-	// }
-
-	//TODO! go through REQ and REP chan
-
-	// heartbeat_time := 400 * time.Millisecond
-	// log.Println("??")
-	// go func() {
-	// 	for {
-	// 		//msg := "test" + string(protocol.DELIM)
-	// 		msg := ntwk.EncodeHeartbeat("client")
-	// 		//log.Println("heartbeat > ", msg)
-	// 		ntchan.Writer_queue <- msg
-	// 		time.Sleep(heartbeat_time)
-
-	// 		//msg := <-ntchan.Writer_queue
-	// 		//log.Println("XX got msg to write", msg)
-	// 	}
-	// }()
-
-	// log.Println("??")
-
-	time.Sleep(10 * time.Second)
 }
 
 //run client against single node, just use first IP address in peers i.e. mainpeer
@@ -436,18 +408,16 @@ func runSingleMode(option string, config Configuration) {
 
 	//setupPeerClient(mainPeer)
 
+	conn := ntwk.OpenConn(mainPeerAddress + ":" + strconv.Itoa(config.NodePort))
+	ntchan := ntwk.ConnNtchan(conn, mainPeerAddress)
+	ntwk.ReaderWriterConnector(ntchan)
+
 	switch option {
-
-	case "test":
-		log.Println("test")
-
-		testing(mainPeerAddress, config.NodePort)
-
-		//channelPeerNetworkClient()
 
 	case "ping":
 		log.Println("ping")
-		ntwk.MakePing(mainPeer)
+		//ntwk.MakePingOld(mainPeer)
+		ping(ntchan)
 
 	case "heartbeat":
 		log.Println("heartbeat")

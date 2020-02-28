@@ -45,26 +45,27 @@ type Ntchan struct {
 	Rw   *bufio.ReadWriter
 	Name string
 	//TODO message type
-	Reader_queue     chan string
-	Writer_queue     chan string
-	REQ_chan         chan string
-	REP_chan         chan string
+	Reader_queue chan string
+	Writer_queue chan string
+	REQ_chan_in  chan string //REQUESTS in
+	REP_chan_out chan string //REPLIES out
+
 	Reader_processed int
 	Writer_processed int
 }
 
 // --- NTL layer ---
 
-func Reqprocessor(ntchan Ntchan) {
-	x := <-ntchan.REQ_chan
+func Reqprocessor1(ntchan Ntchan) {
+	x := <-ntchan.REQ_chan_in
 	//x := <-xchan
 	logmsgd("REQ processor ", x)
 
 	//reply_string := "reply"
 	reply := EncodeMsg(REP, CMD_PONG, EMPTY_DATA)
-	repöy_string := MsgString(reply)
+	reply_string := MsgString(reply)
 
-	ntchan.Writer_queue <- repöy_string
+	ntchan.Writer_queue <- reply_string
 }
 
 func ReaderWriterConnector(ntchan Ntchan) {
@@ -86,10 +87,10 @@ func ReaderWriterConnector(ntchan Ntchan) {
 	go WriteLoop(ntchan, write_loop_time)
 
 	//REQ processor
-	go Reqprocessor(ntchan)
+	//go Reqprocessor1(ntchan)
 
 	// go func() {
-	// 	ntchan.REQ_chan <- "test"
+	// 	ntchan.REQ_chan_in <- "test"
 	// 	//xchan <- "test"
 	// }()
 
@@ -141,7 +142,7 @@ func ReadLoop(ntchan Ntchan, d time.Duration) {
 func ReplyProcessor(ntchan *Ntchan, d time.Duration) {
 	log.Println("init ReplyProcessor ")
 	for {
-		reply_string := <-ntchan.REP_chan
+		reply_string := <-ntchan.REP_chan_out
 		//log.Println("reply ", reply)
 		//reply_string := MsgString(reply)
 		ntchan.Writer_queue <- reply_string
@@ -168,35 +169,13 @@ func ReadProcessor(ntchan Ntchan, d time.Duration) {
 				//logmsg(ntchan.Name, "ReadProcessor", msg.Command, 0)
 
 				msg_string := MsgString(msg)
-				ntchan.REQ_chan <- msg_string
+				ntchan.REQ_chan_in <- msg_string
 
 				//ntchan.Writer_queue <- reply_string
 
-				//TODO fix
-				//xchan := make(chan string)
-				//xchan := ntchan.REQ_chan
-
-				// go func() {
-				// 	log.Println("2 put on REQ #### ", msg, msg.MessageType)
-				// 	msg_string := MsgString(msg)
-				// 	//xchan <- msg_string
-				// 	ntchan.REQ_chan <- msg_string
-				// 	msg := <-ntchan.REQ_chan
-				// 	log.Println("3 ?? ", msg)
-				// }()
-
-				// go func() {
-				// 	for {
-				// 		log.Println(" get from REQ **** ")
-				// 		//msg := <-xchan
-				// 		msg := <-ntchan.REQ_chan
-				// 		log.Println("1 >>> request ", msg)
-
-				// 		msg_reply := "reply"
-				// 		log.Println("reply ", msg_reply)
-				// 		NetworkWrite(ntchan, msg_reply)
-				// 	}
-				// }()
+			} else if msg.MessageType == REP {
+				//TODO!
+				//msg_string := MsgString(msg)
 
 			}
 
@@ -341,8 +320,8 @@ func ConnNtchanStub(name string) Ntchan {
 	var ntchan Ntchan
 	ntchan.Reader_queue = make(chan string)
 	ntchan.Writer_queue = make(chan string)
-	ntchan.REQ_chan = make(chan string)
-	ntchan.REP_chan = make(chan string)
+	ntchan.REQ_chan_in = make(chan string)
+	ntchan.REP_chan_out = make(chan string)
 	ntchan.Reader_processed = 0
 	ntchan.Writer_processed = 0
 
@@ -355,8 +334,8 @@ func ConnNtchan(conn net.Conn, name string) Ntchan {
 	var ntchan Ntchan
 	ntchan.Reader_queue = make(chan string)
 	ntchan.Writer_queue = make(chan string)
-	ntchan.REQ_chan = make(chan string)
-	ntchan.REP_chan = make(chan string)
+	ntchan.REQ_chan_in = make(chan string)
+	ntchan.REP_chan_out = make(chan string)
 	ntchan.Reader_processed = 0
 	ntchan.Writer_processed = 0
 
@@ -371,8 +350,8 @@ func ConnNtchan(conn net.Conn, name string) Ntchan {
 // 	var ntchan Ntchan
 // 	ntchan.Reader_queue = make(chan string)
 // 	ntchan.Writer_queue = make(chan string)
-// 	ntchan.REQ_chan = make(chan string)
-// 	ntchan.REP_chan = make(chan string)
+// 	ntchan.REQ_chan_in = make(chan string)
+// 	ntchan.REP_chan_out = make(chan string)
 
 //
 //

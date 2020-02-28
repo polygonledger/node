@@ -31,9 +31,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"github.com/polygonledger/node/block"
 	"github.com/polygonledger/node/chain"
-	"github.com/polygonledger/node/crypto"
 	"github.com/polygonledger/node/ntwk"
 )
 
@@ -117,9 +115,10 @@ func putMsg(msg_in_chan chan ntwk.Message, msg ntwk.Message) {
 	msg_in_chan <- msg
 }
 
-func HandlePing(msg_out_chan chan ntwk.Message) {
+func HandlePing() ntwk.Message {
 	reply := ntwk.EncodeMsg(ntwk.REP, ntwk.CMD_PONG, ntwk.EMPTY_DATA)
-	msg_out_chan <- reply
+	return reply
+	//msg_out_chan <- reply
 }
 
 func HandleHandshake(msg_out_chan chan ntwk.Message) {
@@ -127,158 +126,161 @@ func HandleHandshake(msg_out_chan chan ntwk.Message) {
 	msg_out_chan <- reply
 }
 
-func HandleReqMsg(msg ntwk.Message, rep_chan chan ntwk.Message) {
+func HandleReqMsg(msg ntwk.Message) ntwk.Message {
 	nlog.Println("Handle ", msg.Command)
 
 	switch msg.Command {
 
 	case ntwk.CMD_PING:
 		nlog.Println("PING PONG")
-		HandlePing(rep_chan)
+		return HandlePing()
 
-	case ntwk.CMD_HANDSHAKE_HELLO:
-		nlog.Println("handshake")
-		HandleHandshake(rep_chan)
+		// case ntwk.CMD_HANDSHAKE_HELLO:
+		// 	nlog.Println("handshake")
+		// 	HandleHandshake(rep_chan)
 
-	case ntwk.CMD_BALANCE:
-		nlog.Println("Handle balance")
+		// case ntwk.CMD_BALANCE:
+		// 	nlog.Println("Handle balance")
 
-		dataBytes := msg.Data
-		nlog.Println("data ", dataBytes)
-		var account block.Account
+		// 	dataBytes := msg.Data
+		// 	nlog.Println("data ", dataBytes)
+		// 	var account block.Account
 
-		if err := json.Unmarshal(dataBytes, &account); err != nil {
-			panic(err)
-		}
-		nlog.Println("get balance for account ", account)
+		// 	if err := json.Unmarshal(dataBytes, &account); err != nil {
+		// 		panic(err)
+		// 	}
+		// 	nlog.Println("get balance for account ", account)
 
-		balance := chain.Accounts[account]
-		//s := strconv.Itoa(balance)
-		data, _ := json.Marshal(balance)
-		reply := ntwk.EncodeMsgBytes(ntwk.REP, ntwk.CMD_BALANCE, data)
-		log.Println(">> ", reply)
+		// 	balance := chain.Accounts[account]
+		// 	//s := strconv.Itoa(balance)
+		// 	data, _ := json.Marshal(balance)
+		// 	reply := ntwk.EncodeMsgBytes(ntwk.REP, ntwk.CMD_BALANCE, data)
+		// 	log.Println(">> ", reply)
 
-		rep_chan <- reply
+		// 	rep_chan <- reply
 
-	case ntwk.CMD_FAUCET:
-		//send money to specified address
+		// case ntwk.CMD_FAUCET:
+		// 	//send money to specified address
 
-		dataBytes := msg.Data
-		var account block.Account
-		if err := json.Unmarshal(dataBytes, &account); err != nil {
-			panic(err)
-		}
-		nlog.Println("faucet for ... ", account)
+		// 	dataBytes := msg.Data
+		// 	var account block.Account
+		// 	if err := json.Unmarshal(dataBytes, &account); err != nil {
+		// 		panic(err)
+		// 	}
+		// 	nlog.Println("faucet for ... ", account)
 
-		randNonce := 0
-		amount := 10
+		// 	randNonce := 0
+		// 	amount := 10
 
-		keypair := chain.GenesisKeys()
-		addr := crypto.Address(crypto.PubKeyToHex(keypair.PubKey))
-		Genesis_Account := block.AccountFromString(addr)
+		// 	keypair := chain.GenesisKeys()
+		// 	addr := crypto.Address(crypto.PubKeyToHex(keypair.PubKey))
+		// 	Genesis_Account := block.AccountFromString(addr)
 
-		tx := block.Tx{Nonce: randNonce, Amount: amount, Sender: Genesis_Account, Receiver: account}
+		// 	tx := block.Tx{Nonce: randNonce, Amount: amount, Sender: Genesis_Account, Receiver: account}
 
-		tx = crypto.SignTxAdd(tx, keypair)
-		reply_string := chain.HandleTx(tx)
-		nlog.Println("resp > ", reply_string)
+		// 	tx = crypto.SignTxAdd(tx, keypair)
+		// 	reply_string := chain.HandleTx(tx)
+		// 	nlog.Println("resp > ", reply_string)
 
-		reply := ntwk.EncodeMsg(ntwk.REP, ntwk.CMD_FAUCET, reply_string)
+		// 	reply := ntwk.EncodeMsg(ntwk.REP, ntwk.CMD_FAUCET, reply_string)
 
-		rep_chan <- reply
+		// 	rep_chan <- reply
 
-	case ntwk.CMD_BLOCKHEIGHT:
+		// case ntwk.CMD_BLOCKHEIGHT:
 
-		data, _ := json.Marshal(len(chain.Blocks))
-		reply := ntwk.EncodeMsgBytes(ntwk.REP, ntwk.CMD_BLOCKHEIGHT, data)
-		log.Println("CMD_BLOCKHEIGHT >> ", reply)
+		// 	data, _ := json.Marshal(len(chain.Blocks))
+		// 	reply := ntwk.EncodeMsgBytes(ntwk.REP, ntwk.CMD_BLOCKHEIGHT, data)
+		// 	log.Println("CMD_BLOCKHEIGHT >> ", reply)
 
-		rep_chan <- reply
+		// 	rep_chan <- reply
 
-	case ntwk.CMD_TX:
-		nlog.Println("Handle tx")
+		// case ntwk.CMD_TX:
+		// 	nlog.Println("Handle tx")
 
-		dataBytes := msg.Data
+		// 	dataBytes := msg.Data
 
-		var tx block.Tx
+		// 	var tx block.Tx
 
-		if err := json.Unmarshal(dataBytes, &tx); err != nil {
-			panic(err)
-		}
-		nlog.Println(">> ", tx)
+		// 	if err := json.Unmarshal(dataBytes, &tx); err != nil {
+		// 		panic(err)
+		// 	}
+		// 	nlog.Println(">> ", tx)
 
-		resp := chain.HandleTx(tx)
-		msg := ntwk.EncodeMsg(ntwk.REP, ntwk.CMD_TX, resp)
-		rep_chan <- msg
+		// 	resp := chain.HandleTx(tx)
+		// 	msg := ntwk.EncodeMsg(ntwk.REP, ntwk.CMD_TX, resp)
+		// 	rep_chan <- msg
 
-	case ntwk.CMD_GETTXPOOL:
-		nlog.Println("get tx pool")
+		// case ntwk.CMD_GETTXPOOL:
+		// 	nlog.Println("get tx pool")
 
-		//TODO
-		data, _ := json.Marshal(chain.Tx_pool)
-		msg := ntwk.EncodeMsg(ntwk.REP, ntwk.CMD_GETTXPOOL, string(data))
-		rep_chan <- msg
+		// 	//TODO
+		// 	data, _ := json.Marshal(chain.Tx_pool)
+		// 	msg := ntwk.EncodeMsg(ntwk.REP, ntwk.CMD_GETTXPOOL, string(data))
+		// 	rep_chan <- msg
 
 		//var Tx_pool []block.Tx
 
-	// case ntwk.CMD_RANDOM_ACCOUNT:
-	// 	nlog.Println("Handle random account")
+		// case ntwk.CMD_RANDOM_ACCOUNT:
+		// 	nlog.Println("Handle random account")
 
-	// 	txJson, _ := json.Marshal(chain.RandomAccount())
+		// 	txJson, _ := json.Marshal(chain.RandomAccount())
 
 	default:
-		nlog.Println("unknown cmd ", msg.Command)
+		// 	nlog.Println("unknown cmd ", msg.Command)
 		resp := "ERROR UNKONWN CMD"
-		//TODO error message
+
 		msg := ntwk.EncodeMsg(ntwk.REP, ntwk.CMD_TX, resp)
-		rep_chan <- msg
+		return msg
+
 	}
 }
 
 //handle messages
-func HandleMsg(req_chan chan ntwk.Message, rep_chan chan ntwk.Message) {
-	req_msg := <-req_chan
-	//fmt.Println("handle msg string ", msgString)
+// func HandleMsg(req_chan chan ntwk.Message, rep_chan chan ntwk.Message) {
+// 	req_msg := <-req_chan
+// 	//fmt.Println("handle msg string ", msgString)
 
-	fmt.Println("msg type ", req_msg.MessageType)
+// 	fmt.Println("msg type ", req_msg.MessageType)
 
-	if req_msg.MessageType == ntwk.REQ {
-		HandleReqMsg(req_msg, rep_chan)
-	} else if req_msg.MessageType == ntwk.REP {
-		nlog.Println("handle reply")
-	}
-}
+// 	if req_msg.MessageType == ntwk.REQ {
+// 		HandleReqMsg(req_msg, rep_chan)
+// 	} else if req_msg.MessageType == ntwk.REP {
+// 		nlog.Println("handle reply")
+// 	}
+// }
 
-func ReplyLoop(ntchan ntwk.Ntchan, req_chan chan ntwk.Message, rep_chan chan ntwk.Message) {
+//old
+// func ReplyLoop(ntchan ntwk.Ntchan, req_chan chan ntwk.Message, rep_chan chan ntwk.Message) {
 
-	//continously read for requests and respond with reply
-	for {
+// 	//continously read for requests and respond with reply
+// 	for {
 
-		// read from network
-		msgString := ntwk.NetworkReadMessage(ntchan)
-		if msgString == ntwk.EMPTY_MSG {
-			//log.Println("empty message, ignore")
-			time.Sleep(500 * time.Millisecond)
-			continue
-		}
+// 		// read from network
+// 		msgString := ntwk.NetworkReadMessage(ntchan)
+// 		if msgString == ntwk.EMPTY_MSG {
+// 			//log.Println("empty message, ignore")
+// 			time.Sleep(500 * time.Millisecond)
+// 			continue
+// 		}
 
-		msg := ntwk.ParseMessage(msgString)
-		nlog.Print("Receive message over network ", msgString)
+// 		msg := ntwk.ParseMessage(msgString)
+// 		nlog.Print("Receive message over network ", msgString)
 
-		//put in the channel
-		go putMsg(req_chan, msg)
+// 		//put in the channel
+// 		go putMsg(req_chan, msg)
 
-		//handle in channel and put reply in msg_out channel
-		go HandleMsg(req_chan, rep_chan)
+// 		//handle in channel and put reply in msg_out channel
+// 		go HandleMsg(req_chan, rep_chan)
 
-		//take from reply channel and send over network
-		reply := <-rep_chan
-		fmt.Println("msg out ", reply)
-		ntwk.ReplyNetwork(ntchan, reply)
+// 		//take from reply channel and send over network
+// 		reply := <-rep_chan
+// 		fmt.Println("msg out ", reply)
+// 		ntwk.ReplyNetwork(ntchan, reply)
 
-	}
-}
+// 	}
+// }
 
+//old
 func ReqLoop(ntchan ntwk.Ntchan, out_req_chan chan ntwk.Message, out_rep_chan chan ntwk.Message) {
 
 	//TODO
@@ -288,6 +290,7 @@ func ReqLoop(ntchan ntwk.Ntchan, out_req_chan chan ntwk.Message, out_rep_chan ch
 	}
 }
 
+//old
 func PubLoop(ntchan ntwk.Ntchan, Pub_chan chan ntwk.Message) {
 	for {
 		pubmsg := <-Pub_chan
@@ -304,14 +307,29 @@ func pubhearbeat(ntchan ntwk.Ntchan) {
 	heartbeat_time := 1000 * time.Millisecond
 
 	for {
-		//msg := "test" + string(ntwk.DELIM)
 		msg := ntwk.EncodeHeartbeat("peer1")
 		ntchan.Writer_queue <- msg
 		time.Sleep(heartbeat_time)
-
-		//msg := <-ntchan.Writer_queue
-		//log.Println("XX got msg to write", msg)
 	}
+
+}
+
+//process requests
+func Reqprocessor(ntchan ntwk.Ntchan) {
+	msg_string := <-ntchan.REQ_chan_in
+	//logmsgd("REQ processor ", x)
+
+	//reply_string := "reply"
+	//reply := ntwk.EncodeMsg(ntwk.REP, ntwk.CMD_PONG, ntwk.EMPTY_DATA)
+	msg := ntwk.ParseMessage(msg_string)
+	reply := HandleReqMsg(msg)
+
+	reply_string := ntwk.MsgString(reply)
+
+	ntchan.Writer_queue <- reply_string
+}
+
+func Repprocessor(ntchan ntwk.Ntchan) {
 
 }
 
@@ -324,6 +342,8 @@ func channelPeerNetwork(conn net.Conn, peer ntwk.Peer) {
 	//main reader and writer setup
 	go ntwk.ReaderWriterConnector(ntchan)
 
+	go Reqprocessor(ntchan)
+
 	go pubhearbeat(ntchan)
 
 	//Request handler
@@ -333,19 +353,12 @@ func channelPeerNetwork(conn net.Conn, peer ntwk.Peer) {
 	// 	log.Println(">>> request ", msg)
 	// }()
 
-	//TODO hearbeat function
-	//heartbeat
-
 	//could add max listen
 	//timeoutDuration := 5 * time.Second
 	//conn.SetReadDeadline(time.Now().Add(timeoutDuration))
 
-	//TODO
-	//! handshake
 	//when close?
 	//defer conn.Close()
-
-	//REQUEST<>REPLY protocol only so far
 
 	//go ReplyLoop(ntchan, peer.Req_chan, peer.Rep_chan)
 
@@ -398,7 +411,7 @@ func connect_peers(node_port int, PeerAddresses []string) {
 		out_rep := make(chan ntwk.Message)
 		ReqLoop(ntchan, out_req, out_rep)
 		//log.Println("ping ", peer)
-		//MakePing(req_chan, rep_chan)
+		//MakePingOld(req_chan, rep_chan)
 
 	}
 }

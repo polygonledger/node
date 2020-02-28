@@ -1,20 +1,14 @@
 package main
 
-import (
-	"testing"
+// func BenchmarkBasic(b *testing.B) {
 
-	protocol "github.com/polygonledger/node/ntwk"
-)
+// 	for i := 0; i < b.N; i++ {
 
-func BenchmarkBasic(b *testing.B) {
+// 		msg_out_chan := make(chan protocol.Message)
 
-	for i := 0; i < b.N; i++ {
+// 		go HandlePing(msg_out_chan)
+// 		//x := <-msg_out_chan
+// 		//msgString := protocol.MsgString(msg)
 
-		msg_out_chan := make(chan protocol.Message)
-
-		go HandlePing(msg_out_chan)
-		//x := <-msg_out_chan
-		//msgString := protocol.MsgString(msg)
-
-	}
-}
+// 	}
+// }

@@ -9,6 +9,7 @@ type Peer struct {
 	Address  string `json:"Address"`
 	NodePort int
 
+	//TODO! remove
 	Req_chan     chan Message
 	Rep_chan     chan Message
 	Out_req_chan chan Message
@@ -36,7 +37,7 @@ func CreatePeer(ipAddress string, nodeport int) Peer {
 	return p
 }
 
-func MakePing(peer Peer) bool {
+func MakePingOld(peer Peer) bool {
 	emptydata := ""
 	req_msg := EncodeMsgString(REQ, CMD_PING, emptydata)
 	resp := RequestReplyChan(req_msg, peer.Req_chan, peer.Rep_chan)
