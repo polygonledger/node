@@ -248,22 +248,31 @@ func pubhearbeat(ntchan ntwk.Ntchan) {
 
 //process requests
 func Reqprocessor(ntchan ntwk.Ntchan) {
-	msg_string := <-ntchan.REQ_in
-	//logmsgd("REQ processor ", x)
+	for {
+		log.Println("Reqprocessor ")
+		msg_string := <-ntchan.REQ_in
+		//logmsgd("REQ processor ", x)
 
-	//reply_string := "reply"
-	//reply := ntwk.EncodeMsg(ntwk.REP, ntwk.CMD_PONG, ntwk.EMPTY_DATA)
-	msg := ntwk.ParseMessage(msg_string)
-	reply := HandleReqMsg(msg)
+		//reply_string := "reply"
+		//reply := ntwk.EncodeMsg(ntwk.REP, ntwk.CMD_PONG, ntwk.EMPTY_DATA)
+		msg := ntwk.ParseMessage(msg_string)
+		reply := HandleReqMsg(msg)
 
-	reply_string := ntwk.MsgString(reply)
+		reply_string := ntwk.MsgString(reply)
+		log.Println("forward request to writer")
+		//ntchan.Writer_queue <- reply_string
+		ntchan.REP_out <- reply_string
 
-	ntchan.Writer_queue <- reply_string
+	}
 }
 
-func Repprocessor(ntchan ntwk.Ntchan) {
-
-}
+// func Repoutprocessor(ntchan ntwk.Ntchan) {
+// 	for {
+// 		log.Println("handler ")
+// 		msg := <-ntchan.REP_out
+// 		log.Println(">>> REP_out ", msg)
+// 	}
+// }
 
 //setup the network of channels
 //the main junction for managing message flow between types of messages
@@ -276,14 +285,14 @@ func channelPeerNetwork(conn net.Conn, peer ntwk.Peer) {
 
 	go Reqprocessor(ntchan)
 
-	go pubhearbeat(ntchan)
+	//publishers
+	//go pubhearbeat(ntchan)
 
-	//Request handler
-	// go func() {
-	// 	log.Println("handler ")
-	// 	msg := <-ntchan.Req_chan
-	// 	log.Println(">>> request ", msg)
-	// }()
+	//TODO! handle disconnects
+	//when hearbeat fails top all workers related to the peer
+
+	//go Repoutprocessor(ntchan)
+	go ntwk.Writeprocessor(ntchan, 200*time.Millisecond)
 
 	//could add max listen
 	//timeoutDuration := 5 * time.Second

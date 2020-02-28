@@ -369,14 +369,29 @@ func runPeermode(option string, config Configuration) {
 
 }
 
+//process replies
+func ReplyProcessor(ntchan *ntwk.Ntchan, d time.Duration) {
+	log.Println("init ReplyProcessor ")
+	for {
+		//msg := <-ntchan.Reader_queue
+
+		//reply_string := MsgString(reply)
+		//ntchan.Writer_queue <- reply_string
+
+	}
+}
+
 func requestreply(ntchan ntwk.Ntchan, req_msg string) {
 
 	//TODO! use readloop and REQ/REP chans
 
 	log.Println("put writer q", req_msg)
 	//REQUEST
+	//TODO! on req out
 	ntchan.Writer_queue <- req_msg
 	//REPLY
+	log.Println("response in ....")
+	//TODO! read from REP_in
 	resp_string := <-ntchan.Reader_queue
 	//resp_string := <-ntchan.Req_chan_in
 
@@ -393,8 +408,6 @@ func ping(ntchan ntwk.Ntchan) {
 	req_msg := ntwk.EncodeMsgString(ntwk.REQ, ntwk.CMD_PING, "")
 
 	requestreply(ntchan, req_msg)
-
-	time.Sleep(1 * time.Second)
 
 }
 
@@ -418,14 +431,20 @@ func runSingleMode(option string, config Configuration) {
 		log.Println("ping")
 		//ntwk.MakePingOld(mainPeer)
 		ping(ntchan)
+		time.Sleep(1 * time.Second)
 
 	case "heartbeat":
 		log.Println("heartbeat")
-		success := ntwk.MakeHandshake(mainPeer)
-		if success {
-			log.Println("start heartbeat")
-			ntwk.Hearbeat(mainPeer)
+		for {
+			ping(ntchan)
+			time.Sleep(1 * time.Second)
 		}
+
+		// success := ntwk.MakeHandshake(mainPeer)
+		// if success {
+		// 	log.Println("start heartbeat")
+		// 	ntwk.Hearbeat(mainPeer)
+		// }
 
 	case "getbalance":
 		log.Println("getbalance")

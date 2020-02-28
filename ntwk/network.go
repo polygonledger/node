@@ -60,7 +60,7 @@ type Ntchan struct {
 
 // --- NTL layer ---
 
-// setup of all read and write processes for a single connection
+// main setup of all read and write processes for a single connection
 func ReaderWriterConnector(ntchan Ntchan) {
 	//func (ntchan Ntchan) ReaderWriterConnector() {
 
@@ -103,19 +103,6 @@ func logmsg(name string, src string, msg string, total int) {
 	log.Printf("%s [%s] ### %v  %d", name, src, msg, total)
 }
 
-//old
-func Reqprocessor1(ntchan Ntchan) {
-	x := <-ntchan.REQ_in
-	//x := <-xchan
-	logmsgd("REQ processor ", x)
-
-	//reply_string := "reply"
-	reply := EncodeMsg(REP, CMD_PONG, EMPTY_DATA)
-	reply_string := MsgString(reply)
-
-	ntchan.Writer_queue <- reply_string
-}
-
 //continous network reads with sleep
 func ReadLoop(ntchan Ntchan, d time.Duration) {
 	msg_reader_total := 0
@@ -123,13 +110,16 @@ func ReadLoop(ntchan Ntchan, d time.Duration) {
 		//read from network and put in channel
 		msg := NetworkReadMessage(ntchan)
 		//handle cases
+		//currently can be empty or len, shoudl fix one style
 		if len(msg) > 0 && msg != EMPTY_MSG {
 			logmsg(ntchan.Name, "ReadLoop", msg, msg_reader_total)
+			//put in the queue to process
 			ntchan.Reader_queue <- msg
 		}
 
 		time.Sleep(d)
-		msg_reader_total++
+		//fix: need ntchan to be a pointer
+		//msg_reader_total++
 	}
 }
 
@@ -163,10 +153,13 @@ func ReplyProcessor(ntchan *Ntchan, d time.Duration) {
 //read from reader queue and process
 func ReadProcessor(ntchan Ntchan, d time.Duration) {
 
+	//loop and basic fanout based on message type
+	//can optimize for performance here based on channel select
 	for {
 		msgString := <-ntchan.Reader_queue
 		ntchan.Reader_processed++
 		//log.Println("got msg on reader ", msg)
+
 		if len(msgString) > 0 {
 			logmsg(ntchan.Name, "ReadProcessor", msgString, ntchan.Reader_processed)
 			//TODO try catch
@@ -187,6 +180,7 @@ func ReadProcessor(ntchan Ntchan, d time.Duration) {
 			} else if msg.MessageType == REP {
 				//TODO!
 				//msg_string := MsgString(msg)
+				//ntchan.REP_in
 
 			}
 
@@ -207,7 +201,11 @@ func WriteLoop(ntchan Ntchan, d time.Duration) {
 	msg_writer_total := 0
 	for {
 		//log.Println("loop writer")
-		//TODO! bug both reading
+		//TODO!
+		//
+
+		//msg_string := <-ntchan.REQ_out
+
 		//take from channel and write
 		msg := <-ntchan.Writer_queue
 		logmsg(ntchan.Name, "WriteLoop", msg, msg_writer_total)
@@ -216,6 +214,24 @@ func WriteLoop(ntchan Ntchan, d time.Duration) {
 
 		time.Sleep(d)
 		msg_writer_total++
+	}
+}
+
+func Writeprocessor(ntchan Ntchan, d time.Duration) {
+	//TODO!
+	//put on Writer_queue
+	for {
+		log.Println("Writeprocessor ")
+		select {
+		case msg := <-ntchan.REP_out:
+			//read from REQ_out
+			log.Println("got REP_out", msg)
+			ntchan.Writer_queue <- msg
+
+		case msg := <-ntchan.REQ_out:
+			log.Println("got REQ_out ", msg)
+			ntchan.Writer_queue <- msg
+		}
 	}
 }
 
@@ -240,7 +256,7 @@ func WriteProducer(ntchan Ntchan, d time.Duration) {
 	}
 }
 
-// --- underlying stack calls ---
+// --- underlying network stack calls ---
 
 //read a message from network
 func NetworkRead(nt Ntchan) string {
@@ -373,4 +389,17 @@ func OpenNtchan(addr string) Ntchan {
 	conn := OpenConn(addr)
 	name := addr
 	return ConnNtchan(conn, name)
+}
+
+//old
+func Reqprocessor1(ntchan Ntchan) {
+	x := <-ntchan.REQ_in
+	//x := <-xchan
+	logmsgd("REQ processor ", x)
+
+	//reply_string := "reply"
+	reply := EncodeMsg(REP, CMD_PONG, EMPTY_DATA)
+	reply_string := MsgString(reply)
+
+	ntchan.Writer_queue <- reply_string
 }
