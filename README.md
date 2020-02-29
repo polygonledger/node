@@ -18,9 +18,6 @@ with browser go to http://localhost:8080
 
 ## client functions
 
-client:
-```cd client && go run client.go -option=randomtx```
-
 create keys
 
 ```cd client && go run client.go -option=createkeys```
@@ -28,6 +25,7 @@ create keys
  verify signature
  
  ```go run client.go -option=verify```
+
 
 ## testing
 

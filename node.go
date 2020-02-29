@@ -76,8 +76,6 @@ func ChannelPeerNetwork(conn net.Conn, peer ntwk.Peer) {
 
 	go Reqoutprocessor(ntchan)
 
-	//go ntwk.ReadLoop(ntchan, 100*time.Millisecond)
-
 	//publishers
 	//go pubhearbeat(ntchan)
 
@@ -103,6 +101,28 @@ func ChannelPeerNetwork(conn net.Conn, peer ntwk.Peer) {
 
 }
 
+//simplified network for testing
+func SimpleNetwork(conn net.Conn, peer ntwk.Peer) {
+
+	log.Println("init channelPeerNetwork")
+
+	ntchan := ntwk.ConnNtchan(conn, peer.Address)
+
+	read_loop_time := 900 * time.Millisecond
+	go func() {
+		for {
+			//read from network and put in channel
+			msg := ntwk.NetworkReadMessage(ntchan)
+			log.Println("ntwk read => " + msg)
+			//ntchan.Reader_queue <- msg
+			time.Sleep(read_loop_time)
+			//fix: need ntchan to be a pointer
+			//msg_reader_total++
+		}
+	}()
+
+}
+
 //inbound
 func setupPeer(addr string, nodeport int, conn net.Conn) {
 	peer := addpeer(addr, nodeport)
@@ -111,6 +131,7 @@ func setupPeer(addr string, nodeport int, conn net.Conn) {
 	//TODO peers chan
 	//TODO handshake
 	go ChannelPeerNetwork(conn, peer)
+	//go SimpleNetwork(conn, peer)
 
 }
 
@@ -135,7 +156,7 @@ func ListenAll(node_port int) error {
 	//https://gist.github.com/elico/3eecebd87d4bc714c94066a1783d4c9c
 
 	for {
-		nlog.Println("Accept a connection request")
+		//nlog.Println("Accept a connection request ")
 
 		//TODO peer handshake
 		//TODO client handshake

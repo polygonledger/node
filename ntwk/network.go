@@ -89,7 +89,7 @@ func ReaderWriterConnector(ntchan Ntchan) {
 	//write to network whatever is the reader queue
 	go WriteLoop(ntchan, write_loop_time)
 
-	//go ntwk.Writeprocessor(ntchan, 200*time.Millisecond)
+	go Writeprocessor(ntchan, 200*time.Millisecond)
 
 	//REQ processor
 	//go Reqprocessor1(ntchan)
@@ -297,20 +297,23 @@ func NetworkRead(nt Ntchan) string {
 //given a sream read from it
 //TODO proper error handling
 func NetworkReadMessage(nt Ntchan) string {
-	vlog("NetworkReadMessage")
+	//vlog("NetworkReadMessage")
 	msg, err := nt.Rw.ReadString(DELIM)
-	vlog("msg > " + msg)
+	if len(msg) == 0 {
+		//log.Println("empty message")
+		return EMPTY_MSG
+	} else {
+		vlog("msg > " + msg)
+	}
 	if err != nil {
 		//issue
 		//special case is empty message if client disconnects?
-		if len(msg) == 0 {
-			//log.Println("empty message")
-			return EMPTY_MSG
-		} else {
-			log.Println("Failed ", err)
-			//log.Println(err.)
-			return ERROR_READ
-		}
+
+		// else {
+		// 	log.Println("Failed ", err)
+		// 	//log.Println(err.)
+		// 	return ERROR_READ
+		// }
 	} else {
 		log.Println(err)
 	}
@@ -389,7 +392,6 @@ func ConnNtchanStub(name string) Ntchan {
 	ntchan.Reader_processed = 0
 	ntchan.Writer_processed = 0
 
-	//return Ntchan{Rw: rw, Name: name, Reader_queue: make(chan string), Writer_queue: make(chan string)}
 	return ntchan
 }
 
@@ -408,21 +410,8 @@ func ConnNtchan(conn net.Conn, name string) Ntchan {
 	rw := bufio.NewReadWriter(bufio.NewReader(conn), bufio.NewWriter(conn))
 	ntchan.Rw = rw
 
-	//return Ntchan{Rw: rw, Name: name, Reader_queue: make(chan string), Writer_queue: make(chan string)}
 	return ntchan
 }
-
-// func CreateNtchan() Ntchan {
-// 	var ntchan Ntchan
-// 	ntchan.Reader_queue = make(chan string)
-// 	ntchan.Writer_queue = make(chan string)
-// 	ntchan.REQ_in = make(chan string)
-// 	ntchan.REP_out = make(chan string)
-
-//
-//
-// 	return ntchan
-// }
 
 func OpenNtchan(addr string) Ntchan {
 	conn := OpenConn(addr)
