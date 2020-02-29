@@ -432,8 +432,17 @@ func runSingleMode(option string, config Configuration) {
 	//setupPeerClient(mainPeer)
 
 	conn := ntwk.OpenConn(mainPeerAddress + ":" + strconv.Itoa(config.NodePort))
+	//ntwk.ChannelPeerNetwork(conn, mainPeer)
 	ntchan := ntwk.ConnNtchan(conn, mainPeerAddress)
-	ntwk.ReaderWriterConnector(ntchan)
+
+	go ntwk.ReaderWriterConnector(ntchan)
+
+	//TODO need to formalize this
+	//go Reqprocessor(ntchan)
+
+	//go Reqoutprocessor(ntchan)
+
+	//ntwk.ReaderWriterConnector(ntchan)
 	//go ReplyInProcessor(ntchan)
 
 	switch option {

@@ -30,7 +30,6 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/gin-gonic/gin"
-
 	"github.com/polygonledger/node/chain"
 	"github.com/polygonledger/node/ntwk"
 )
@@ -61,6 +60,49 @@ func addpeer(addr string, nodeport int) ntwk.Peer {
 	return p
 }
 
+//setup the network of channels
+//the main junction for managing message flow between types of messages
+func ChannelPeerNetwork(conn net.Conn, peer ntwk.Peer) {
+
+	log.Println("init channelPeerNetwork")
+
+	ntchan := ntwk.ConnNtchan(conn, peer.Address)
+
+	//main reader and writer setup
+	go ntwk.ReaderWriterConnector(ntchan)
+
+	//TODO need to formalize this
+	go Reqprocessor(ntchan)
+
+	go Reqoutprocessor(ntchan)
+
+	//go ntwk.ReadLoop(ntchan, 100*time.Millisecond)
+
+	//publishers
+	//go pubhearbeat(ntchan)
+
+	//TODO! handle disconnects
+	//when hearbeat fails top all workers related to the peer
+
+	//could add max listen
+	//timeoutDuration := 5 * time.Second
+	//conn.SetReadDeadline(time.Now().Add(timeoutDuration))
+
+	//when close?
+	//defer conn.Close()
+
+	//go ReplyLoop(ntchan, peer.Req_chan, peer.Rep_chan)
+
+	//----------------
+	//TODO pubsub
+	//go publishLoop(msg_in_chan, msg_out_chan)
+
+	// go ntwk.Subtime(tchan, "peer1")
+
+	// go ntwk.Subout(tchan, "peer1", peer.Pub_chan)
+
+}
+
 //inbound
 func setupPeer(addr string, nodeport int, conn net.Conn) {
 	peer := addpeer(addr, nodeport)
@@ -68,7 +110,8 @@ func setupPeer(addr string, nodeport int, conn net.Conn) {
 	nlog.Println("setup channels for incoming requests")
 	//TODO peers chan
 	//TODO handshake
-	go channelPeerNetwork(conn, peer)
+	go ChannelPeerNetwork(conn, peer)
+
 }
 
 // start listening on tcp and handle connection through channels
@@ -126,6 +169,129 @@ func pubhearbeat(ntchan ntwk.Ntchan) {
 
 }
 
+//--- request handler ---
+
+func HandlePing() ntwk.Message {
+	reply := ntwk.EncodeMsg(ntwk.REP, ntwk.CMD_PONG, ntwk.EMPTY_DATA)
+	return reply
+	//msg_out_chan <- reply
+}
+
+func HandleHandshake(msg_out_chan chan ntwk.Message) {
+	reply := ntwk.EncodeMsg(ntwk.REP, ntwk.CMD_HANDSHAKE_STABLE, ntwk.EMPTY_DATA)
+	msg_out_chan <- reply
+}
+
+func HandleReqMsg(msg ntwk.Message) ntwk.Message {
+	log.Println("Handle ", msg.Command)
+
+	//can use handler instead i.e. map[string] => func
+	switch msg.Command {
+
+	case ntwk.CMD_PING:
+		log.Println("PING PONG")
+		return HandlePing()
+
+		// case ntwk.CMD_HANDSHAKE_HELLO:
+		// 	nlog.Println("handshake")
+		// 	HandleHandshake(rep_chan)
+
+		// case ntwk.CMD_BALANCE:
+		// 	nlog.Println("Handle balance")
+
+		// 	dataBytes := msg.Data
+		// 	nlog.Println("data ", dataBytes)
+		// 	var account block.Account
+
+		// 	if err := json.Unmarshal(dataBytes, &account); err != nil {
+		// 		panic(err)
+		// 	}
+		// 	nlog.Println("get balance for account ", account)
+
+		// 	balance := chain.Accounts[account]
+		// 	//s := strconv.Itoa(balance)
+		// 	data, _ := json.Marshal(balance)
+		// 	reply := ntwk.EncodeMsgBytes(ntwk.REP, ntwk.CMD_BALANCE, data)
+		// 	log.Println(">> ", reply)
+
+		// 	rep_chan <- reply
+
+		// case ntwk.CMD_FAUCET:
+		// 	//send money to specified address
+
+		// 	dataBytes := msg.Data
+		// 	var account block.Account
+		// 	if err := json.Unmarshal(dataBytes, &account); err != nil {
+		// 		panic(err)
+		// 	}
+		// 	nlog.Println("faucet for ... ", account)
+
+		// 	randNonce := 0
+		// 	amount := 10
+
+		// 	keypair := chain.GenesisKeys()
+		// 	addr := crypto.Address(crypto.PubKeyToHex(keypair.PubKey))
+		// 	Genesis_Account := block.AccountFromString(addr)
+
+		// 	tx := block.Tx{Nonce: randNonce, Amount: amount, Sender: Genesis_Account, Receiver: account}
+
+		// 	tx = crypto.SignTxAdd(tx, keypair)
+		// 	reply_string := chain.HandleTx(tx)
+		// 	nlog.Println("resp > ", reply_string)
+
+		// 	reply := ntwk.EncodeMsg(ntwk.REP, ntwk.CMD_FAUCET, reply_string)
+
+		// 	rep_chan <- reply
+
+		// case ntwk.CMD_BLOCKHEIGHT:
+
+		// 	data, _ := json.Marshal(len(chain.Blocks))
+		// 	reply := ntwk.EncodeMsgBytes(ntwk.REP, ntwk.CMD_BLOCKHEIGHT, data)
+		// 	log.Println("CMD_BLOCKHEIGHT >> ", reply)
+
+		// 	rep_chan <- reply
+
+		// case ntwk.CMD_TX:
+		// 	nlog.Println("Handle tx")
+
+		// 	dataBytes := msg.Data
+
+		// 	var tx block.Tx
+
+		// 	if err := json.Unmarshal(dataBytes, &tx); err != nil {
+		// 		panic(err)
+		// 	}
+		// 	nlog.Println(">> ", tx)
+
+		// 	resp := chain.HandleTx(tx)
+		// 	msg := ntwk.EncodeMsg(ntwk.REP, ntwk.CMD_TX, resp)
+		// 	rep_chan <- msg
+
+		// case ntwk.CMD_GETTXPOOL:
+		// 	nlog.Println("get tx pool")
+
+		// 	//TODO
+		// 	data, _ := json.Marshal(chain.Tx_pool)
+		// 	msg := ntwk.EncodeMsg(ntwk.REP, ntwk.CMD_GETTXPOOL, string(data))
+		// 	rep_chan <- msg
+
+		//var Tx_pool []block.Tx
+
+		// case ntwk.CMD_RANDOM_ACCOUNT:
+		// 	nlog.Println("Handle random account")
+
+		// 	txJson, _ := json.Marshal(chain.RandomAccount())
+
+	default:
+		// 	nlog.Println("unknown cmd ", msg.Command)
+		resp := "ERROR UNKONWN CMD"
+
+		msg := ntwk.EncodeMsg(ntwk.REP, ntwk.CMD_TX, resp)
+		return msg
+
+	}
+}
+
 func HandleReqMsgString(msg_string string) string {
 	msg := ntwk.ParseMessage(msg_string)
 	reply := HandleReqMsg(msg)
@@ -136,7 +302,7 @@ func HandleReqMsgString(msg_string string) string {
 //process requests
 func Reqprocessor(ntchan ntwk.Ntchan) {
 	for {
-		log.Println("Reqprocessor")
+		log.Println("init Reqprocessor")
 		msg_string := <-ntchan.REQ_in
 
 		//reply_string := "reply"
@@ -149,6 +315,21 @@ func Reqprocessor(ntchan ntwk.Ntchan) {
 	}
 }
 
+func Reqoutprocessor(ntchan ntwk.Ntchan) {
+	log.Println("init Reqoutprocessor")
+	for {
+		log.Println("... Reqoutprocessor")
+		msg_string := <-ntchan.REQ_out
+
+		//reply_string := "reply"
+		//reply := ntwk.EncodeMsg(ntwk.REP, ntwk.CMD_PONG, ntwk.EMPTY_DATA)
+
+		log.Println("forward request to writer")
+
+		ntchan.Writer_queue <- msg_string
+	}
+}
+
 // func Repoutprocessor(ntchan ntwk.Ntchan) {
 // 	for {
 // 		log.Println("handler ")
@@ -157,53 +338,14 @@ func Reqprocessor(ntchan ntwk.Ntchan) {
 // 	}
 // }
 
-//setup the network of channels
-//the main junction for managing message flow between types of messages
-func channelPeerNetwork(conn net.Conn, peer ntwk.Peer) {
-
-	ntchan := ntwk.ConnNtchan(conn, peer.Address)
-
-	//main reader and writer setup
-	go ntwk.ReaderWriterConnector(ntchan)
-
-	go Reqprocessor(ntchan)
-
-	//publishers
-	//go pubhearbeat(ntchan)
-
-	//TODO! handle disconnects
-	//when hearbeat fails top all workers related to the peer
-
-	//go Repoutprocessor(ntchan)
-	go ntwk.Writeprocessor(ntchan, 200*time.Millisecond)
-
-	//could add max listen
-	//timeoutDuration := 5 * time.Second
-	//conn.SetReadDeadline(time.Now().Add(timeoutDuration))
-
-	//when close?
-	//defer conn.Close()
-
-	//go ReplyLoop(ntchan, peer.Req_chan, peer.Rep_chan)
-
-	//----------------
-	//TODO pubsub
-	//go publishLoop(msg_in_chan, msg_out_chan)
-
-	// go ntwk.Subtime(tchan, "peer1")
-
-	// go ntwk.Subout(tchan, "peer1", peer.Pub_chan)
-
-}
-
 //channel network optimised for client
-func channelPeerNetworkClient(conn net.Conn, peer ntwk.Peer) {
+// func channelPeerNetworkClient(conn net.Conn, peer ntwk.Peer) {
 
-	ntchan := ntwk.ConnNtchan(conn, peer.Address)
+// 	ntchan := ntwk.ConnNtchan(conn, peer.Address)
 
-	ntwk.ReaderWriterConnector(ntchan)
+// 	ntwk.ReaderWriterConnector(ntchan)
 
-}
+// }
 
 //basic threading helper
 func doEvery(d time.Duration, f func(time.Time)) {

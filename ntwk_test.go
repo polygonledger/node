@@ -272,13 +272,13 @@ func TestReaderPing(t *testing.T) {
 
 }
 
-func TestAllPingPoing(t *testing.T) {
+//test entire loop from reader to writer
+func TestAllPingPoingIn(t *testing.T) {
 
 	ntchan := ntwk.ConnNtchanStub("")
 
 	go ntwk.ReadProcessor(ntchan, 1*time.Millisecond)
 	go ntwk.Writeprocessor(ntchan, 1*time.Millisecond)
-
 	go pinghandler(ntchan)
 
 	ntchan.Reader_queue <- ntwk.EncodeMsgString(ntwk.REQ, ntwk.CMD_PING, ntwk.EMPTY_DATA)
@@ -300,30 +300,51 @@ func TestAllPingPoing(t *testing.T) {
 
 }
 
-//
-// go ntwk.RequestProcessor(ntchan, 1*time.Second)
-// go ntwk.ReplyProcessor(&ntchan, 1*time.Second)
-// read_time_chan := 300 * time.Millisecond
-// go ntwk.ReadProcessor(ntchan, read_time_chan)
-// start := time.Now()
+//connect to ntchans to each other
+//this simulates a real network connection
+func ConnectWrite(ntchan1 ntwk.Ntchan, ntchan2 ntwk.Ntchan) {
 
+	for {
+		xout := <-ntchan1.Writer_queue
+		ntchan2.Reader_queue <- xout
+
+		yout := <-ntchan2.Writer_queue
+		ntchan1.Reader_queue <- yout
+
+	}
+}
+
+func TestAllPingPongDuplex(t *testing.T) {
+
+	ntchan1 := ntwk.ConnNtchanStub("")
+	ntchan2 := ntwk.ConnNtchanStub("")
+
+	go ntwk.ReadProcessor(ntchan1, 1*time.Millisecond)
+	go ntwk.Writeprocessor(ntchan1, 1*time.Millisecond)
+	go ConnectWrite(ntchan1, ntchan2)
+
+	ntchan1.Writer_queue <- "test"
+	time.Sleep(300 * time.Millisecond)
+
+	if !isEmpty(ntchan1.Writer_queue, 300*time.Millisecond) {
+		t.Error("writer not empty")
+	}
+
+	x := <-ntchan2.Reader_queue
+	if x != "test" {
+		t.Error("did not connect")
+	}
+	//go pinghandler(ntchan)
+
+}
+
+// start := time.Now()
 // maxt := 300 * time.Millisecond
 // tt := time.Now()
 // elapsed := tt.Sub(start)
-
 // for ok := true; ok; ok = elapsed < maxt {
 // 	t2 := time.Now()
 // 	elapsed = t2.Sub(start)
 // 	time.Sleep(10 * time.Millisecond)
 // }
 // x := <-ntchan.Reader_queue
-
-// if x != "REQ#PING#EMPTY|" {
-// 	t.Error("TestRequest reader queue ", x)
-// }
-
-// resp_to_write := <-ntchan.Writer_queue
-
-// if resp_to_write != "REP#PONG#EMPTY|" {
-// 	t.Error("wrong reply ", resp_to_write)
-// }

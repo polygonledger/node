@@ -42,7 +42,8 @@ import (
 
 //network channel, abstraction of a network connection
 type Ntchan struct {
-	Rw   *bufio.ReadWriter
+	Rw *bufio.ReadWriter
+	//Conn *net.conn
 	Name string
 	//TODO message type
 	Reader_queue chan string
@@ -60,12 +61,17 @@ type Ntchan struct {
 
 // --- NTL layer ---
 
+func vlog(s string) {
+	log.Println(s)
+}
+
 // main setup of all read and write processes for a single connection
 func ReaderWriterConnector(ntchan Ntchan) {
+	vlog("ReaderWriterConnector")
 	//func (ntchan Ntchan) ReaderWriterConnector() {
 
 	//timers
-	read_loop_time := 300 * time.Millisecond
+	read_loop_time := 800 * time.Millisecond
 	read_time_chan := 300 * time.Millisecond
 	write_loop_time := 300 * time.Millisecond
 	//write_processor_time := 300 * time.Millisecond
@@ -82,6 +88,8 @@ func ReaderWriterConnector(ntchan Ntchan) {
 	//init writer
 	//write to network whatever is the reader queue
 	go WriteLoop(ntchan, write_loop_time)
+
+	//go ntwk.Writeprocessor(ntchan, 200*time.Millisecond)
 
 	//REQ processor
 	//go Reqprocessor1(ntchan)
@@ -109,10 +117,13 @@ func logmsg(name string, src string, msg string, total int) {
 
 //continous network reads with sleep
 func ReadLoop(ntchan Ntchan, d time.Duration) {
+	vlog("init ReadLoop")
 	msg_reader_total := 0
 	for {
 		//read from network and put in channel
+		vlog("iter ReadLoop")
 		msg := NetworkReadMessage(ntchan)
+		vlog("ntwk read => " + msg)
 		//handle cases
 		//currently can be empty or len, shoudl fix one style
 		if len(msg) > 0 && msg != EMPTY_MSG {
@@ -144,7 +155,7 @@ func ReadLoop(ntchan Ntchan, d time.Duration) {
 
 //process replies
 func ReplyProcessor(ntchan *Ntchan, d time.Duration) {
-	log.Println("init ReplyProcessor ")
+	vlog("init ReplyProcessor ")
 	for {
 		reply_string := <-ntchan.REP_out
 		//log.Println("reply ", reply)
@@ -156,6 +167,8 @@ func ReplyProcessor(ntchan *Ntchan, d time.Duration) {
 
 //read from reader queue and process by forwarding to right channel
 func ReadProcessor(ntchan Ntchan, d time.Duration) {
+
+	vlog("init ReadProcessor")
 
 	//loop and basic fanout based on message type
 	//can optimize for performance here based on channel select
@@ -225,10 +238,13 @@ func WriteLoop(ntchan Ntchan, d time.Duration) {
 }
 
 func Writeprocessor(ntchan Ntchan, d time.Duration) {
+
+	vlog("init Writeprocessor")
+
 	//TODO!
 	//put on Writer_queue
 	for {
-		log.Println("Writeprocessor")
+		vlog("loop Writeprocessor")
 
 		//selectively read on write outputs
 		select {
@@ -281,8 +297,9 @@ func NetworkRead(nt Ntchan) string {
 //given a sream read from it
 //TODO proper error handling
 func NetworkReadMessage(nt Ntchan) string {
+	vlog("NetworkReadMessage")
 	msg, err := nt.Rw.ReadString(DELIM)
-	//log.Println("msg > ", msg)
+	vlog("msg > " + msg)
 	if err != nil {
 		//issue
 		//special case is empty message if client disconnects?
@@ -294,12 +311,14 @@ func NetworkReadMessage(nt Ntchan) string {
 			//log.Println(err.)
 			return ERROR_READ
 		}
+	} else {
+		log.Println(err)
 	}
 	return msg
 }
 
 func NetworkWrite(nt Ntchan, message string) error {
-	log.Println("#network# -> write ", message)
+	vlog("#network# -> write " + message)
 	n, err := nt.Rw.WriteString(message)
 	if err != nil {
 		return errors.Wrap(err, "Could not write data ("+strconv.Itoa(n)+" bytes written)")
@@ -340,6 +359,10 @@ func Open(addr string) (*bufio.ReadWriter, error) {
 	if err != nil {
 		log.Println("Error:", errors.WithStack(err))
 	}
+	//tmp
+	//timeoutDuration := 5 * time.Second
+	//conn.SetReadDeadline(time.Now().Add(timeoutDuration))
+	//TODO! return conn, not rw
 	return bufio.NewReadWriter(bufio.NewReader(conn), bufio.NewWriter(conn)), nil
 }
 
