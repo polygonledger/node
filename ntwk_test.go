@@ -102,10 +102,6 @@ func TestRequestOut(t *testing.T) {
 	req_out_msg := ntwk.EncodeMsgString(ntwk.REQ, ntwk.CMD_PING, ntwk.EMPTY_DATA)
 	log.Println(req_out_msg)
 
-	//go func() {
-	log.Println(ntchan.REQ_out)
-	//ntchan.REQ_out <- req_out_msg
-
 	select {
 	case msg := <-ntchan.REQ_out:
 		fmt.Println("received message", msg)
@@ -164,13 +160,26 @@ func TestReplyIn(t *testing.T) {
 
 }
 
-func TestRequestreply(t *testing.T) {
+func basicPingReqProcessor(ntchan ntwk.Ntchan, t *testing.T) {
+
+	x := <-ntchan.REQ_in
+	if x != "ping" {
+		t.Error("req in")
+	}
+	ntchan.REP_out <- "pong"
+}
+
+func TestPing(t *testing.T) {
 
 	ntchan := ntwk.ConnNtchanStub("")
 
+	//REQ in
+	//reply request ping with pong
 	go func() {
 		ntchan.REQ_in <- "ping"
 	}()
+
+	go basicPingReqProcessor(ntchan, t)
 
 	go func() {
 		x := <-ntchan.REP_out
@@ -179,39 +188,117 @@ func TestRequestreply(t *testing.T) {
 		}
 	}()
 
+	//REQ out
+	//request ping should return pong
 	go func() {
-		x := <-ntchan.REQ_in
+		ntchan.REQ_out <- "ping"
+	}()
+
+	go func() {
+		x := <-ntchan.REP_in
+		if x != "pong" {
+			t.Error("expect pong")
+		}
+	}()
+
+	go func() {
+		x := <-ntchan.REQ_out
 		if x != "ping" {
-			t.Error("req in")
+			t.Error("req out")
 		}
 
-		ntchan.REP_out <- "pong"
+		ntchan.REP_in <- "pong"
 	}()
 
 }
 
-// func TestReader(t *testing.T) {
+func TestReaderRequest(t *testing.T) {
 
-// 	ntchan := ntwk.ConnNtchanStub("")
+	ntchan := ntwk.ConnNtchanStub("")
 
-// 	go ntwk.ReadProcessor(ntchan, 1*time.Millisecond)
-// 	if ntchan.Reader_processed != 0 {
-// 		t.Error("reader processed")
-// 	}
+	go ntwk.ReadProcessor(ntchan, 1*time.Millisecond)
 
-// 	if len(ntchan.Reader_queue) != 0 {
-// 		t.Error("reader queue not empty")
-// 	}
+	req_msg := ntwk.EncodeMsgString(ntwk.REQ, ntwk.CMD_PING, ntwk.EMPTY_DATA)
 
-// 	req_msg := ntwk.EncodeMsgString(ntwk.REQ, ntwk.CMD_PING, ntwk.EMPTY_DATA)
+	ntchan.Reader_queue <- req_msg
+	time.Sleep(50 * time.Millisecond)
 
-// 	// ntchan.Reader_queue <- req_msg
-// 	// time.Sleep(5 * time.Millisecond)
-// 	// if ntchan.Reader_processed != 1 {
-// 	// 	t.Error("reader not processed")
-// 	// }
+	//reader queue should be empty
+	if !isEmpty(ntchan.Reader_queue, 1*time.Second) {
+		t.Error("reader not processed")
+	}
 
-// }
+	req_in := <-ntchan.REQ_in
+	if req_in != ntwk.EncodeMsgString(ntwk.REQ, ntwk.CMD_PING, ntwk.EMPTY_DATA) {
+		t.Error("req not equal")
+	}
+
+}
+
+func pinghandler(ntchan ntwk.Ntchan) {
+	for {
+		//REQUEST
+		req_msg := <-ntchan.REQ_in
+		//if ping
+		if req_msg == "" {
+			//<-req_msg
+		}
+		rep_msg := ntwk.EncodeMsgString(ntwk.REP, ntwk.CMD_PONG, "")
+		ntchan.REP_out <- rep_msg
+		//log.Println("REP_out >> ", rep_msg)
+	}
+}
+
+func TestReaderPing(t *testing.T) {
+
+	ntchan := ntwk.ConnNtchanStub("")
+
+	go ntwk.ReadProcessor(ntchan, 1*time.Millisecond)
+
+	go pinghandler(ntchan)
+
+	ntchan.REQ_in <- ntwk.EncodeMsgString(ntwk.REQ, ntwk.CMD_PING, ntwk.EMPTY_DATA)
+
+	time.Sleep(50 * time.Millisecond)
+
+	if !isEmpty(ntchan.REQ_in, 1*time.Second) {
+		t.Error("REQ_in not processed")
+	}
+
+	x := <-ntchan.REP_out
+	if x != ntwk.EncodeMsgString(ntwk.REP, ntwk.CMD_PONG, "") {
+		t.Error("not poing")
+	}
+
+}
+
+func TestAllPingPoing(t *testing.T) {
+
+	ntchan := ntwk.ConnNtchanStub("")
+
+	go ntwk.ReadProcessor(ntchan, 1*time.Millisecond)
+	go ntwk.Writeprocessor(ntchan, 1*time.Millisecond)
+
+	go pinghandler(ntchan)
+
+	ntchan.Reader_queue <- ntwk.EncodeMsgString(ntwk.REQ, ntwk.CMD_PING, ntwk.EMPTY_DATA)
+
+	time.Sleep(50 * time.Millisecond)
+
+	if !isEmpty(ntchan.REQ_in, 1*time.Second) {
+		t.Error("REQ_in not processed")
+	}
+
+	// if isEmpty(ntchan.Writer_queue, time.Second) {
+	// 	t.Error("writer queue empty")
+	// }
+
+	write_out := <-ntchan.Writer_queue
+	if write_out != "REP#PONG#|" {
+		t.Error("pong out ", write_out)
+	}
+
+}
 
 //
 // go ntwk.RequestProcessor(ntchan, 1*time.Second)

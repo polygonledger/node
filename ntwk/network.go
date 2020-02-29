@@ -5,7 +5,7 @@ package ntwk
 // network layer (NTL)
 
 // NTL -> semantics of channels
-// TCP/IP -> golang net and so on
+// TCP/IP -> golang net
 
 // golang has the native net package. as TCP only deals with byte streams we need some form
 // to delinate distinct messages to implement the equivalent of actors. since we have
@@ -40,7 +40,7 @@ import (
 	"github.com/pkg/errors"
 )
 
-//network channel
+//network channel, abstraction of a network connection
 type Ntchan struct {
 	Rw   *bufio.ReadWriter
 	Name string
@@ -99,6 +99,10 @@ func logmsgd(src string, msg string) {
 	log.Printf("[%s] ### %v", src, msg)
 }
 
+func logmsgc(name string, src string, msg string) {
+	log.Printf("%s [%s] ### %v", name, src, msg)
+}
+
 func logmsg(name string, src string, msg string, total int) {
 	log.Printf("%s [%s] ### %v  %d", name, src, msg, total)
 }
@@ -150,7 +154,7 @@ func ReplyProcessor(ntchan *Ntchan, d time.Duration) {
 	}
 }
 
-//read from reader queue and process
+//read from reader queue and process by forwarding to right channel
 func ReadProcessor(ntchan Ntchan, d time.Duration) {
 
 	//loop and basic fanout based on message type
@@ -165,9 +169,6 @@ func ReadProcessor(ntchan Ntchan, d time.Duration) {
 			//TODO try catch
 			msg := ParseMessage(msgString)
 
-			log.Println("> ", msg.MessageType)
-
-			//REQUEST<->REPLY
 			if msg.MessageType == REQ {
 				//TODO proper handler
 				//log.Println("req ", msg.Command)
@@ -227,16 +228,21 @@ func Writeprocessor(ntchan Ntchan, d time.Duration) {
 	//TODO!
 	//put on Writer_queue
 	for {
-		log.Println("Writeprocessor ")
+		log.Println("Writeprocessor")
+
+		//selectively read on write outputs
 		select {
 		case msg := <-ntchan.REP_out:
 			//read from REQ_out
-			log.Println("[Writeprocessor]  REP_out", msg)
+			//log.Println("[Writeprocessor]  REP_out", msg)
+			logmsgc("WriteProcessor", "REP_out", msg)
 			ntchan.Writer_queue <- msg
 
 		case msg := <-ntchan.REQ_out:
-			log.Println("[Writeprocessor]  REQ_out ", msg)
+			logmsgc("Writeprocessor", "REQ_out ", msg)
 			ntchan.Writer_queue <- msg
+
+			//PUB?
 		}
 	}
 }
