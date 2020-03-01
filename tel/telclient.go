@@ -34,6 +34,6 @@ func main() {
 
 	log.Println(num)
 
-	// s, _ := rw.ReadString(DELIM)
-	// log.Println(s)
+	s, _ := ntwk.NtwkRead(conn, DELIM)
+	log.Println(s)
 }

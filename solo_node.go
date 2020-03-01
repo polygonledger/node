@@ -2,13 +2,14 @@ package main
 
 import (
 	"bufio"
-	"bytes"
-	"io"
 	"log"
 	"net"
 	"strconv"
+	"strings"
+	"time"
 
 	"github.com/pkg/errors"
+	"github.com/polygonledger/node/ntwk"
 )
 
 //simple node that runs standalone without peers
@@ -66,28 +67,10 @@ func (t *TCPServer) Run() (err error) {
 	return
 }
 
-func Read(conn net.Conn, delim byte) (string, error) {
-	reader := bufio.NewReader(conn)
-	var buffer bytes.Buffer
-	for {
-		ba, isPrefix, err := reader.ReadLine()
-		if err != nil {
-			if err == io.EOF {
-				break
-			}
-			return "", err
-		}
-		buffer.Write(ba)
-		if !isPrefix {
-			break
-		}
-	}
-	return buffer.String(), nil
-}
-
 // handleConnections deals with the logic of
 // each connection and their requests
 func (t *TCPServer) handleConnection(conn net.Conn) {
+	tr := 100 * time.Millisecond
 	defer conn.Close()
 	log.Println("handleConnection")
 
@@ -96,7 +79,7 @@ func (t *TCPServer) handleConnection(conn net.Conn) {
 
 		log.Println("read with delim ", DELIM)
 		//req, err := rw.ReadString(DELIM)
-		req, err := Read(conn, DELIM)
+		req, err := ntwk.NtwkRead(conn, DELIM)
 
 		if err != nil {
 			rw.WriteString("failed to read input")
@@ -106,11 +89,19 @@ func (t *TCPServer) handleConnection(conn net.Conn) {
 
 		if len(req) > 0 {
 			log.Println("=> ", req, len(req))
-			resp := "Echo: " + req + string(DELIM)
-			//log.Println(resp[len(resp)-1])
+			req = strings.Trim(req, string(DELIM))
+			resp := "Echo: " + req
 			log.Println("resp => ", resp)
-			rw.WriteString(resp)
-			rw.Flush()
+			ntwk.NtwkWrite(conn, resp)
+
+		} else {
+			tr += 100 * time.Millisecond
+		}
+
+		time.Sleep(tr)
+		//on empty reads increase time, but max at 800
+		if tr > 800*time.Millisecond {
+			tr = 800 * time.Millisecond
 		}
 
 	}

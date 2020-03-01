@@ -1,11 +1,12 @@
 package main
 
 import (
-	"bufio"
 	"log"
 	"net"
 	"strconv"
 	"testing"
+
+	"github.com/polygonledger/node/ntwk"
 )
 
 const test_node_port = 8888
@@ -47,43 +48,26 @@ func TestServer_Request(t *testing.T) {
 	}
 	defer conn.Close()
 
-	reqs := "hello world" + string(DELIM)
-	//req := []byte(reqs)
-	i := len(reqs) - 1
-	log.Println("??", reqs[i])
+	reqs := "hello world"
 
-	rw := bufio.NewReadWriter(bufio.NewReader(conn), bufio.NewWriter(conn))
-
-	// if _, err := conn.Write(req); err != nil {
-	// 	t.Error("could not write payload to server:", err)
-	// }
-	n, err := rw.WriteString(reqs)
+	n, err := ntwk.NtwkWrite(conn, reqs)
 	if err != nil {
 		t.Error("could not write payload to server:", err)
 	} else {
 		log.Println("bytes written ", n)
 	}
 
-	rs := "Echo: hello world"
+	rs := "Echo: hello world|"
 
-	got, err := rw.ReadString(DELIM)
+	s, err := ntwk.NtwkRead(conn, DELIM)
+
 	if err != nil {
 		log.Println(err)
 	}
-	if got != rs {
-		t.Error("response did match expected output")
+	if s != rs {
+		t.Error("response did match expected output ", s, rs)
 	} else {
 		log.Println("repsonse ok")
 	}
-
-	// if _, err := conn.Read(out); err == nil {
-	// 	if bytes.Compare(out, r) == 0 {
-	// 		t.Error("response did match expected output")
-	// 	} else {
-	// 		log.Println("response ok")
-	// 	}
-	// } else {
-	// 	t.Error("could not read from connection")
-	// }
 
 }
