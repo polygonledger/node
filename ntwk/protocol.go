@@ -54,6 +54,12 @@ func EncodeReply(resp string) string {
 	return msg
 }
 
+func EncodeRequest(req_string string) string {
+	//TODO header missing
+	msg := EncodeMsgString(REQ, req_string, "")
+	return msg
+}
+
 func EncodePub(resp string, name string) string {
 	//TODO header missing
 	msg := EncodeMsgString(PUB, resp, name)

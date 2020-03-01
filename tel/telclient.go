@@ -11,7 +11,8 @@ import (
 	ntwk "github.com/polygonledger/node/ntwk"
 )
 
-const DELIM = "|"
+//const DELIM = "|"
+const DELIM byte = '|'
 
 func main() {
 
@@ -32,6 +33,18 @@ func main() {
 
 	rw := bufio.NewReadWriter(bufio.NewReader(conn), bufio.NewWriter(conn))
 
-	n, err := rw.WriteString("test" + DELIM)
+	//n, err := rw.WriteString("REQ#PING#" + string(DELIM))
+	//s1 := "REQ#PING#" + string(DELIM)
+	s1 := ntwk.EncodeMsgString(ntwk.REQ, ntwk.CMD_PING, "")
+
+	n, err := rw.WriteString(s1)
+	if err != nil {
+		log.Println("err ", err)
+	}
+	rw.WriteString(string('|'))
 	log.Println("bytes written: ", n)
+	log.Println(s1)
+
+	s, _ := rw.ReadString(DELIM)
+	log.Println(s)
 }

@@ -31,6 +31,7 @@ package ntwk
 
 import (
 	"bufio"
+	"io"
 	"log"
 	"net"
 	"strconv"
@@ -121,9 +122,9 @@ func ReadLoop(ntchan Ntchan, d time.Duration) {
 	msg_reader_total := 0
 	for {
 		//read from network and put in channel
-		vlog("iter ReadLoop")
+		//vlog("iter ReadLoop")
 		msg := NetworkReadMessage(ntchan)
-		vlog("ntwk read => " + msg)
+		//vlog("ntwk read => " + msg)
 		//handle cases
 		//currently can be empty or len, shoudl fix one style
 		if len(msg) > 0 && msg != EMPTY_MSG {
@@ -297,15 +298,13 @@ func NetworkRead(nt Ntchan) string {
 //given a sream read from it
 //TODO proper error handling
 func NetworkReadMessage(nt Ntchan) string {
-	//vlog("NetworkReadMessage")
+	vlog("NetworkReadMessage")
 	msg, err := nt.Rw.ReadString(DELIM)
-	if len(msg) == 0 {
-		//log.Println("empty message")
-		return EMPTY_MSG
-	} else {
-		vlog("msg > " + msg)
-	}
 	if err != nil {
+		if !(err == io.EOF) {
+			logmsgd("NetworkReadMessage err", string(err.Error()))
+		}
+
 		//issue
 		//special case is empty message if client disconnects?
 
@@ -314,9 +313,15 @@ func NetworkReadMessage(nt Ntchan) string {
 		// 	//log.Println(err.)
 		// 	return ERROR_READ
 		// }
-	} else {
-		log.Println(err)
 	}
+	if len(msg) > 0 {
+		logmsgd("NetworkReadMessage", msg)
+		//vlog("msg > " + msg)
+		//log.Println("empty message")
+	} else {
+		return EMPTY_MSG
+	}
+
 	return msg
 }
 
@@ -326,6 +331,7 @@ func NetworkWrite(nt Ntchan, message string) error {
 	if err != nil {
 		return errors.Wrap(err, "Could not write data ("+strconv.Itoa(n)+" bytes written)")
 	} else {
+		log.Println("??")
 		//TODO log trace
 		//log.Println(strconv.Itoa(n) + " bytes written")
 	}
