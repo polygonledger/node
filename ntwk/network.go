@@ -31,6 +31,7 @@ package ntwk
 
 import (
 	"bufio"
+	"fmt"
 	"io"
 	"log"
 	"net"
@@ -436,4 +437,14 @@ func Reqprocessor1(ntchan Ntchan) {
 	reply_string := MsgString(reply)
 
 	ntchan.Writer_queue <- reply_string
+}
+
+func NtwkWrite(conn net.Conn, content string) (int, error) {
+	respContent := fmt.Sprintf("%s: %c", content, DELIM)
+	writer := bufio.NewWriter(conn)
+	number, err := writer.WriteString(respContent)
+	if err == nil {
+		err = writer.Flush()
+	}
+	return number, err
 }

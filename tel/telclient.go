@@ -4,15 +4,13 @@ package main
 //can send an
 
 import (
-	"bufio"
 	"log"
 	"net"
 
 	ntwk "github.com/polygonledger/node/ntwk"
 )
 
-//const DELIM = "|"
-const DELIM byte = '|'
+const DELIM = '|'
 
 func main() {
 
@@ -21,7 +19,7 @@ func main() {
 	//cmd, _ := reader.ReadString('\n')
 	//cmd = strings.Trim(cmd, string('\n'))
 
-	mainPeerAddress := "localhost:8888" // "polygonnode.com"
+	mainPeerAddress := "localhost:8888"
 	mainPeer := ntwk.CreatePeer(mainPeerAddress, 8888)
 	log.Println("client with mainPeer ", mainPeer)
 
@@ -31,20 +29,11 @@ func main() {
 		log.Println("error ", err)
 	}
 
-	rw := bufio.NewReadWriter(bufio.NewReader(conn), bufio.NewWriter(conn))
+	content := "telnet"
+	num, err := ntwk.NtwkWrite(conn, content)
 
-	//n, err := rw.WriteString("REQ#PING#" + string(DELIM))
-	//s1 := "REQ#PING#" + string(DELIM)
-	s1 := ntwk.EncodeMsgString(ntwk.REQ, ntwk.CMD_PING, "")
+	log.Println(num)
 
-	n, err := rw.WriteString(s1)
-	if err != nil {
-		log.Println("err ", err)
-	}
-	rw.WriteString(string('|'))
-	log.Println("bytes written: ", n)
-	log.Println(s1)
-
-	s, _ := rw.ReadString(DELIM)
-	log.Println(s)
+	// s, _ := rw.ReadString(DELIM)
+	// log.Println(s)
 }

@@ -2,7 +2,8 @@ package main
 
 import (
 	"bufio"
-	"fmt"
+	"bytes"
+	"io"
 	"log"
 	"net"
 	"strconv"
@@ -14,7 +15,8 @@ import (
 
 var srv Server
 
-const DELIM = '\n'
+//const DELIM = '\n'
+const DELIM = '|'
 
 // minimum TCP server
 type Server interface {
@@ -64,6 +66,25 @@ func (t *TCPServer) Run() (err error) {
 	return
 }
 
+func Read(conn net.Conn, delim byte) (string, error) {
+	reader := bufio.NewReader(conn)
+	var buffer bytes.Buffer
+	for {
+		ba, isPrefix, err := reader.ReadLine()
+		if err != nil {
+			if err == io.EOF {
+				break
+			}
+			return "", err
+		}
+		buffer.Write(ba)
+		if !isPrefix {
+			break
+		}
+	}
+	return buffer.String(), nil
+}
+
 // handleConnections deals with the logic of
 // each connection and their requests
 func (t *TCPServer) handleConnection(conn net.Conn) {
@@ -74,15 +95,24 @@ func (t *TCPServer) handleConnection(conn net.Conn) {
 	for {
 
 		log.Println("read with delim ", DELIM)
-		req, err := rw.ReadString(DELIM)
+		//req, err := rw.ReadString(DELIM)
+		req, err := Read(conn, DELIM)
+
 		if err != nil {
 			rw.WriteString("failed to read input")
 			rw.Flush()
 			return
 		}
 
-		rw.WriteString(fmt.Sprintf("Request received: %s", req))
-		rw.Flush()
+		if len(req) > 0 {
+			log.Println("=> ", req, len(req))
+			resp := "Echo: " + req + string(DELIM)
+			//log.Println(resp[len(resp)-1])
+			log.Println("resp => ", resp)
+			rw.WriteString(resp)
+			rw.Flush()
+		}
+
 	}
 }
 
