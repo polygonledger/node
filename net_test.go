@@ -57,7 +57,7 @@ func TestServer_Request(t *testing.T) {
 		log.Println("bytes written ", n)
 	}
 
-	rs := "Echo: hello world|"
+	rs := "Echo:" + reqs + string(DELIM)
 
 	s, err := ntwk.NtwkRead(conn, DELIM)
 
@@ -66,8 +66,6 @@ func TestServer_Request(t *testing.T) {
 	}
 	if s != rs {
 		t.Error("response did match expected output ", s, rs)
-	} else {
-		log.Println("repsonse ok")
 	}
 
 }

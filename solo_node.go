@@ -67,8 +67,12 @@ func (t *TCPServer) Run() (err error) {
 	return
 }
 
-// handleConnections deals with the logic of
-// each connection and their requests
+func echohandler(ins string) string {
+	resp := "Echo:" + ins
+	return resp
+}
+
+//deal with the logic of each connection
 func (t *TCPServer) handleConnection(conn net.Conn) {
 	tr := 100 * time.Millisecond
 	defer conn.Close()
@@ -78,7 +82,6 @@ func (t *TCPServer) handleConnection(conn net.Conn) {
 	for {
 
 		log.Println("read with delim ", DELIM)
-		//req, err := rw.ReadString(DELIM)
 		req, err := ntwk.NtwkRead(conn, DELIM)
 
 		if err != nil {
@@ -90,11 +93,13 @@ func (t *TCPServer) handleConnection(conn net.Conn) {
 		if len(req) > 0 {
 			log.Println("=> ", req, len(req))
 			req = strings.Trim(req, string(DELIM))
-			resp := "Echo: " + req
+			resp := echohandler(req)
+
 			log.Println("resp => ", resp)
 			ntwk.NtwkWrite(conn, resp)
 
 		} else {
+			//empty read next read slower
 			tr += 100 * time.Millisecond
 		}
 
