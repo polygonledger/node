@@ -158,9 +158,6 @@ func ListenAll(node_port int) error {
 	for {
 		//nlog.Println("Accept a connection request ")
 
-		//TODO peer handshake
-		//TODO client handshake
-
 		conn, err := listener.Accept()
 		strRemoteAddr := conn.RemoteAddr().String()
 
@@ -583,24 +580,24 @@ func printsub(t time.Time) {
 	//}
 }
 
-func main() {
+// func main() {
 
-	//setup publisher
-	//tchan = ntwk.Publisher()
-	//go ntwk.Pubtime(tchan)
+// 	//setup publisher
+// 	//tchan = ntwk.Publisher()
+// 	//go ntwk.Pubtime(tchan)
 
-	setupLogfile()
+// 	setupLogfile()
 
-	config := LoadConfiguration("nodeconf.json")
+// 	config := LoadConfiguration("nodeconf.json")
 
-	nlog.Println("run node with config ", config)
+// 	nlog.Println("run node with config ", config)
 
-	run_node(config)
+// 	run_node(config)
 
-	log.Println("run web on ", config.WebPort)
+// 	log.Println("run web on ", config.WebPort)
 
-	//rungin(config.WebPort)
+// 	//rungin(config.WebPort)
 
-	Runweb(config.WebPort)
+// 	Runweb(config.WebPort)
 
-}
+// }
