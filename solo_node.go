@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bufio"
 	"log"
 	"net"
 	"strconv"
@@ -9,15 +8,12 @@ import (
 	"time"
 
 	"github.com/pkg/errors"
-	"github.com/polygonledger/node/ntwk"
+	"github.com/polygonledger/node/ntcl"
 )
 
 //simple node that runs standalone without peers
 
 var srv Server
-
-//const DELIM = '\n'
-const DELIM = '|'
 
 // minimum TCP server
 type Server interface {
@@ -61,8 +57,9 @@ func (t *TCPServer) Run() (err error) {
 		//?
 		//setupPeer(strRemoteAddr, node_port, conn)
 		//conn.Close()
-		//t.handleConnections()
-		go t.handleConnection(conn)
+		ntchan := ntcl.ConnNtchan(conn)
+
+		go t.handleConnection(ntchan)
 	}
 	return
 }
@@ -72,31 +69,37 @@ func echohandler(ins string) string {
 	return resp
 }
 
+func (t *TCPServer) handleConnection(ntchan ntcl.Ntchan) {
+	//tr := 100 * time.Millisecond
+	//defer ntchan.Conn.Close()
+	log.Println("handleConnection")
+
+	go ntcl.ReadLoop(ntchan)
+	go ntcl.ReadProcessor(ntchan)
+}
+
 //deal with the logic of each connection
-func (t *TCPServer) handleConnection(conn net.Conn) {
+func (t *TCPServer) handleConnection1(conn net.Conn) {
 	tr := 100 * time.Millisecond
 	defer conn.Close()
 	log.Println("handleConnection")
 
-	rw := bufio.NewReadWriter(bufio.NewReader(conn), bufio.NewWriter(conn))
 	for {
 
-		log.Println("read with delim ", DELIM)
-		req, err := ntwk.NtwkRead(conn, DELIM)
+		log.Println("read with delim ", ntcl.DELIM)
+		req, err := ntcl.NtwkRead(conn, ntcl.DELIM)
 
 		if err != nil {
-			rw.WriteString("failed to read input")
-			rw.Flush()
-			return
+			log.Println(err)
 		}
 
 		if len(req) > 0 {
 			log.Println("=> ", req, len(req))
-			req = strings.Trim(req, string(DELIM))
+			req = strings.Trim(req, string(ntcl.DELIM))
 			resp := echohandler(req)
 
 			log.Println("resp => ", resp)
-			ntwk.NtwkWrite(conn, resp)
+			ntcl.NtwkWrite(conn, resp)
 
 		} else {
 			//empty read next read slower
