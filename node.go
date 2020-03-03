@@ -1,5 +1,21 @@
 package main
 
+//kill -9 $(lsof -t -i:8888)
+//node should run via DNS
+//nodexample.com
+
+//basic protocol
+//node receives tx messages
+//adds tx messages to a pool
+//block gets created every 10 secs
+
+//getBlocks
+//registerPeer
+//pickRandomAccount
+//storeBalance
+
+//newWallet
+
 import (
 	"encoding/json"
 	"fmt"
@@ -14,6 +30,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/polygonledger/node/block"
 	"github.com/polygonledger/node/chain"
+	"github.com/polygonledger/node/crypto"
 	"github.com/polygonledger/node/ntcl"
 	"github.com/polygonledger/node/ntwk"
 )
@@ -23,6 +40,8 @@ import (
 //var srv Server
 
 const node_port = 8888
+
+var blockTime = 10000 * time.Millisecond
 
 var nlog *log.Logger
 var logfile_name = "node.log"
@@ -38,9 +57,8 @@ type TCPServer struct {
 	addr          string
 	server        net.Listener
 	accepting     bool
-	ConnectedChan chan net.Conn
-	//TODO! list of peers
-	Peers []ntcl.Peer
+	ConnectedChan chan net.Conn //channel of newly connected clients/peers
+	Peers         []ntcl.Peer
 }
 
 func (t *TCPServer) GetPeers() []ntcl.Peer {
@@ -73,8 +91,13 @@ func (t *TCPServer) Run() (err error) {
 			break
 		}
 
-		log.Println("put on out ", conn)
+		log.Println("new conn accepted ", conn)
+		//we put the new connection on the chan and handle there
 		t.ConnectedChan <- conn
+
+		// 	//TODO check if peers are alive see
+		// 	//https://stackoverflow.com/questions/12741386/how-to-know-tcp-connection-is-closed-in-net-package
+		// 	//https://gist.github.com/elico/3eecebd87d4bc714c94066a1783d4c9c
 
 	}
 	log.Println("end run")
@@ -113,9 +136,136 @@ func (t *TCPServer) HandleConnect() {
 	}
 }
 
+//--- request handlers ---
+
 func echohandler(ins string) string {
 	resp := "Echo:" + ins
 	return resp
+}
+
+func HandlePing(msg ntwk.Message) string {
+	reply_msg := ntwk.EncodeMsgString(ntwk.REP, "PONG", "")
+	return reply_msg
+}
+
+func HandleBlockheight(msg ntwk.Message) string {
+	bh := len(chain.Blocks)
+	data := strconv.Itoa(bh)
+	reply_msg := ntwk.EncodeMsgString(ntwk.REP, ntwk.CMD_BLOCKHEIGHT, data)
+	//log.Println("BLOCKHEIGHT ", reply_msg)
+	return reply_msg
+}
+
+func HandleBalance(msg ntwk.Message) string {
+	dataBytes := msg.Data
+	nlog.Println("data ", string(msg.Data), dataBytes)
+
+	a := block.Account{AccountKey: string(msg.Data)}
+
+	// var account block.Account
+
+	// if err := json.Unmarshal(dataBytes, &account); err != nil {
+	// 	panic(err)
+	// }
+	// nlog.Println("get balance for account ", account)
+
+	balance := chain.Accounts[a]
+	//s := strconv.Itoa(balance)
+	// data, _ := json.Marshal(balance)
+	data := strconv.Itoa(balance)
+	reply_msg := ntwk.EncodeMsgString(ntwk.REP, ntwk.CMD_BALANCE, data)
+	return reply_msg
+}
+
+func HandleFaucet(msg ntwk.Message) string {
+	// dataBytes := msg.Data
+	// var account block.Account
+	// if err := json.Unmarshal(dataBytes, &account); err != nil {
+	// 	panic(err)
+	// }
+
+	account := block.Account{AccountKey: string(msg.Data)}
+	nlog.Println("faucet for ... ", account)
+
+	randNonce := 0
+	amount := 10
+
+	keypair := chain.GenesisKeys()
+	addr := crypto.Address(crypto.PubKeyToHex(keypair.PubKey))
+	Genesis_Account := block.AccountFromString(addr)
+
+	tx := block.Tx{Nonce: randNonce, Amount: amount, Sender: Genesis_Account, Receiver: account}
+
+	tx = crypto.SignTxAdd(tx, keypair)
+	reply_string := chain.HandleTx(tx)
+	nlog.Println("resp > ", reply_string)
+
+	reply := ntwk.EncodeMsgString(ntwk.REP, ntwk.CMD_FAUCET, reply_string)
+	return reply
+}
+
+//handle requests in telnet style i.e. string encoding
+func RequestHandlerTel(ntchan ntcl.Ntchan) {
+	for {
+		msg_string := <-ntchan.REQ_in
+		log.Println("handle ", msg_string)
+		msg := ntwk.ParseMessage(msg_string)
+
+		//"echo:" + msg_string
+		var reply_msg string
+
+		nlog.Println("Handle ", msg.Command)
+
+		switch msg.Command {
+
+		case ntwk.CMD_PING:
+			reply_msg = HandlePing(msg)
+
+		case ntwk.CMD_BALANCE:
+			reply_msg = HandleBalance(msg)
+
+		case ntwk.CMD_FAUCET:
+			//send money to specified address
+			reply_msg = HandleFaucet(msg)
+
+		case ntwk.CMD_BLOCKHEIGHT:
+			reply_msg = HandleBlockheight(msg)
+
+			// case ntwk.CMD_TX:
+			// 	nlog.Println("Handle tx")
+
+			// 	dataBytes := msg.Data
+
+			// 	var tx block.Tx
+
+			// 	if err := json.Unmarshal(dataBytes, &tx); err != nil {
+			// 		panic(err)
+			// 	}
+			// 	nlog.Println(">> ", tx)
+
+			// 	resp := chain.HandleTx(tx)
+			// 	msg := ntwk.EncodeMsg(ntwk.REP, ntwk.CMD_TX, resp)
+			// 	rep_chan <- msg
+
+			// case ntwk.CMD_GETTXPOOL:
+			// 	nlog.Println("get tx pool")
+
+			// 	//TODO
+			// 	data, _ := json.Marshal(chain.Tx_pool)
+			// 	msg := ntwk.EncodeMsg(ntwk.REP, ntwk.CMD_GETTXPOOL, string(data))
+			// 	rep_chan <- msg
+
+			//var Tx_pool []block.Tx
+
+			// case ntwk.CMD_RANDOM_ACCOUNT:
+			// 	nlog.Println("Handle random account")
+
+			// 	txJson, _ := json.Marshal(chain.RandomAccount())
+
+		}
+
+		ntchan.Writer_queue <- reply_msg
+	}
 }
 
 func (t *TCPServer) handleConnection(ntchan ntcl.Ntchan) {
@@ -127,52 +277,7 @@ func (t *TCPServer) handleConnection(ntchan ntcl.Ntchan) {
 	go ntcl.ReadProcessor(ntchan)
 	go ntcl.WriteLoop(ntchan, 500*time.Millisecond)
 
-	go func() {
-		for {
-			msg_string := <-ntchan.REQ_in
-			log.Println("handle ", msg_string)
-			msg := ntwk.ParseMessage(msg_string)
-			//reply_string := "default"
-
-			//"echo:" + msg_string
-			var reply string
-			var reply_msg string
-
-			switch msg.Command {
-
-			case ntwk.CMD_PING:
-				reply = "PONG"
-				reply_msg = ntwk.EncodeMsgString(ntwk.REP, reply, "")
-
-			case ntwk.CMD_BALANCE:
-				nlog.Println("Handle balance")
-
-				dataBytes := msg.Data
-				nlog.Println("data ", string(msg.Data), dataBytes)
-
-				a := block.Account{AccountKey: string(msg.Data)}
-
-				// var account block.Account
-
-				// if err := json.Unmarshal(dataBytes, &account); err != nil {
-				// 	panic(err)
-				// }
-				// nlog.Println("get balance for account ", account)
-
-				balance := chain.Accounts[a]
-				//s := strconv.Itoa(balance)
-				// data, _ := json.Marshal(balance)
-				data := strconv.Itoa(balance)
-				reply_msg = ntwk.EncodeMsgString(ntwk.REP, ntwk.CMD_BALANCE, data)
-				log.Println(">> ", reply)
-
-				//rep_chan <- reply
-
-			}
-
-			ntchan.Writer_queue <- reply_msg
-		}
-	}()
+	go RequestHandlerTel(ntchan)
 }
 
 //HTTP

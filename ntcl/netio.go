@@ -23,6 +23,7 @@ func NtwkWrite(ntchan Ntchan, content string) (int, error) {
 	NEWLINE := '\n'
 	//respContent := fmt.Sprintf("%s%c%c", content, DELIM, NEWLINE)
 	respContent := fmt.Sprintf("%s%c", content, NEWLINE)
+	log.Println("write > ", content, respContent)
 	writer := bufio.NewWriter(ntchan.Conn)
 	n, err := writer.WriteString(respContent)
 	if err == nil {
