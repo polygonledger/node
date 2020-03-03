@@ -7,7 +7,7 @@ import (
 	"bytes"
 	"fmt"
 	"io"
-	"net"
+	"log"
 )
 
 const DELIM = '|'
@@ -17,20 +17,22 @@ func EncodeMsg(content string) string {
 }
 
 //TODO! factor and replace old
-func NtwkWrite(conn net.Conn, content string) (int, error) {
+func NtwkWrite(ntchan Ntchan, content string) (int, error) {
 	//READLINE uses \n
 	NEWLINE := '\n'
 	respContent := fmt.Sprintf("%s%c%c", content, DELIM, NEWLINE)
-	writer := bufio.NewWriter(conn)
-	number, err := writer.WriteString(respContent)
+	writer := bufio.NewWriter(ntchan.Conn)
+	n, err := writer.WriteString(respContent)
 	if err == nil {
 		err = writer.Flush()
 	}
-	return number, err
+	log.Println("bytes written", n, " ", ntchan.SrcName, ntchan.DestName)
+	return n, err
 }
 
-func NtwkRead(conn net.Conn, delim byte) (string, error) {
-	reader := bufio.NewReader(conn)
+func NtwkRead(ntchan Ntchan, delim byte) (string, error) {
+	log.Println("read ", ntchan.SrcName, ntchan.DestName)
+	reader := bufio.NewReader(ntchan.Conn)
 	var buffer bytes.Buffer
 	for {
 		//READLINE uses \n
@@ -49,6 +51,6 @@ func NtwkRead(conn net.Conn, delim byte) (string, error) {
 	return buffer.String(), nil
 }
 
-func MsgRead(conn net.Conn) (string, error) {
-	return NtwkRead(conn, DELIM)
+func MsgRead(ntchan Ntchan) (string, error) {
+	return NtwkRead(ntchan, DELIM)
 }

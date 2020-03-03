@@ -49,19 +49,6 @@ func SimulateRequest(ntchan *ntwk.Ntchan) {
 
 }
 
-//check if a channel is empty
-func isEmpty(c chan string, d time.Duration) bool {
-	select {
-	case ret := <-c:
-		log.Println("got ", ret)
-		return false
-
-	case <-time.After(d):
-		//log.Println("timeout")
-		return true
-	}
-}
-
 // in reader should bet forwarded to req_chan
 func TestRequestIn(t *testing.T) {
 	ntchan := ntwk.ConnNtchanStub("")

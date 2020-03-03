@@ -13,35 +13,40 @@ import (
 
 //simple node that runs standalone without peers
 
-var srv Server
+//var srv Server
 
-// minimum TCP server
-type Server interface {
-	Run() error
-	Close() error
-}
+const node_port = 8888
 
 type TCPServer struct {
-	addr   string
-	server net.Listener
+	Name          string
+	addr          string
+	server        net.Listener
+	accepting     bool
+	ConnectedChan chan net.Conn
+	//TODO! list of peers
+	Peers []ntcl.Peer
+}
+
+func (t *TCPServer) GetPeers() []ntcl.Peer {
+	if &t.Peers == nil {
+		return nil
+	}
+	return t.Peers
 }
 
 // start listening on tcp and handle connection through channels
 func (t *TCPServer) Run() (err error) {
 
-	//TODO! nodeport int
-	//TODO! hearbeart, check if peers are alive
-	//TODO! handshake
-
 	log.Println("listen ", t.addr)
 	t.server, err = net.Listen("tcp", t.addr)
 	if err != nil {
-		return errors.Wrapf(err, "Unable to listen on port %s\n", t.addr)
+		//return errors.Wrapf(err, "Unable to listen on port %s\n", t.addr)
 	}
 	//run forever and don't close
 	//defer t.Close()
 
 	for {
+		t.accepting = true
 		conn, err := t.server.Accept()
 		if err != nil {
 			err = errors.New("could not accept connection")
@@ -51,17 +56,45 @@ func (t *TCPServer) Run() (err error) {
 			err = errors.New("could not create connection")
 			break
 		}
-		strRemoteAddr := conn.RemoteAddr().String()
-		log.Println("accepted conn ", strRemoteAddr)
 
-		//?
-		//setupPeer(strRemoteAddr, node_port, conn)
-		//conn.Close()
-		ntchan := ntcl.ConnNtchan(conn)
+		log.Println("put on out ", conn)
+		t.ConnectedChan <- conn
+
+	}
+	log.Println("end run")
+	return
+}
+
+func (t *TCPServer) HandleDisconnect() {
+
+}
+
+//handle new connection
+func (t *TCPServer) HandleConnect() {
+
+	//TODO! hearbeart, check if peers are alive
+	//TODO! handshake
+
+	for {
+		newpeerConn := <-t.ConnectedChan
+		strRemoteAddr := newpeerConn.RemoteAddr().String()
+		log.Println("accepted conn ", strRemoteAddr, t.accepting)
+		log.Println("new peer ", newpeerConn)
+		// log.Println("> ", t.Peers)
+		// log.Println("# peers ", len(t.Peers))
+
+		ntchan := ntcl.ConnNtchan(newpeerConn, "server", strRemoteAddr)
+
+		p := ntcl.Peer{Address: strRemoteAddr, NodePort: node_port, NTchan: ntchan}
+		t.Peers = append(t.Peers, p)
 
 		go t.handleConnection(ntchan)
+		//go ChannelPeerNetwork(conn, peer)
+		//setupPeer(strRemoteAddr, node_port, conn)
+
+		//conn.Close()
+
 	}
-	return
 }
 
 func echohandler(ins string) string {
@@ -79,15 +112,16 @@ func (t *TCPServer) handleConnection(ntchan ntcl.Ntchan) {
 }
 
 //deal with the logic of each connection
-func (t *TCPServer) handleConnection1(conn net.Conn) {
+//simple readwriter
+func (t *TCPServer) handleConnectionReadWriter(ntchan ntcl.Ntchan) {
 	tr := 100 * time.Millisecond
-	defer conn.Close()
+	defer ntchan.Conn.Close()
 	log.Println("handleConnection")
 
 	for {
 
 		log.Println("read with delim ", ntcl.DELIM)
-		req, err := ntcl.NtwkRead(conn, ntcl.DELIM)
+		req, err := ntcl.NtwkRead(ntchan, ntcl.DELIM)
 
 		if err != nil {
 			log.Println(err)
@@ -99,7 +133,7 @@ func (t *TCPServer) handleConnection1(conn net.Conn) {
 			resp := echohandler(req)
 
 			log.Println("resp => ", resp)
-			ntcl.NtwkWrite(conn, resp)
+			ntcl.NtwkWrite(ntchan, resp)
 
 		} else {
 			//empty read next read slower
@@ -117,12 +151,14 @@ func (t *TCPServer) handleConnection1(conn net.Conn) {
 
 // NewServer creates a new Server using given protocol
 // and addr
-func NewServer(addr string) (Server, error) {
+func NewServer(addr string) (*TCPServer, error) {
 	return &TCPServer{
-		addr: addr,
+		addr:          addr,
+		accepting:     false,
+		ConnectedChan: make(chan net.Conn),
+		//Peers: make([]ntcl.Peer)
 	}, nil
 
-	return nil, errors.New("Invalid protocol given")
 }
 
 // Close shuts down the TCP Server
@@ -130,17 +166,21 @@ func (t *TCPServer) Close() (err error) {
 	return t.server.Close()
 }
 
-const node_port = 8888
-
 func main() {
 
 	srv, err := NewServer(":" + strconv.Itoa(node_port))
 
 	if err != nil {
-		log.Println("error starting TCP server")
+		log.Println("error creating TCP server")
 		return
 	}
 
-	srv.Run()
+	// if err2 != nil {
+	// 	log.Println("error starting TCP server ", err2)
+	// 	return
+	// }
 
+	go srv.HandleConnect()
+
+	srv.Run()
 }

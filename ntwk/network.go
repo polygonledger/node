@@ -31,8 +31,6 @@ package ntwk
 
 import (
 	"bufio"
-	"bytes"
-	"fmt"
 	"io"
 	"log"
 	"net"
@@ -438,36 +436,4 @@ func Reqprocessor1(ntchan Ntchan) {
 	reply_string := MsgString(reply)
 
 	ntchan.Writer_queue <- reply_string
-}
-
-//TODO! factor and replace old
-func NtwkWrite(conn net.Conn, content string) (int, error) {
-	NL := '\n'
-	respContent := fmt.Sprintf("%s%c%c", content, DELIM, NL)
-	writer := bufio.NewWriter(conn)
-	number, err := writer.WriteString(respContent)
-	if err == nil {
-		err = writer.Flush()
-	}
-	return number, err
-}
-
-func NtwkRead(conn net.Conn, delim byte) (string, error) {
-	reader := bufio.NewReader(conn)
-	var buffer bytes.Buffer
-	for {
-		//READLINE uses \n
-		ba, isPrefix, err := reader.ReadLine()
-		if err != nil {
-			if err == io.EOF {
-				break
-			}
-			return "", err
-		}
-		buffer.Write(ba)
-		if !isPrefix {
-			break
-		}
-	}
-	return buffer.String(), nil
 }

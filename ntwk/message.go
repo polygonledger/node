@@ -9,7 +9,7 @@ import (
 
 //any message is defined through the delimters, no size restrictions as of now
 //MSG TYPE # CMD # DATA |
-
+	
 //Message Types
 //Message Types exist in a context of communication
 //i.e. is this message an intial request or a reply or part of a stream of events etc

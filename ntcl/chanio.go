@@ -4,6 +4,8 @@ import (
 	"log"
 	"net"
 	"time"
+
+	"github.com/polygonledger/node/ntwk"
 )
 
 const (
@@ -12,9 +14,10 @@ const (
 )
 
 type Ntchan struct {
-	//Rw   *bufio.ReadWriter
-	Conn net.Conn
-	Name string
+	//TODO is only single connection
+	Conn     net.Conn
+	SrcName  string
+	DestName string
 	//TODO message type
 	Reader_queue chan string
 	Writer_queue chan string
@@ -37,12 +40,8 @@ func logmsgc(name string, src string, msg string) {
 	log.Printf("%s [%s] ### %v", name, src, msg)
 }
 
-func logmsg(name string, src string, msg string, total int) {
-	log.Printf("%s [%s] ### %v  %d", name, src, msg, total)
-}
-
 //wrap connection in Ntchan
-func ConnNtchan(conn net.Conn) Ntchan {
+func ConnNtchan(conn net.Conn, SrcName string, DestName string) Ntchan {
 	var ntchan Ntchan
 	ntchan.Reader_queue = make(chan string)
 	ntchan.Writer_queue = make(chan string)
@@ -53,6 +52,8 @@ func ConnNtchan(conn net.Conn) Ntchan {
 	// ntchan.Reader_processed = 0
 	// ntchan.Writer_processed = 0
 	ntchan.Conn = conn
+	ntchan.SrcName = SrcName
+	ntchan.DestName = DestName
 
 	return ntchan
 }
@@ -71,22 +72,27 @@ func ConnNtchanStub(name string) Ntchan {
 	return ntchan
 }
 
+func vlog(s string) {
+	log.Println(s)
+}
+
 func ReadLoop(ntchan Ntchan) {
-	//vlog("init ReadLoop")
+	vlog("init ReadLoop " + ntchan.SrcName + " " + ntchan.DestName)
 	d := 300 * time.Millisecond
 	//msg_reader_total := 0
 	for {
 		//read from network and put in channel
-		//vlog("iter ReadLoop")
-		msg, err := MsgRead(ntchan.Conn)
+		vlog("iter ReadLoop " + ntchan.SrcName + " " + ntchan.DestName)
+		msg, err := MsgRead(ntchan)
 		if err != nil {
 
 		}
-		//vlog("ntwk read => " + msg)
 		//handle cases
 		//currently can be empty or len, shoudl fix one style
-		if len(msg) > 0 && msg != EMPTY_MSG {
-			logmsgc(ntchan.Name, "ReadLoop", msg)
+		if len(msg) > 0 { //&& msg != EMPTY_MSG {
+			vlog("ntwk read => " + msg)
+			logmsgc(ntchan.SrcName, "ReadLoop", msg)
+			log.Println("put ", msg)
 			//put in the queue to process
 			ntchan.Reader_queue <- msg
 		}
@@ -102,7 +108,39 @@ func ReadProcessor(ntchan Ntchan) {
 
 	for {
 		msgString := <-ntchan.Reader_queue
-		log.Println(msgString)
+		logmsgd("ReadProcessor", msgString)
+
+		if len(msgString) > 0 {
+			logmsgc(ntchan.SrcName, "ReadProcessor", msgString) //, ntchan.Reader_processed)
+			//TODO try catch
+
+			msg := ntwk.ParseMessage(msgString)
+
+			if msg.MessageType == ntwk.REQ {
+				//TODO proper handler
+				//log.Println("req ", msg.Command)
+				//logmsg(ntchan.Name, "ReadProcessor", msg.Command, 0)
+
+				msg_string := ntwk.MsgString(msg)
+				logmsgd("ReadProcessor", "REQ_in")
+				ntchan.REQ_in <- msg_string
+
+				//ntchan.Writer_queue <- reply_string
+
+			} else if msg.MessageType == ntwk.REP {
+				//TODO!
+				//msg_string := MsgString(msg)
+				msg_string := ntwk.MsgString(msg)
+				logmsgd("ReadProcessor", "REP_in")
+				ntchan.REP_in <- msg_string
+
+				x := <-ntchan.REP_in
+				log.Println("x ", x)
+			}
+
+			//ntchan.Reader_processed++
+			//log.Println(" ", ntchan.Reader_processed, ntchan)
+		}
 	}
 
 }
