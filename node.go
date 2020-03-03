@@ -25,8 +25,6 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/pkg/errors"
-
 	"github.com/gin-gonic/gin"
 	"github.com/polygonledger/node/chain"
 	"github.com/polygonledger/node/ntwk"
@@ -41,12 +39,6 @@ var Peers []ntwk.Peer
 var blockTime = 10000 * time.Millisecond
 
 var tchan chan string
-
-type Configuration struct {
-	PeerAddresses []string
-	NodePort      int
-	WebPort       int
-}
 
 //inbound
 func addpeer(addr string, nodeport int) ntwk.Peer {
@@ -134,56 +126,56 @@ func setupPeer(addr string, nodeport int, conn net.Conn) {
 }
 
 // start listening on tcp and handle connection through channels
-func ListenAll(node_port int) error {
-	nlog.Println("listen all")
-	var err error
-	var listener net.Listener
-	p := ":" + strconv.Itoa(node_port)
-	nlog.Println("listen on ", p)
-	listener, err = net.Listen("tcp", p)
-	if err != nil {
-		nlog.Println(err)
-		return errors.Wrapf(err, "Unable to listen on port %d\n", node_port) //ntwk.Port
-	}
+// func ListenAll(node_port int) error {
+// 	nlog.Println("listen all")
+// 	var err error
+// 	var listener net.Listener
+// 	p := ":" + strconv.Itoa(node_port)
+// 	nlog.Println("listen on ", p)
+// 	listener, err = net.Listen("tcp", p)
+// 	if err != nil {
+// 		nlog.Println(err)
+// 		return errors.Wrapf(err, "Unable to listen on port %d\n", node_port) //ntwk.Port
+// 	}
 
-	addr := listener.Addr().String()
-	nlog.Println("Listen on", addr)
+// 	addr := listener.Addr().String()
+// 	nlog.Println("Listen on", addr)
 
-	//TODO check if peers are alive see
-	//https://stackoverflow.com/questions/12741386/how-to-know-tcp-connection-is-closed-in-net-package
-	//https://gist.github.com/elico/3eecebd87d4bc714c94066a1783d4c9c
+// 	//TODO check if peers are alive see
+// 	//https://stackoverflow.com/questions/12741386/how-to-know-tcp-connection-is-closed-in-net-package
+// 	//https://gist.github.com/elico/3eecebd87d4bc714c94066a1783d4c9c
 
-	for {
-		//nlog.Println("Accept a connection request ")
+// 	for {
+// 		//nlog.Println("Accept a connection request ")
 
-		conn, err := listener.Accept()
-		strRemoteAddr := conn.RemoteAddr().String()
+// 		conn, err := listener.Accept()
+// 		strRemoteAddr := conn.RemoteAddr().String()
 
-		nlog.Println("accepted conn ", strRemoteAddr)
-		if err != nil {
-			nlog.Println("Failed accepting a connection request:", err)
-			continue
-		}
+// 		nlog.Println("accepted conn ", strRemoteAddr)
+// 		if err != nil {
+// 			nlog.Println("Failed accepting a connection request:", err)
+// 			continue
+// 		}
 
-		setupPeer(strRemoteAddr, node_port, conn)
+// 		setupPeer(strRemoteAddr, node_port, conn)
 
-	}
-}
+// 	}
+// }
 
-func putMsg(msg_in_chan chan ntwk.Message, msg ntwk.Message) {
-	msg_in_chan <- msg
-}
+// func putMsg(msg_in_chan chan ntwk.Message, msg ntwk.Message) {
+// 	msg_in_chan <- msg
+// }
 
-func pubhearbeat(ntchan ntwk.Ntchan) {
-	heartbeat_time := 1000 * time.Millisecond
+// func pubhearbeat(ntchan ntwk.Ntchan) {
+// 	heartbeat_time := 1000 * time.Millisecond
 
-	for {
-		msg := ntwk.EncodeHeartbeat("peer1")
-		ntchan.Writer_queue <- msg
-		time.Sleep(heartbeat_time)
-	}
+// 	for {
+// 		msg := ntwk.EncodeHeartbeat("peer1")
+// 		ntchan.Writer_queue <- msg
+// 		time.Sleep(heartbeat_time)
+// 	}
 
-}
+// }
 
 //--- request handler ---
 
@@ -380,65 +372,6 @@ func connect_peers(node_port int, PeerAddresses []string) {
 }
 
 // 	nlog.Printf("block height %d", len(chain.Blocks))
-
-//HTTP
-// func LoadContent(peers []ntwk.Peer) string {
-// 	content := ""
-
-// 	content += fmt.Sprintf("<h2>Peers</h2>Peers: %d<br>", len(peers))
-// 	for i := 0; i < len(peers); i++ {
-// 		content += fmt.Sprintf("peer ip address: %s<br>", peers[i].Address)
-// 	}
-
-// 	content += fmt.Sprintf("<h2>TxPool</h2>%d<br>", len(chain.Tx_pool))
-
-// 	for i := 0; i < len(chain.Tx_pool); i++ {
-// 		//content += fmt.Sprintf("Nonce %d, Id %x<br>", chain.Tx_pool[i].Nonce, chain.Tx_pool[i].Id[:])
-// 		ctx := chain.Tx_pool[i]
-// 		content += fmt.Sprintf("%d from %s to %s %x<br>", ctx.Amount, ctx.Sender, ctx.Receiver, ctx.Id)
-// 	}
-
-// 	content += fmt.Sprintf("<h2>Accounts</h2>number of accounts: %d<br><br>", len(chain.Accounts))
-
-// 	for k, v := range chain.Accounts {
-// 		content += fmt.Sprintf("%s %d<br>", k, v)
-// 	}
-
-// 	content += fmt.Sprintf("<br><h2>Blocks</h2><i>number of blocks %d</i><br>", len(chain.Blocks))
-
-// 	for i := 0; i < len(chain.Blocks); i++ {
-// 		t := chain.Blocks[i].Timestamp
-// 		tsf := fmt.Sprintf("%d-%02d-%02dT%02d:%02d:%02d",
-// 			t.Year(), t.Month(), t.Day(),
-// 			t.Hour(), t.Minute(), t.Second())
-
-// 		//summary
-// 		content += fmt.Sprintf("<br><h3>Block %d</h3>timestamp %s<br>hash %x<br>prevhash %x\n", chain.Blocks[i].Height, tsf, chain.Blocks[i].Hash, chain.Blocks[i].Prev_Block_Hash)
-
-// 		content += fmt.Sprintf("<h4>Number of Tx %d</h4>", len(chain.Blocks[i].Txs))
-// 		for j := 0; j < len(chain.Blocks[i].Txs); j++ {
-// 			ctx := chain.Blocks[i].Txs[j]
-// 			content += fmt.Sprintf("%d from %s to %s %x<br>", ctx.Amount, ctx.Sender, ctx.Receiver, ctx.Id)
-// 		}
-// 	}
-
-// 	return content
-// }
-
-// func Runweb(webport int) {
-// 	//webserver to access node state through browser
-// 	// HTTP
-// 	nlog.Println("start webserver")
-
-// 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-// 		p := LoadContent(Peers)
-// 		//nlog.Print(p)
-// 		fmt.Fprintf(w, "<h1>Polygon chain</h1><div>%s</div>", p)
-// 	})
-
-// 	nlog.Fatal(http.ListenAndServe(":"+strconv.Itoa(webport), nil))
-
-// }
 
 //TODO
 func rungin(webport int) {

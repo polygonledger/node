@@ -26,7 +26,7 @@ func initserver() *TCPServer {
 
 	// Run the server in Goroutine to stop tests from blocking
 	// test execution
-	log.Println("initserver >>> ", testsrv)
+	//log.Println("initserver  ", testsrv)
 
 	go testsrv.Run()
 	//log.Println("waiting ", newpeerchan)
@@ -107,7 +107,7 @@ func TestServer_Write(t *testing.T) {
 		t.Error("could not write to server:", err)
 	}
 
-	delimsize := 2
+	delimsize := 1
 	l := len([]byte(reqs)) + delimsize
 	if n != l {
 		t.Error("wrong bytes written ", l)

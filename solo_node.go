@@ -136,35 +136,40 @@ func (t *TCPServer) handleConnection(ntchan ntcl.Ntchan) {
 
 			//"echo:" + msg_string
 			var reply string
+			var reply_msg string
 
 			switch msg.Command {
 
 			case ntwk.CMD_PING:
 				reply = "PONG"
+				reply_msg = ntwk.EncodeMsgString(ntwk.REP, reply, "")
 
 			case ntwk.CMD_BALANCE:
 				nlog.Println("Handle balance")
 
 				dataBytes := msg.Data
-				nlog.Println("data ", dataBytes)
-				var account block.Account
+				nlog.Println("data ", string(msg.Data), dataBytes)
 
-				if err := json.Unmarshal(dataBytes, &account); err != nil {
-					panic(err)
-				}
-				nlog.Println("get balance for account ", account)
+				a := block.Account{AccountKey: string(msg.Data)}
 
-				balance := chain.Accounts[account]
+				// var account block.Account
+
+				// if err := json.Unmarshal(dataBytes, &account); err != nil {
+				// 	panic(err)
+				// }
+				// nlog.Println("get balance for account ", account)
+
+				balance := chain.Accounts[a]
 				//s := strconv.Itoa(balance)
-				data, _ := json.Marshal(balance)
-				reply := ntwk.EncodeMsgBytes(ntwk.REP, ntwk.CMD_BALANCE, data)
+				// data, _ := json.Marshal(balance)
+				data := strconv.Itoa(balance)
+				reply_msg = ntwk.EncodeMsgString(ntwk.REP, ntwk.CMD_BALANCE, data)
 				log.Println(">> ", reply)
 
 				//rep_chan <- reply
 
 			}
 
-			reply_msg := ntwk.EncodeMsgString(ntwk.REP, reply, "")
 			ntchan.Writer_queue <- reply_msg
 		}
 	}()

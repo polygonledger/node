@@ -48,6 +48,22 @@ func ParseMessage(msgString string) Message {
 	return msg
 }
 
+// func ParseMessageString(msgString string) Message {
+// 	msgString = strings.Trim(msgString, string(DELIM))
+// 	s := strings.Split(msgString, string(DELIM_HEAD))
+
+// 	//ERROR handling of malformed messages
+
+// 	var msg Message
+// 	msg.MessageType = s[0]
+// 	msg.Command = s[1]
+// 	data := s[2] //data can empty but still we expect the delim to be there
+
+// 	msg.Data = data
+// 	//trace(msg)
+// 	return msg
+// }
+
 func EncodeReply(resp string) string {
 	//TODO header missing
 	msg := EncodeMsgString(REP, resp, "")
