@@ -122,10 +122,10 @@ func ReadProcessor(ntchan Ntchan) {
 				logmsgd("ReadProcessor", "REQ_in")
 
 				//TODO!
-				//ntchan.REQ_in <- msg_string
-				reply_string := "echo:" + msg_string
-				log.Println(">> ", reply_string)
-				ntchan.Writer_queue <- reply_string
+				ntchan.REQ_in <- msg_string
+				// reply_string := "echo:" + msg_string
+				// log.Println(">> ", reply_string)
+				// ntchan.Writer_queue <- reply_string
 
 			} else if msg.MessageType == ntwk.REP {
 				//TODO!

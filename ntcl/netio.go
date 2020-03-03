@@ -21,7 +21,8 @@ func EncodeMsg(content string) string {
 func NtwkWrite(ntchan Ntchan, content string) (int, error) {
 	//READLINE uses \n
 	NEWLINE := '\n'
-	respContent := fmt.Sprintf("%s%c%c", content, DELIM, NEWLINE)
+	//respContent := fmt.Sprintf("%s%c%c", content, DELIM, NEWLINE)
+	respContent := fmt.Sprintf("%s%c", content, NEWLINE)
 	writer := bufio.NewWriter(ntchan.Conn)
 	n, err := writer.WriteString(respContent)
 	if err == nil {

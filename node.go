@@ -1,5 +1,7 @@
 package main
 
+//needs refactor
+
 //kill -9 $(lsof -t -i:8888)
 //node should run via DNS
 //nodexample.com
@@ -17,13 +19,9 @@ package main
 //newWallet
 
 import (
-	"encoding/json"
-	"fmt"
-	"io"
 	"log"
 	"net"
 	"net/http"
-	"os"
 	"strconv"
 	"time"
 
@@ -37,8 +35,8 @@ import (
 var Peers []ntwk.Peer
 
 //banned IPs
-var nlog *log.Logger
-var logfile_name = "node.log"
+// var nlog *log.Logger
+// var logfile_name = "node.log"
 
 var blockTime = 10000 * time.Millisecond
 
@@ -365,19 +363,6 @@ func Reqoutprocessor(ntchan ntwk.Ntchan) {
 
 // }
 
-//basic threading helper
-func doEvery(d time.Duration, f func(time.Time)) {
-	for x := range time.Tick(d) {
-		f(x)
-	}
-}
-
-func doEveryX(d time.Duration, f func() <-chan string) {
-	for _ = range time.Tick(d) {
-		f()
-	}
-}
-
 func connect_peers(node_port int, PeerAddresses []string) {
 
 	for _, peer := range PeerAddresses {
@@ -394,137 +379,66 @@ func connect_peers(node_port int, PeerAddresses []string) {
 	}
 }
 
-func run_node(config Configuration) {
-	nlog.Println("run node ", config.NodePort)
-
-	nlog.Println("PeerAddresses: ", config.PeerAddresses)
-
-	//TODO signatures of genesis
-	chain.InitAccounts()
-
-	success := chain.ReadChain()
-
-	nlog.Printf("block height %d", len(chain.Blocks))
-
-	//nlog.Println("genesis block ", chain.Blocks[0])
-	//chain.WriteGenBlock(chain.Blocks[0])
-
-	//create new genesis block (demo)
-	createDemo := !success
-	if createDemo {
-		genBlock := chain.MakeGenesisBlock()
-		chain.ApplyBlock(genBlock)
-		chain.AppendBlock(genBlock)
-	}
-
-	//if file exists read the chain
-
-	// create block every 10sec
-
-	delegation_enabled := false
-	if delegation_enabled {
-		go doEvery(blockTime, chain.MakeBlock)
-	}
-
-	//connect_peers(configuration.PeerAddresses)
-
-	go ListenAll(config.NodePort)
-
-}
-
-func setupLogfile() *log.Logger {
-	//setup log file
-
-	logFile, err := os.OpenFile(logfile_name, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0644)
-	if err != nil {
-		nlog.Fatal(err)
-	}
-
-	//defer logfile.Close()
-
-	mw := io.MultiWriter(os.Stdout, logFile)
-	log.SetOutput(mw)
-
-	logger := log.New(logFile, "node ", log.LstdFlags)
-	logger.SetOutput(mw)
-
-	//log.SetOutput(file)
-
-	nlog = logger
-	return logger
-
-}
-
-func LoadConfiguration(file string) Configuration {
-	var config Configuration
-	configFile, err := os.Open(file)
-	defer configFile.Close()
-	if err != nil {
-		log.Println(err.Error())
-	}
-	jsonParser := json.NewDecoder(configFile)
-	jsonParser.Decode(&config)
-	return config
-}
+// 	nlog.Printf("block height %d", len(chain.Blocks))
 
 //HTTP
-func LoadContent(peers []ntwk.Peer) string {
-	content := ""
+// func LoadContent(peers []ntwk.Peer) string {
+// 	content := ""
 
-	content += fmt.Sprintf("<h2>Peers</h2>Peers: %d<br>", len(peers))
-	for i := 0; i < len(peers); i++ {
-		content += fmt.Sprintf("peer ip address: %s<br>", peers[i].Address)
-	}
+// 	content += fmt.Sprintf("<h2>Peers</h2>Peers: %d<br>", len(peers))
+// 	for i := 0; i < len(peers); i++ {
+// 		content += fmt.Sprintf("peer ip address: %s<br>", peers[i].Address)
+// 	}
 
-	content += fmt.Sprintf("<h2>TxPool</h2>%d<br>", len(chain.Tx_pool))
+// 	content += fmt.Sprintf("<h2>TxPool</h2>%d<br>", len(chain.Tx_pool))
 
-	for i := 0; i < len(chain.Tx_pool); i++ {
-		//content += fmt.Sprintf("Nonce %d, Id %x<br>", chain.Tx_pool[i].Nonce, chain.Tx_pool[i].Id[:])
-		ctx := chain.Tx_pool[i]
-		content += fmt.Sprintf("%d from %s to %s %x<br>", ctx.Amount, ctx.Sender, ctx.Receiver, ctx.Id)
-	}
+// 	for i := 0; i < len(chain.Tx_pool); i++ {
+// 		//content += fmt.Sprintf("Nonce %d, Id %x<br>", chain.Tx_pool[i].Nonce, chain.Tx_pool[i].Id[:])
+// 		ctx := chain.Tx_pool[i]
+// 		content += fmt.Sprintf("%d from %s to %s %x<br>", ctx.Amount, ctx.Sender, ctx.Receiver, ctx.Id)
+// 	}
 
-	content += fmt.Sprintf("<h2>Accounts</h2>number of accounts: %d<br><br>", len(chain.Accounts))
+// 	content += fmt.Sprintf("<h2>Accounts</h2>number of accounts: %d<br><br>", len(chain.Accounts))
 
-	for k, v := range chain.Accounts {
-		content += fmt.Sprintf("%s %d<br>", k, v)
-	}
+// 	for k, v := range chain.Accounts {
+// 		content += fmt.Sprintf("%s %d<br>", k, v)
+// 	}
 
-	content += fmt.Sprintf("<br><h2>Blocks</h2><i>number of blocks %d</i><br>", len(chain.Blocks))
+// 	content += fmt.Sprintf("<br><h2>Blocks</h2><i>number of blocks %d</i><br>", len(chain.Blocks))
 
-	for i := 0; i < len(chain.Blocks); i++ {
-		t := chain.Blocks[i].Timestamp
-		tsf := fmt.Sprintf("%d-%02d-%02dT%02d:%02d:%02d",
-			t.Year(), t.Month(), t.Day(),
-			t.Hour(), t.Minute(), t.Second())
+// 	for i := 0; i < len(chain.Blocks); i++ {
+// 		t := chain.Blocks[i].Timestamp
+// 		tsf := fmt.Sprintf("%d-%02d-%02dT%02d:%02d:%02d",
+// 			t.Year(), t.Month(), t.Day(),
+// 			t.Hour(), t.Minute(), t.Second())
 
-		//summary
-		content += fmt.Sprintf("<br><h3>Block %d</h3>timestamp %s<br>hash %x<br>prevhash %x\n", chain.Blocks[i].Height, tsf, chain.Blocks[i].Hash, chain.Blocks[i].Prev_Block_Hash)
+// 		//summary
+// 		content += fmt.Sprintf("<br><h3>Block %d</h3>timestamp %s<br>hash %x<br>prevhash %x\n", chain.Blocks[i].Height, tsf, chain.Blocks[i].Hash, chain.Blocks[i].Prev_Block_Hash)
 
-		content += fmt.Sprintf("<h4>Number of Tx %d</h4>", len(chain.Blocks[i].Txs))
-		for j := 0; j < len(chain.Blocks[i].Txs); j++ {
-			ctx := chain.Blocks[i].Txs[j]
-			content += fmt.Sprintf("%d from %s to %s %x<br>", ctx.Amount, ctx.Sender, ctx.Receiver, ctx.Id)
-		}
-	}
+// 		content += fmt.Sprintf("<h4>Number of Tx %d</h4>", len(chain.Blocks[i].Txs))
+// 		for j := 0; j < len(chain.Blocks[i].Txs); j++ {
+// 			ctx := chain.Blocks[i].Txs[j]
+// 			content += fmt.Sprintf("%d from %s to %s %x<br>", ctx.Amount, ctx.Sender, ctx.Receiver, ctx.Id)
+// 		}
+// 	}
 
-	return content
-}
+// 	return content
+// }
 
-func Runweb(webport int) {
-	//webserver to access node state through browser
-	// HTTP
-	nlog.Println("start webserver")
+// func Runweb(webport int) {
+// 	//webserver to access node state through browser
+// 	// HTTP
+// 	nlog.Println("start webserver")
 
-	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		p := LoadContent(Peers)
-		//nlog.Print(p)
-		fmt.Fprintf(w, "<h1>Polygon chain</h1><div>%s</div>", p)
-	})
+// 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+// 		p := LoadContent(Peers)
+// 		//nlog.Print(p)
+// 		fmt.Fprintf(w, "<h1>Polygon chain</h1><div>%s</div>", p)
+// 	})
 
-	nlog.Fatal(http.ListenAndServe(":"+strconv.Itoa(webport), nil))
+// 	nlog.Fatal(http.ListenAndServe(":"+strconv.Itoa(webport), nil))
 
-}
+// }
 
 //TODO
 func rungin(webport int) {
@@ -567,24 +481,7 @@ func rungin(webport int) {
 	router.Run(":" + strconv.Itoa(webport))
 }
 
-func printsub(t time.Time) {
-	log.Println("printsub")
-	x := ntwk.TakeChan()
-
-	nlog.Println("> ", x)
-	//nlog.Println(len(ntwk.Timechan))
-
-	// select {
-	// case <-ntwk.Timechan:
-	// 	fmt.Println("Received from Timechan. bufsize ", len(ntwk.Timechan))
-	//}
-}
-
 // func main() {
-
-// 	//setup publisher
-// 	//tchan = ntwk.Publisher()
-// 	//go ntwk.Pubtime(tchan)
 
 // 	setupLogfile()
 
