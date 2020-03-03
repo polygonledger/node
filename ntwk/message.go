@@ -33,6 +33,7 @@ const (
 	CMD_BALANCE          = "BALANCE" //get balance of account
 	CMD_FAUCET           = "FAUCET"
 	CMD_TX               = "TX" //send transaction
+	CMD_LOGIN            = "LOGIN"
 	CMD_BLOCKHEIGHT      = "BLOCKHEIGHT"
 	CMD_RANDOM_ACCOUNT   = "RANACC" //get some random account
 	//GET

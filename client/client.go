@@ -18,6 +18,7 @@ import (
 
 	"github.com/polygonledger/node/block"
 	cryptoutil "github.com/polygonledger/node/crypto"
+	"github.com/polygonledger/node/ntcl"
 	ntwk "github.com/polygonledger/node/ntwk"
 )
 
@@ -620,31 +621,63 @@ func readOption() string {
 	return option
 }
 
+const node_port = 8888
+
+func testclient() ntcl.Ntchan {
+	time.Sleep(200 * time.Millisecond)
+	addr := ":" + strconv.Itoa(node_port)
+	conn, err := net.Dial("tcp", addr)
+	if err != nil {
+		//t.Error("could not connect to server: ", err)
+	}
+	//t.Error("...")
+	log.Println("connected")
+	ntchan := ntcl.ConnNtchan(conn, "client", addr)
+
+	go ntcl.ReadLoop(ntchan)
+
+	reqs := "REQ#PING#|"
+	ntcl.NtwkWrite(ntchan, reqs)
+
+	time.Sleep(100 * time.Millisecond)
+
+	//log.Println(clientNt.SrcName)
+
+	rmsg := <-ntchan.Reader_queue
+	log.Println("response ", rmsg)
+
+	//defer conn.Close()
+	return ntchan
+
+}
+
 //run client based on options
 func main() {
 
-	config := getConfig()
+	testclient()
 
-	option := readOption()
+	// config := getConfig()
 
-	//dnslook()
+	// option := readOption()
 
-	switch option {
+	// //dnslook()
 
-	case "test", "ping", "heartbeat", "getbalance", "faucet", "txpool", "pushtx", "randomtx":
-		runSingleMode(option, config)
+	// switch option {
 
-	case "createkeys", "sign", "createtx", "verify":
-		runOffline(option, config)
+	// case "test", "ping", "heartbeat", "getbalance", "faucet", "txpool", "pushtx", "randomtx":
+	// 	runSingleMode(option, config)
 
-	case "pingall", "blockheight":
-		runPeermode(option, config)
+	// case "createkeys", "sign", "createtx", "verify":
+	// 	runOffline(option, config)
 
-	case "listen":
-		runListenMode(option, config)
+	// case "pingall", "blockheight":
+	// 	runPeermode(option, config)
 
-	default:
-		log.Println("unknown option")
-	}
+	// case "listen":
+	// 	runListenMode(option, config)
+
+	// default:
+	// 	log.Println("unknown option")
+	// }
 
 }

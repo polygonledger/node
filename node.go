@@ -204,6 +204,22 @@ func HandleFaucet(msg ntwk.Message) string {
 	return reply
 }
 
+func HandleTx(msg ntwk.Message) string {
+	dataBytes := msg.Data
+
+	var tx block.Tx
+
+	if err := json.Unmarshal(dataBytes, &tx); err != nil {
+		panic(err)
+	}
+	nlog.Println(">> ", tx)
+
+	resp := chain.HandleTx(tx)
+	reply := ntwk.EncodeMsgString(ntwk.REP, ntwk.CMD_TX, resp)
+	//reply_msg := ntwk.EncodeMsgString(ntwk.REP, "PONG", "")
+	return reply
+}
+
 //handle requests in telnet style i.e. string encoding
 func RequestHandlerTel(ntchan ntcl.Ntchan) {
 	for {
@@ -211,7 +227,6 @@ func RequestHandlerTel(ntchan ntcl.Ntchan) {
 		log.Println("handle ", msg_string)
 		msg := ntwk.ParseMessage(msg_string)
 
-		//"echo:" + msg_string
 		var reply_msg string
 
 		nlog.Println("Handle ", msg.Command)
@@ -231,21 +246,13 @@ func RequestHandlerTel(ntchan ntcl.Ntchan) {
 		case ntwk.CMD_BLOCKHEIGHT:
 			reply_msg = HandleBlockheight(msg)
 
-			// case ntwk.CMD_TX:
-			// 	nlog.Println("Handle tx")
+			//Login would be challenge response protocol
+			// case ntwk.CMD_LOGIN:
+			// 	log.Println("> ", msg.Data)
 
-			// 	dataBytes := msg.Data
-
-			// 	var tx block.Tx
-
-			// 	if err := json.Unmarshal(dataBytes, &tx); err != nil {
-			// 		panic(err)
-			// 	}
-			// 	nlog.Println(">> ", tx)
-
-			// 	resp := chain.HandleTx(tx)
-			// 	msg := ntwk.EncodeMsg(ntwk.REP, ntwk.CMD_TX, resp)
-			// 	rep_chan <- msg
+		case ntwk.CMD_TX:
+			nlog.Println("Handle tx")
+			reply_msg = HandleTx(msg)
 
 			// case ntwk.CMD_GETTXPOOL:
 			// 	nlog.Println("get tx pool")
