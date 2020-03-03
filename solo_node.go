@@ -109,6 +109,7 @@ func (t *TCPServer) handleConnection(ntchan ntcl.Ntchan) {
 
 	go ntcl.ReadLoop(ntchan)
 	go ntcl.ReadProcessor(ntchan)
+	go ntcl.WriteLoop(ntchan, 500*time.Millisecond)
 }
 
 //deal with the logic of each connection
@@ -149,8 +150,7 @@ func (t *TCPServer) handleConnectionReadWriter(ntchan ntcl.Ntchan) {
 	}
 }
 
-// NewServer creates a new Server using given protocol
-// and addr
+// create a new Server
 func NewServer(addr string) (*TCPServer, error) {
 	return &TCPServer{
 		addr:          addr,

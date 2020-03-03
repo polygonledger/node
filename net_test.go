@@ -53,8 +53,9 @@ func testclient() ntcl.Ntchan {
 func TestServer_Run(t *testing.T) {
 
 	testsrv := initserver()
+	defer testsrv.Close()
 
-	time.Sleep(1100 * time.Millisecond)
+	time.Sleep(800 * time.Millisecond)
 
 	// Simply check that the server is up and can accept connections
 	go testclient()
@@ -80,12 +81,13 @@ func TestServer_Run(t *testing.T) {
 func TestServer_Write(t *testing.T) {
 
 	testsrv := initserver()
+	defer testsrv.Close()
 
 	clientNt := testclient()
 	go ntcl.ReadLoop(clientNt)
 	//go ntcl.ReadProcessor(clientNt)
 
-	time.Sleep(1000 * time.Millisecond)
+	time.Sleep(2000 * time.Millisecond)
 
 	peers := testsrv.GetPeers()
 	if len(peers) != 1 {
@@ -113,35 +115,17 @@ func TestServer_Write(t *testing.T) {
 
 	time.Sleep(100 * time.Millisecond)
 
-	log.Println(clientNt.SrcName)
+	//log.Println(clientNt.SrcName)
 
-	if isEmpty(clientNt.Reader_queue, 1*time.Second) {
-		t.Error("fail")
+	rmsg := <-clientNt.Reader_queue
+	if rmsg != reqs {
+		t.Error("different message on reader ", rmsg)
 	}
-
-	// msg, _ := ntcl.MsgRead(clientNt)
-	// log.Println("msg ", msg)
-
-	//n, err := ntcl.MsgRead(firstpeer.NTchan, reqs)
-
-	//TODO! need to start reader on firstpeer
-	// if isEmpty(firstpeer.NTchan.Reader_queue, 1*time.Second) {
-	// 	t.Error("Reader_queue empty")
-	// }
+	// if isEmpty(clientNt.Reader_queue, 1*time.Second) {
+	// 	t.Error("fail")
+	//}
 
 }
-
-// func TestServer_Write(t *testing.T) {
-// 	testsrv := initserver()
-
-// 	if len(testsrv.GetPeers()) > 0 {
-// 		x := <-testsrv.Peers[0].NTchan.Writer_queue
-// 		if x == "" {
-// 			t.Error("peer nil")
-// 		}
-// 	}
-// 	defer conn.Close()
-// }
 
 // func TestServer_Request(t *testing.T) {
 

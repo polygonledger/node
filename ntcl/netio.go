@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"strings"
 )
 
 const DELIM = '|'
@@ -52,5 +53,7 @@ func NtwkRead(ntchan Ntchan, delim byte) (string, error) {
 }
 
 func MsgRead(ntchan Ntchan) (string, error) {
-	return NtwkRead(ntchan, DELIM)
+	msg_string, err := NtwkRead(ntchan, DELIM)
+	msg_string = strings.Trim(msg_string, string(DELIM))
+	return msg_string, err
 }

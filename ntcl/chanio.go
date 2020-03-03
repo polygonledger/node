@@ -117,15 +117,15 @@ func ReadProcessor(ntchan Ntchan) {
 			msg := ntwk.ParseMessage(msgString)
 
 			if msg.MessageType == ntwk.REQ {
-				//TODO proper handler
-				//log.Println("req ", msg.Command)
-				//logmsg(ntchan.Name, "ReadProcessor", msg.Command, 0)
 
 				msg_string := ntwk.MsgString(msg)
 				logmsgd("ReadProcessor", "REQ_in")
-				ntchan.REQ_in <- msg_string
 
-				//ntchan.Writer_queue <- reply_string
+				//TODO!
+				//ntchan.REQ_in <- msg_string
+				reply_string := "echo:" + msg_string
+				log.Println(">> ", reply_string)
+				ntchan.Writer_queue <- reply_string
 
 			} else if msg.MessageType == ntwk.REP {
 				//TODO!
@@ -143,4 +143,24 @@ func ReadProcessor(ntchan Ntchan) {
 		}
 	}
 
+}
+
+func WriteLoop(ntchan Ntchan, d time.Duration) {
+	//msg_writer_total := 0
+	for {
+		//log.Println("loop writer")
+		//TODO!
+		//
+
+		//msg_string := <-ntchan.REQ_out
+
+		//take from channel and write
+		msg := <-ntchan.Writer_queue
+		NtwkWrite(ntchan, msg)
+		//logmsg(ntchan.Name, "WriteLoop", msg, msg_writer_total)
+		//NetworkWrite(ntchan, msg)
+
+		time.Sleep(d)
+		//msg_writer_total++
+	}
 }
