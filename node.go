@@ -33,6 +33,7 @@ import (
 	"github.com/polygonledger/node/crypto"
 	"github.com/polygonledger/node/ntcl"
 	"github.com/polygonledger/node/ntwk"
+	utils "github.com/polygonledger/node/utils"
 )
 
 //simple node that runs standalone without peers
@@ -47,9 +48,10 @@ var nlog *log.Logger
 var logfile_name = "node.log"
 
 type Configuration struct {
-	PeerAddresses []string
-	NodePort      int
-	WebPort       int
+	PeerAddresses  []string
+	NodePort       int
+	WebPort        int
+	DelgateEnabled bool
 }
 
 type TCPServer struct {
@@ -449,12 +451,11 @@ func run_node(config Configuration) {
 
 	// 	//if file exists read the chain
 
-	// 	// create block every 10sec
+	// create block every 10sec
 
-	// 	delegation_enabled := false
-	// 	if delegation_enabled {
-	// 		go doEvery(blockTime, chain.MakeBlock)
-	// 	}
+	if config.DelgateEnabled {
+		go utils.DoEvery(blockTime, chain.MakeBlock)
+	}
 
 	srv, err := NewServer(":" + strconv.Itoa(node_port))
 

@@ -1,8 +1,10 @@
-{
+{    
     "PeerAddresses": ["polygonnode.com", "54.162.206.72", "3.93.218.181"],
     
     "NodePort": 8888,
 
-    "WebPort": 8080
+    "WebPort": 8080,
+
+    "DelgateEnabled": true
     
 }
