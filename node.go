@@ -259,8 +259,17 @@ func RequestHandlerTel(ntchan ntcl.Ntchan) {
 		case ntwk.CMD_SUB:
 			log.Println("subscribe to topic ", msg.Data)
 
+			//quitpub := make(chan int)
 			go ntcl.PublishTime(ntchan)
-			go ntcl.PubWriterLoop(ntchan)
+			go ntcl.PubWriterLoop(ntchan, ntchan.PUB_time_quit)
+
+		case ntwk.CMD_SUBUN:
+			log.Println("unsubscribe from topic ", msg.Data)
+
+			go func() {
+				//time.Sleep(5000 * time.Millisecond)
+				close(ntchan.PUB_time_quit)
+			}()
 
 			// case ntwk.CMD_GETTXPOOL:
 			// 	nlog.Println("get tx pool")

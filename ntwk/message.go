@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"time"
 
-	block "github.com/polygonledger/node/block"
+	"github.com/polygonledger/node/block"
 )
 
 //any message is defined through the delimters, no size restrictions as of now
@@ -41,6 +41,7 @@ const (
 	CMD_GETBLOCKS = "GETBLOCKS"
 	EMPTY_DATA    = "EMPTY"
 	CMD_SUB       = "SUBTO"
+	CMD_SUBUN     = "SUBUN" //unsuscribe
 )
 
 //TODO proper enums

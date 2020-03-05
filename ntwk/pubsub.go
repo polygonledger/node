@@ -48,19 +48,6 @@ func Subout(tchan chan string, name string, outchan chan Message) {
 	}
 }
 
-func PublishTime(tchan chan string) {
-	t := time.Now()
-	timeFormat := "2006-01-02T15:04:05"
-	tf := t.Format(timeFormat)
-	go func() {
-		log.Println("publish ", tf)
-		tchan <- tf
-		//log.Println(len(Timechan), cap(Timechan))
-		//log.Println("do")
-	}()
-
-}
-
 // func PublishLoop() {
 // 	tTime := 1000 * time.Millisecond
 // 	for _ = range time.Tick(tTime) {

@@ -11,7 +11,7 @@ import (
 	"time"
 
 	"github.com/polygonledger/node/block"
-	crypto "github.com/polygonledger/node/crypto"
+	"github.com/polygonledger/node/crypto"
 )
 
 var Tx_pool []block.Tx

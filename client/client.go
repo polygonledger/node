@@ -640,6 +640,7 @@ func testclient() {
 
 	//reqs := "REQ#PING#|"
 	reqs := "REQ#SUBTO#TIME|"
+	log.Println("subscribe")
 	ntcl.NtwkWrite(ntchan, reqs)
 
 	//log.Println(clientNt.SrcName)
@@ -650,7 +651,15 @@ func testclient() {
 			log.Println("> ", rmsg)
 		}
 	}()
-	time.Sleep(100000 * time.Millisecond)
+	time.Sleep(2000 * time.Millisecond)
+
+	reqs = "REQ#SUBUN#TIME|"
+	ntcl.NtwkWrite(ntchan, reqs)
+
+	log.Println("unsubscribe")
+
+	time.Sleep(10000 * time.Millisecond)
+
 	//defer conn.Close()
 	return
 

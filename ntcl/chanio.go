@@ -29,8 +29,9 @@ type Ntchan struct {
 	REQ_out chan string
 	REP_in  chan string
 
-	PUB_time_out chan string
-	SUB_time_out chan string
+	PUB_time_out  chan string
+	SUB_time_out  chan string
+	PUB_time_quit chan int
 	// SUB_request_out   chan string
 	// SUB_request_in    chan string
 	// UNSUB_request_out chan string
@@ -67,6 +68,7 @@ func ConnNtchan(conn net.Conn, SrcName string, DestName string) Ntchan {
 	ntchan.REP_out = make(chan string)
 	ntchan.REQ_out = make(chan string)
 	ntchan.PUB_time_out = make(chan string)
+	ntchan.PUB_time_quit = make(chan int)
 	// ntchan.Reader_processed = 0
 	// ntchan.Writer_processed = 0
 	ntchan.Conn = conn
@@ -86,6 +88,7 @@ func ConnNtchanStub(name string) Ntchan {
 	ntchan.REP_out = make(chan string)
 	ntchan.REQ_out = make(chan string)
 	ntchan.PUB_time_out = make(chan string)
+	ntchan.PUB_time_quit = make(chan int)
 	//ntchan.Reader_processed = 0
 	//ntchan.Writer_processed = 0
 
@@ -199,14 +202,17 @@ func PublishTime(ntchan Ntchan) {
 
 }
 
-//publication to writer queue
-func PubWriterLoop(ntchan Ntchan) {
+//publication to writer queue. requires quit channel
+func PubWriterLoop(ntchan Ntchan, quit chan int) {
 
 	for {
 		select {
 		case msg := <-ntchan.PUB_time_out:
 			vlog("sub " + msg)
 			ntchan.Writer_queue <- msg
+		case <-quit:
+			fmt.Println("stop pub")
+			return
 			// default:
 			// 	fmt.Println("no message received")
 		}
