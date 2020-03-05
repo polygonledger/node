@@ -256,6 +256,12 @@ func RequestHandlerTel(ntchan ntcl.Ntchan) {
 			nlog.Println("Handle tx")
 			reply_msg = HandleTx(msg)
 
+		case ntwk.CMD_SUB:
+			nlog.Println("subscribe to topic ", msg.Data)
+
+			go ntcl.PublishTime(ntchan)
+			go ntcl.PubWriterLoop(ntchan)
+
 			// case ntwk.CMD_GETTXPOOL:
 			// 	nlog.Println("get tx pool")
 
@@ -287,6 +293,9 @@ func (t *TCPServer) handleConnection(ntchan ntcl.Ntchan) {
 	go ntcl.WriteLoop(ntchan, 500*time.Millisecond)
 
 	go RequestHandlerTel(ntchan)
+
+	//go ntcl.WriteLoop(ntchan, 100*time.Millisecond)
+
 }
 
 //HTTP
@@ -493,5 +502,13 @@ func main() {
 	go run_node(config)
 
 	Runweb(config.WebPort)
+
+	// ntchan := ntcl.ConnNtchanStub("test")
+
+	// go ntcl.PublishTime(ntchan)
+	// go PubWriterLoop(ntchan)
+	// go ntcl.WriteLoop(ntchan, 100*time.Millisecond)
+
+	// time.Sleep(2000 * time.Millisecond)
 
 }
