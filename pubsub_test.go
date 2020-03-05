@@ -52,21 +52,15 @@ func TestServer_Pub(t *testing.T) {
 
 	ntchan := ntcl.ConnNtchanStub("server")
 
-	// clientNt := testclientpub()
-	//go ntcl.ReadLoop(ntchan)
+	time.Sleep(100 * time.Millisecond)
+
+	go ntcl.PublishTime(ntchan)
+	go ntcl.PubWriterLoop(ntchan)
 
 	time.Sleep(100 * time.Millisecond)
 
-	// peers := testsrv.GetPeers()
-
-	// firstpeer := peers[0]
-
-	go ntcl.PublishTime(ntchan)
-
-	time.Sleep(200 * time.Millisecond)
-
-	if !isEmpty(ntchan.Writer_queue, 1*time.Second) {
-		t.Error("fail")
+	if isEmpty(ntchan.Writer_queue, 1*time.Millisecond) {
+		t.Error("Writer_queue empty")
 	}
 
 	// go SubLoop(ntchan)

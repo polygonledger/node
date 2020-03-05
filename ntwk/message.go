@@ -19,7 +19,6 @@ const (
 	REQ = "REQ"
 	REP = "REP"
 	PUB = "PUB"
-	//PUB
 	//SUB
 	//HANDSHAKE
 )
@@ -41,6 +40,7 @@ const (
 	CMD_GETPEERS  = "GETPEERS"
 	CMD_GETBLOCKS = "GETBLOCKS"
 	EMPTY_DATA    = "EMPTY"
+	CMD_SUB       = "SUBTO"
 )
 
 //TODO proper enums

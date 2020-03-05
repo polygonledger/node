@@ -29,6 +29,11 @@ type Ntchan struct {
 	REP_in  chan string
 
 	PUB_time_out chan string
+	SUB_time_out chan string
+	// SUB_request_out   chan string
+	// SUB_request_in    chan string
+	// UNSUB_request_out chan string
+	// UNSUB_request_in  chan string
 
 	// Reader_processed int
 	// Writer_processed int
@@ -173,7 +178,7 @@ func WriteLoop(ntchan Ntchan, d time.Duration) {
 
 func PublishTime(ntchan Ntchan) {
 	timeFormat := "2006-01-02T15:04:05"
-	limiter := time.Tick(200 * time.Millisecond)
+	limiter := time.Tick(1000 * time.Millisecond)
 	pubcount := 0
 	log.Println("PublishTime")
 
@@ -184,6 +189,23 @@ func PublishTime(ntchan Ntchan) {
 		ntchan.PUB_time_out <- tf
 		<-limiter
 		pubcount++
+
+	}
+
+}
+
+//publication to writer queue
+func PubWriterLoop(ntchan Ntchan) {
+
+	for {
+		select {
+		case msg := <-ntchan.PUB_time_out:
+			log.Println("sub ", msg)
+			ntchan.Writer_queue <- msg
+			// default:
+			// 	fmt.Println("no message received")
+		}
+		time.Sleep(50 * time.Millisecond)
 
 	}
 

@@ -256,6 +256,12 @@ func RequestHandlerTel(ntchan ntcl.Ntchan) {
 			nlog.Println("Handle tx")
 			reply_msg = HandleTx(msg)
 
+		case ntwk.CMD_SUB:
+			nlog.Println("subscribe to topic ", msg.Data)
+
+			go ntcl.PublishTime(ntchan)
+			go ntcl.PubWriterLoop(ntchan)
+
 			// case ntwk.CMD_GETTXPOOL:
 			// 	nlog.Println("get tx pool")
 
@@ -287,6 +293,9 @@ func (t *TCPServer) handleConnection(ntchan ntcl.Ntchan) {
 	go ntcl.WriteLoop(ntchan, 500*time.Millisecond)
 
 	go RequestHandlerTel(ntchan)
+
+	//go ntcl.WriteLoop(ntchan, 100*time.Millisecond)
+
 }
 
 //HTTP
@@ -486,37 +495,20 @@ func LoadConfiguration(file string) Configuration {
 	return config
 }
 
-func SubLoop(ntchan ntcl.Ntchan) {
-
-	for {
-		select {
-		case msg := <-ntchan.PUB_time_out:
-			fmt.Println("received message", msg)
-			log.Println("sub ", msg)
-			ntchan.Writer_queue <- msg
-		default:
-			fmt.Println("no message received")
-		}
-		time.Sleep(50 * time.Millisecond)
-
-	}
-
-}
-
 func main() {
 
-	// config := LoadConfiguration("nodeconf.json")
+	config := LoadConfiguration("nodeconf.json")
 
-	// go run_node(config)
+	go run_node(config)
 
-	// Runweb(config.WebPort)
+	Runweb(config.WebPort)
 
-	ntchan := ntcl.ConnNtchanStub("test")
+	// ntchan := ntcl.ConnNtchanStub("test")
 
-	go ntcl.PublishTime(ntchan)
-	go SubLoop(ntchan)
-	go ntcl.WriteLoop(ntchan, 100*time.Millisecond)
+	// go ntcl.PublishTime(ntchan)
+	// go PubWriterLoop(ntchan)
+	// go ntcl.WriteLoop(ntchan, 100*time.Millisecond)
 
-	time.Sleep(2000 * time.Millisecond)
+	// time.Sleep(2000 * time.Millisecond)
 
 }
