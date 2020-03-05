@@ -486,12 +486,37 @@ func LoadConfiguration(file string) Configuration {
 	return config
 }
 
+func SubLoop(ntchan ntcl.Ntchan) {
+
+	for {
+		select {
+		case msg := <-ntchan.PUB_time_out:
+			fmt.Println("received message", msg)
+			log.Println("sub ", msg)
+			ntchan.Writer_queue <- msg
+		default:
+			fmt.Println("no message received")
+		}
+		time.Sleep(50 * time.Millisecond)
+
+	}
+
+}
+
 func main() {
 
-	config := LoadConfiguration("nodeconf.json")
+	// config := LoadConfiguration("nodeconf.json")
 
-	go run_node(config)
+	// go run_node(config)
 
-	Runweb(config.WebPort)
+	// Runweb(config.WebPort)
+
+	ntchan := ntcl.ConnNtchanStub("test")
+
+	go ntcl.PublishTime(ntchan)
+	go SubLoop(ntchan)
+	go ntcl.WriteLoop(ntchan, 100*time.Millisecond)
+
+	time.Sleep(2000 * time.Millisecond)
 
 }

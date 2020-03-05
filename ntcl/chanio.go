@@ -28,6 +28,8 @@ type Ntchan struct {
 	REQ_out chan string
 	REP_in  chan string
 
+	PUB_time_out chan string
+
 	// Reader_processed int
 	// Writer_processed int
 }
@@ -49,6 +51,7 @@ func ConnNtchan(conn net.Conn, SrcName string, DestName string) Ntchan {
 	ntchan.REP_in = make(chan string)
 	ntchan.REP_out = make(chan string)
 	ntchan.REQ_out = make(chan string)
+	ntchan.PUB_time_out = make(chan string)
 	// ntchan.Reader_processed = 0
 	// ntchan.Writer_processed = 0
 	ntchan.Conn = conn
@@ -58,6 +61,7 @@ func ConnNtchan(conn net.Conn, SrcName string, DestName string) Ntchan {
 	return ntchan
 }
 
+//for testing
 func ConnNtchanStub(name string) Ntchan {
 	var ntchan Ntchan
 	ntchan.Reader_queue = make(chan string)
@@ -66,6 +70,7 @@ func ConnNtchanStub(name string) Ntchan {
 	ntchan.REP_in = make(chan string)
 	ntchan.REP_out = make(chan string)
 	ntchan.REQ_out = make(chan string)
+	ntchan.PUB_time_out = make(chan string)
 	//ntchan.Reader_processed = 0
 	//ntchan.Writer_processed = 0
 
@@ -164,4 +169,22 @@ func WriteLoop(ntchan Ntchan, d time.Duration) {
 		time.Sleep(d)
 		//msg_writer_total++
 	}
+}
+
+func PublishTime(ntchan Ntchan) {
+	timeFormat := "2006-01-02T15:04:05"
+	limiter := time.Tick(200 * time.Millisecond)
+	pubcount := 0
+	log.Println("PublishTime")
+
+	for {
+		t := time.Now()
+		tf := t.Format(timeFormat)
+		log.Println("pub ", tf, pubcount)
+		ntchan.PUB_time_out <- tf
+		<-limiter
+		pubcount++
+
+	}
+
 }
