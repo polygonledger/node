@@ -7,7 +7,6 @@ import (
 	"bytes"
 	"fmt"
 	"io"
-	"log"
 	"strings"
 )
 
@@ -23,18 +22,19 @@ func NtwkWrite(ntchan Ntchan, content string) (int, error) {
 	NEWLINE := '\n'
 	//respContent := fmt.Sprintf("%s%c%c", content, DELIM, NEWLINE)
 	respContent := fmt.Sprintf("%s%c", content, NEWLINE)
-	log.Println("write > ", content, respContent)
+	//log.Println("write > ", content, respContent)
 	writer := bufio.NewWriter(ntchan.Conn)
 	n, err := writer.WriteString(respContent)
 	if err == nil {
 		err = writer.Flush()
 	}
-	log.Println("bytes written", n, " ", ntchan.SrcName, ntchan.DestName)
+	s := fmt.Sprintf("bytes written", n, " ", ntchan.SrcName, ntchan.DestName)
+	vlog(s)
 	return n, err
 }
 
 func NtwkRead(ntchan Ntchan, delim byte) (string, error) {
-	log.Println("read ", ntchan.SrcName, ntchan.DestName)
+	//log.Println("NtwkRead ", ntchan.SrcName, ntchan.DestName)
 	reader := bufio.NewReader(ntchan.Conn)
 	var buffer bytes.Buffer
 	for {

@@ -33,7 +33,7 @@ import (
 	"github.com/polygonledger/node/crypto"
 	"github.com/polygonledger/node/ntcl"
 	"github.com/polygonledger/node/ntwk"
-	utils "github.com/polygonledger/node/utils"
+	"github.com/polygonledger/node/utils"
 )
 
 //simple node that runs standalone without peers
@@ -257,7 +257,7 @@ func RequestHandlerTel(ntchan ntcl.Ntchan) {
 			reply_msg = HandleTx(msg)
 
 		case ntwk.CMD_SUB:
-			nlog.Println("subscribe to topic ", msg.Data)
+			log.Println("subscribe to topic ", msg.Data)
 
 			go ntcl.PublishTime(ntchan)
 			go ntcl.PubWriterLoop(ntchan)

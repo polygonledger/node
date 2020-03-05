@@ -1,6 +1,7 @@
 package ntcl
 
 import (
+	"fmt"
 	"log"
 	"net"
 	"time"
@@ -39,12 +40,21 @@ type Ntchan struct {
 	// Writer_processed int
 }
 
+func vlog(s string) {
+	verbose := false
+	if verbose {
+		log.Println(s)
+	}
+}
+
 func logmsgd(src string, msg string) {
-	log.Printf("[%s] ### %v", src, msg)
+	s := fmt.Sprintf("[%s] ### %v", src, msg)
+	vlog(s)
 }
 
 func logmsgc(name string, src string, msg string) {
-	log.Printf("%s [%s] ### %v", name, src, msg)
+	s := fmt.Sprintf("%s [%s] ### %v", name, src, msg)
+	vlog(s)
 }
 
 //wrap connection in Ntchan
@@ -82,10 +92,6 @@ func ConnNtchanStub(name string) Ntchan {
 	return ntchan
 }
 
-func vlog(s string) {
-	log.Println(s)
-}
-
 func ReadLoop(ntchan Ntchan) {
 	vlog("init ReadLoop " + ntchan.SrcName + " " + ntchan.DestName)
 	d := 300 * time.Millisecond
@@ -102,7 +108,7 @@ func ReadLoop(ntchan Ntchan) {
 		if len(msg) > 0 { //&& msg != EMPTY_MSG {
 			vlog("ntwk read => " + msg)
 			logmsgc(ntchan.SrcName, "ReadLoop", msg)
-			log.Println("put ", msg)
+			vlog("put " + msg)
 			//put in the queue to process
 			ntchan.Reader_queue <- msg
 		}
@@ -145,7 +151,7 @@ func ReadProcessor(ntchan Ntchan) {
 				ntchan.REP_in <- msg_string
 
 				x := <-ntchan.REP_in
-				log.Println("x ", x)
+				vlog("x " + x)
 			}
 
 			//ntchan.Reader_processed++
@@ -166,7 +172,7 @@ func WriteLoop(ntchan Ntchan, d time.Duration) {
 
 		//take from channel and write
 		msg := <-ntchan.Writer_queue
-		log.Println("writeloop ", msg)
+		vlog("writeloop " + msg)
 		NtwkWrite(ntchan, msg)
 		//logmsg(ntchan.Name, "WriteLoop", msg, msg_writer_total)
 		//NetworkWrite(ntchan, msg)
@@ -185,11 +191,10 @@ func PublishTime(ntchan Ntchan) {
 	for {
 		t := time.Now()
 		tf := t.Format(timeFormat)
-		log.Println("pub ", tf, pubcount)
+		vlog("pub " + tf)
 		ntchan.PUB_time_out <- tf
 		<-limiter
 		pubcount++
-
 	}
 
 }
@@ -200,7 +205,7 @@ func PubWriterLoop(ntchan Ntchan) {
 	for {
 		select {
 		case msg := <-ntchan.PUB_time_out:
-			log.Println("sub ", msg)
+			vlog("sub " + msg)
 			ntchan.Writer_queue <- msg
 			// default:
 			// 	fmt.Println("no message received")

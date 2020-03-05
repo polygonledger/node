@@ -17,9 +17,9 @@ import (
 	"time"
 
 	"github.com/polygonledger/node/block"
-	cryptoutil "github.com/polygonledger/node/crypto"
+	"github.com/polygonledger/node/crypto"
 	"github.com/polygonledger/node/ntcl"
-	ntwk "github.com/polygonledger/node/ntwk"
+	"github.com/polygonledger/node/ntwk"
 )
 
 var Peers []ntwk.Peer
@@ -199,7 +199,7 @@ func setupPeerClient(peer ntwk.Peer) error {
 	return nil
 }
 
-func readKeys(keysfile string) cryptoutil.Keypair {
+func readKeys(keysfile string) crypto.Keypair {
 
 	dat, _ := ioutil.ReadFile(keysfile)
 	s := strings.Split(string(dat), string("\n"))
@@ -210,18 +210,18 @@ func readKeys(keysfile string) cryptoutil.Keypair {
 	privHex := s[1]
 	log.Println("privHex ", privHex)
 
-	return cryptoutil.Keypair{PubKey: cryptoutil.PubKeyFromHex(pubkeyHex), PrivKey: cryptoutil.PrivKeyFromHex(privHex)}
+	return crypto.Keypair{PubKey: crypto.PubKeyFromHex(pubkeyHex), PrivKey: crypto.PrivKeyFromHex(privHex)}
 }
 
-func writeKeys(kp cryptoutil.Keypair, keysfile string) {
+func writeKeys(kp crypto.Keypair, keysfile string) {
 
-	pubkeyHex := cryptoutil.PubKeyToHex(kp.PubKey)
+	pubkeyHex := crypto.PubKeyToHex(kp.PubKey)
 	log.Println("pub ", pubkeyHex)
 
-	privHex := cryptoutil.PrivKeyToHex(kp.PrivKey)
+	privHex := crypto.PrivKeyToHex(kp.PrivKey)
 	log.Println("privHex ", privHex)
 
-	address := cryptoutil.Address(pubkeyHex)
+	address := crypto.Address(pubkeyHex)
 
 	t := pubkeyHex + "\n" + privHex + "\n" + address
 	//log.Println("address ", address)
@@ -242,7 +242,7 @@ func createKeys() {
 	//dat, _ := ioutil.ReadFile("keys.txt")
 	//check(err)
 
-	kp := cryptoutil.PairFromSecret(pw)
+	kp := crypto.PairFromSecret(pw)
 	log.Println("keypair ", kp)
 
 	writeKeys(kp, "keys.txt")
@@ -259,8 +259,8 @@ func createtx() {
 
 	// keypair := crypto.PairFromSecret(pw)
 
-	pubk := cryptoutil.PubKeyToHex(kp.PubKey)
-	addr := cryptoutil.Address(pubk)
+	pubk := crypto.PubKeyToHex(kp.PubKey)
+	addr := crypto.Address(pubk)
 	s := block.AccountFromString(addr)
 	log.Println("using account ", s)
 
@@ -278,11 +278,11 @@ func createtx() {
 	tx := block.Tx{Nonce: 1, Amount: amount_int, Sender: block.Account{AccountKey: addr}, Receiver: block.Account{AccountKey: recv}}
 	log.Println("tx ", tx)
 
-	signature := cryptoutil.SignTx(tx, kp)
+	signature := crypto.SignTx(tx, kp)
 	sighex := hex.EncodeToString(signature.Serialize())
 
 	tx.Signature = sighex
-	tx.SenderPubkey = cryptoutil.PubKeyToHex(kp.PubKey)
+	tx.SenderPubkey = crypto.PubKeyToHex(kp.PubKey)
 	log.Println("tx ", tx)
 
 	txJson, _ := json.Marshal(tx)
@@ -537,7 +537,7 @@ func runOffline(option string, config Configuration) {
 		msg = strings.Trim(msg, string('\n'))
 		fmt.Println(msg)
 		kp := readKeys("keys.txt")
-		signature := cryptoutil.SignMsgHash(kp, msg)
+		signature := crypto.SignMsgHash(kp, msg)
 		log.Println("signature ", signature)
 
 		sighex := hex.EncodeToString(signature.Serialize())
@@ -557,16 +557,16 @@ func runOffline(option string, config Configuration) {
 		msgsig, _ := reader.ReadString('\n')
 		msgsig = strings.Trim(msgsig, string('\n'))
 
-		sign := cryptoutil.SignatureFromHex(msgsig)
+		sign := crypto.SignatureFromHex(msgsig)
 
 		fmt.Print("Enter pubkey to verify: ")
 		msgpub, _ := reader.ReadString('\n')
 		log.Println(msgpub)
 		msgpub = strings.Trim(msgpub, string('\n'))
 
-		pubkey := cryptoutil.PubKeyFromHex(msgpub)
+		pubkey := crypto.PubKeyFromHex(msgpub)
 
-		verified := cryptoutil.VerifyMessageSignPub(sign, pubkey, msg)
+		verified := crypto.VerifyMessageSignPub(sign, pubkey, msg)
 		log.Println("verified ", verified)
 
 	}
@@ -623,31 +623,36 @@ func readOption() string {
 
 const node_port = 8888
 
-func testclient() ntcl.Ntchan {
+func testclient() {
 	time.Sleep(200 * time.Millisecond)
 	addr := ":" + strconv.Itoa(node_port)
+	log.Println("dial ", addr)
 	conn, err := net.Dial("tcp", addr)
 	if err != nil {
-		//t.Error("could not connect to server: ", err)
+		log.Println("cant run")
+		return
 	}
-	//t.Error("...")
+
 	log.Println("connected")
 	ntchan := ntcl.ConnNtchan(conn, "client", addr)
 
 	go ntcl.ReadLoop(ntchan)
 
-	reqs := "REQ#PING#|"
+	//reqs := "REQ#PING#|"
+	reqs := "REQ#SUBTO#TIME|"
 	ntcl.NtwkWrite(ntchan, reqs)
-
-	time.Sleep(100 * time.Millisecond)
 
 	//log.Println(clientNt.SrcName)
 
-	rmsg := <-ntchan.Reader_queue
-	log.Println("response ", rmsg)
-
+	go func() {
+		for {
+			rmsg := <-ntchan.Reader_queue
+			log.Println("> ", rmsg)
+		}
+	}()
+	time.Sleep(100000 * time.Millisecond)
 	//defer conn.Close()
-	return ntchan
+	return
 
 }
 
