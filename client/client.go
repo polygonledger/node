@@ -389,11 +389,8 @@ func requestreply(ntchan ntwk.Ntchan, req_msg string) {
 	log.Println("requestreply >> ", req_msg)
 	//REQUEST
 	ntchan.REQ_out <- req_msg
-	//ntchan.REQ_out <- req_msg
 	//REPLY
 
-	// resp_string := <-ntchan.Reader_queue
-	//todo! where is rep?
 	resp_string := <-ntchan.REP_in
 	log.Println("REP_in >> ", resp_string)
 
@@ -637,7 +634,41 @@ func testclient() {
 	ntchan := ntcl.ConnNtchan(conn, "client", addr)
 
 	go ntcl.ReadLoop(ntchan)
+	go ntcl.ReadProcessor(ntchan)
+	go ntcl.WriteProcessor(ntchan)
+	go ntcl.WriteLoop(ntchan, 300*time.Millisecond)
 
+	//subscribe example
+	reqs := "REQ#PING#|"
+	ntchan.REQ_out <- reqs
+	//ntcl.NtwkWrite(ntchan, reqs)
+
+	time.Sleep(1000 * time.Millisecond)
+
+	x := <-ntchan.REP_in
+	log.Println("REP_in", x)
+
+	//defer conn.Close()
+	return
+
+}
+
+func testclient_subscribe() {
+	time.Sleep(200 * time.Millisecond)
+	addr := ":" + strconv.Itoa(node_port)
+	log.Println("dial ", addr)
+	conn, err := net.Dial("tcp", addr)
+	if err != nil {
+		log.Println("cant run")
+		return
+	}
+
+	log.Println("connected")
+	ntchan := ntcl.ConnNtchan(conn, "client", addr)
+
+	go ntcl.ReadLoop(ntchan)
+
+	//subscribe example
 	//reqs := "REQ#PING#|"
 	reqs := "REQ#SUBTO#TIME|"
 	log.Println("subscribe")

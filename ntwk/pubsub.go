@@ -19,20 +19,20 @@ func Publisher() chan string {
 	return tchan
 }
 
-func Pubtime(tchan chan string) {
-	d := 1000 * time.Millisecond
-	for _ = range time.Tick(d) {
-		PublishTime(tchan)
-	}
-}
+// func Pubtime(tchan chan string) {
+// 	d := 1000 * time.Millisecond
+// 	for _ = range time.Tick(d) {
+// 		PublishTime(tchan)
+// 	}
+// }
 
-func Subtime(tchan chan string, name string) {
-	d := 100 * time.Millisecond
-	for _ = range time.Tick(d) {
-		x := <-tchan
-		log.Printf("subscriber [%s] %s", name, x)
-	}
-}
+// func Subtime(tchan chan string, name string) {
+// 	d := 100 * time.Millisecond
+// 	for _ = range time.Tick(d) {
+// 		x := <-tchan
+// 		log.Printf("subscriber [%s] %s", name, x)
+// 	}
+// }
 
 func Subout(tchan chan string, name string, outchan chan Message) {
 	d := 100 * time.Millisecond

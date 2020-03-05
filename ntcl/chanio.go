@@ -42,7 +42,7 @@ type Ntchan struct {
 }
 
 func vlog(s string) {
-	verbose := false
+	verbose := true
 	if verbose {
 		log.Println(s)
 	}
@@ -164,14 +164,21 @@ func ReadProcessor(ntchan Ntchan) {
 
 }
 
+//process from higher level chans into write queue
+func WriteProcessor(ntchan Ntchan) {
+	for {
+		msg_string := <-ntchan.REQ_out
+		log.Println("writeprocessor ", msg_string)
+		ntchan.Writer_queue <- msg_string
+	}
+}
+
 func WriteLoop(ntchan Ntchan, d time.Duration) {
 	//msg_writer_total := 0
 	for {
 		//log.Println("loop writer")
 		//TODO!
 		//
-
-		//msg_string := <-ntchan.REQ_out
 
 		//take from channel and write
 		msg := <-ntchan.Writer_queue
