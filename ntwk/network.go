@@ -2,33 +2,6 @@ package ntwk
 
 // functions relating to network stack
 
-// network layer (NTL)
-
-// NTL -> semantics of channels
-// TCP/IP -> golang net
-
-// golang has the native net package. as TCP only deals with byte streams we need some form
-// to delinate distinct messages to implement the equivalent of actors. since we have
-// channels as the major building block for the network we wrap the bufio readwriter in
-// defined set of channels with equivalent set of messages.
-
-// the struct ntchan is the struct wraps the native readwriter with reads and write queues
-// as channels.
-
-// network reads happen in distinct units of messages which are delimited by the DELIM byte
-// messages have types to indicate the flow of message direction and commands
-// an open question is use of priorities, timing etc.
-
-// the P2P network or any network connection really has different behaviour based on the
-// types of messages going through it. a request-reply for example will have a single read
-// and single write in order, publish-subscribe will  push messages from producers to
-// consumers, etc.
-
-// since we always have only one single two-way channel available as we are on a single
-// socket we need to coordinate the reads and writes. the network is essentialy a scarce
-// resource and depending on the context and semantics messages will be sent/received in
-// different style
-
 import (
 	"bufio"
 	"io"
@@ -139,21 +112,6 @@ func ReadLoop(ntchan Ntchan, d time.Duration) {
 	}
 }
 
-// func RequestProcessor(ntchan *Ntchan, d time.Duration) {
-// 	log.Println("init RequestProcessor ")
-// 	for {
-// 		request := <-ntchan.Req_chan
-// 		log.Println("request ", request)
-
-// 		//reply_string := EncodeMsgString(REP, CMD_PONG, EMPTY_DATA)
-// 		reply := EncodeMsg(REP, CMD_PONG, EMPTY_DATA)
-// 		//TODO reply goes through req_chan only
-// 		ntchan.Rep_chan <- reply
-// 		//ntchan.Writer_queue <- reply_string
-
-// 	}
-// }
-
 //process replies
 func ReplyProcessor(ntchan *Ntchan, d time.Duration) {
 	vlog("init ReplyProcessor ")
@@ -221,11 +179,6 @@ func ReadProcessor(ntchan Ntchan, d time.Duration) {
 func WriteLoop(ntchan Ntchan, d time.Duration) {
 	msg_writer_total := 0
 	for {
-		//log.Println("loop writer")
-		//TODO!
-		//
-
-		//msg_string := <-ntchan.REQ_out
 
 		//take from channel and write
 		msg := <-ntchan.Writer_queue

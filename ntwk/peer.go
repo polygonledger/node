@@ -1,10 +1,5 @@
 package ntwk
 
-import (
-	"log"
-	"time"
-)
-
 //TODO! redundant with Ntchan
 type Peer struct {
 	Address  string `json:"Address"`
@@ -39,55 +34,30 @@ func CreatePeer(ipAddress string, nodeport int) Peer {
 	return p
 }
 
-func MakePingOld(peer Peer) bool {
-	emptydata := ""
-	req_msg := EncodeMsgString(REQ, CMD_PING, emptydata)
-	resp := RequestReplyChan(req_msg, peer.Req_chan, peer.Rep_chan)
-	//log.Println("resp ", resp)
-	if string(resp.Command) == "PONG" {
-		log.Println("ping success")
-		return true
-	} else {
-		log.Println("ping failed ", string(resp.Data))
-		return false
-	}
-}
+// func HearbeatOnce(peer Peer) bool {
+// }
 
-func HearbeatOnce(peer Peer) bool {
-	emptydata := ""
-	req_msg := EncodeMsgString(REQ, CMD_PING, emptydata)
-	resp := RequestReplyChan(req_msg, peer.Req_chan, peer.Rep_chan)
-	//log.Println("resp ", resp)
-	if string(resp.Command) == "PONG" {
-		log.Println("ping success")
-		return true
-	} else {
-		log.Println("ping failed ", string(resp.Data))
-		return false
-	}
-}
+// func Hearbeat(peer Peer) {
 
-func Hearbeat(peer Peer) {
+// 	hTime := 1000 * time.Millisecond
 
-	hTime := 1000 * time.Millisecond
+// 	for tt := range time.Tick(hTime) {
+// 		log.Println("heartbeat ", tt)
+// 		HearbeatOnce(peer)
+// 	}
 
-	for tt := range time.Tick(hTime) {
-		log.Println("heartbeat ", tt)
-		HearbeatOnce(peer)
-	}
+// }
 
-}
-
-func MakeHandshake(peer Peer) bool {
-	emptydata := ""
-	req_msg := EncodeMsgString(REQ, CMD_HANDSHAKE_HELLO, emptydata)
-	resp := RequestReplyChan(req_msg, peer.Req_chan, peer.Rep_chan)
-	//log.Println("resp ", resp)
-	if string(resp.Command) == CMD_HANDSHAKE_STABLE {
-		log.Println("handshake success")
-		return true
-	} else {
-		log.Println("handshake failed ", string(resp.Data))
-		return false
-	}
-}
+// func MakeHandshake(peer Peer) bool {
+// 	emptydata := ""
+// 	req_msg := EncodeMsgString(REQ, CMD_HANDSHAKE_HELLO, emptydata)
+// 	resp := RequestReplyChan(req_msg, peer.Req_chan, peer.Rep_chan)
+// 	//log.Println("resp ", resp)
+// 	if string(resp.Command) == CMD_HANDSHAKE_STABLE {
+// 		log.Println("handshake success")
+// 		return true
+// 	} else {
+// 		log.Println("handshake failed ", string(resp.Data))
+// 		return false
+// 	}
+// }

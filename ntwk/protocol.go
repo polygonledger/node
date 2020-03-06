@@ -48,22 +48,6 @@ func ParseMessage(msgString string) Message {
 	return msg
 }
 
-// func ParseMessageString(msgString string) Message {
-// 	msgString = strings.Trim(msgString, string(DELIM))
-// 	s := strings.Split(msgString, string(DELIM_HEAD))
-
-// 	//ERROR handling of malformed messages
-
-// 	var msg Message
-// 	msg.MessageType = s[0]
-// 	msg.Command = s[1]
-// 	data := s[2] //data can empty but still we expect the delim to be there
-
-// 	msg.Data = data
-// 	//trace(msg)
-// 	return msg
-// }
-
 func EncodeReply(resp string) string {
 	//TODO header missing
 	msg := EncodeMsgString(REP, resp, "")
@@ -100,66 +84,4 @@ func ConstructMessage(cmd string) string {
 	//delim := "\n"
 	msg := cmd + string(DELIM)
 	return msg
-}
-
-//generic request<->reply
-func RequestReplyChan(request_string string, msg_in_chan chan Message, msg_out_chan chan Message) Message {
-	request := ParseMessage(request_string)
-	msg_in_chan <- request
-	resp := <-msg_out_chan
-	return resp
-}
-
-//continous loop of processing requests
-func RequestLoop(ntchan Ntchan, msg_in_chan chan Message, msg_out_chan chan Message) {
-	for {
-		//take from channel and perform request
-		request := <-msg_in_chan
-		//fmt.Println("request ", request)
-		resp := RequestReplyMsg(ntchan, request)
-		//fmt.Println("resp ", resp, resp.MessageType)
-		//BUG MSG can be of type pub
-		if resp.MessageType == REP {
-			msg_out_chan <- resp
-		}
-	}
-}
-
-//request reply of messages
-func RequestReplyMsg(ntchan Ntchan, req_msg Message) Message {
-	req_msg_string := MsgString(req_msg)
-	//log.Println("> ", req_msg_string)
-	resp_msg_string := RequestReplyString(ntchan, req_msg_string)
-	resp_msg := ParseMessage(resp_msg_string)
-	return resp_msg
-}
-
-//request reply on network level
-func RequestReplyString(ntchan Ntchan, req_msg_string string) string {
-	NetworkWrite(ntchan, req_msg_string)
-	resp_msg := NetworkRead(ntchan)
-	return resp_msg
-}
-
-func ReplyNetwork(ntchan Ntchan, resp Message) {
-	//rep_msg := EncodeReply(resp)
-	resp_string := MsgString(resp)
-	NetworkWrite(ntchan, resp_string)
-}
-
-func ReadMessage(ntchan Ntchan) Message {
-	var msg Message
-	msgString := NetworkReadMessage(ntchan)
-	if msgString == EMPTY_MSG {
-		return EmptyMsg()
-	}
-	msg = ParseMessage(msgString)
-	return msg
-}
-
-func PubNetwork(ntchan Ntchan, resp Message) {
-	//rep_msg := EncodeReply(resp)
-	//resp_string := EncodePub(resp)
-	resp_string := EncodePub("TEST", "")
-	NetworkWrite(ntchan, resp_string)
 }
