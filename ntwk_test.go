@@ -269,7 +269,6 @@ func TestReaderPing(t *testing.T) {
 //test entire loop from reader to writer
 func TestAllPingPoingIn(t *testing.T) {
 	log.Println("TestAllPingPoingIn")
-	//TODO! fix
 
 	ntchan := ntcl.ConnNtchanStub("")
 
@@ -285,6 +284,7 @@ func TestAllPingPoingIn(t *testing.T) {
 		t.Error("REQ_in not processed")
 	}
 
+	//TODO! fix
 	// // if isEmpty(ntchan.Writer_queue, time.Second) {
 	// // 	t.Error("writer queue empty")
 	// // }

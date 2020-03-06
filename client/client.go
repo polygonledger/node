@@ -108,34 +108,34 @@ func RandomTx(account_s block.Account) block.Tx {
 }
 
 //
-func MakeRandomTx(peer ntcl.Peer) error {
+func MakeRandomTx(peer ntcl.Peer) {
 	//make a random transaction by requesting random account from node
 	//get random account
 
-	req_msg := ntcl.EncodeMsgString(ntcl.REQ, ntcl.CMD_RANDOM_ACCOUNT, "emptydata")
+	// req_msg := ntcl.EncodeMsgString(ntcl.REQ, ntcl.CMD_RANDOM_ACCOUNT, "emptydata")
 
-	response := ntcl.RequestReplyChan(req_msg, peer.Req_chan, peer.Rep_chan)
+	// response := ntcl.RequestReplyChan(req_msg, peer.Req_chan, peer.Rep_chan)
 
-	var a block.Account
-	dataBytes := []byte(response.Data)
-	if err := json.Unmarshal(dataBytes, &a); err != nil {
-		panic(err)
-	}
-	log.Print(" account key ", a.AccountKey)
+	// var a block.Account
+	// dataBytes := []byte(response.Data)
+	// if err := json.Unmarshal(dataBytes, &a); err != nil {
+	// 	panic(err)
+	// }
+	// log.Print(" account key ", a.AccountKey)
 
-	//use this random account to send coins from
+	// //use this random account to send coins from
 
-	//send Tx
-	testTx := ntcl.RandomTx(a)
-	txJson, _ := json.Marshal(testTx)
-	log.Println("txJson ", txJson)
+	// //send Tx
+	// testTx := ntcl.RandomTx(a)
+	// txJson, _ := json.Marshal(testTx)
+	// log.Println("txJson ", txJson)
 
-	req_msg = ntcl.EncodeMessageTx(txJson)
+	// req_msg = ntcl.EncodeMessageTx(txJson)
 
-	response = ntcl.RequestReplyChan(req_msg, peer.Req_chan, peer.Rep_chan)
-	log.Print("response msg ", response)
+	// response = ntcl.RequestReplyChan(req_msg, peer.Req_chan, peer.Rep_chan)
+	// log.Print("response msg ", response)
 
-	return nil
+	// return nil
 }
 
 func CreateTx(peer ntcl.Peer) {
@@ -165,8 +165,8 @@ func PushTx(peer ntcl.Peer) error {
 	log.Println("txJson ", string(txJson))
 
 	req_msg := ntcl.EncodeMessageTx(txJson)
-	response := ntcl.RequestReplyChan(req_msg, peer.Req_chan, peer.Rep_chan)
-	log.Print("reply msg ", response)
+	// response := ntcl.RequestReplyChan(req_msg, peer.Req_chan, peer.Rep_chan)
+	log.Print(" ", req_msg)
 
 	return nil
 }
@@ -179,26 +179,28 @@ func Getbalance(peer ntcl.Peer) error {
 
 	txJson, _ := json.Marshal(block.Account{AccountKey: addr})
 	req_msg := ntcl.EncodeMsgString(ntcl.REQ, ntcl.CMD_BALANCE, string(txJson))
-	response := ntcl.RequestReplyChan(req_msg, peer.Req_chan, peer.Rep_chan)
-	log.Println("response ", response)
-	var balance int
-	if err := json.Unmarshal(response.Data, &balance); err != nil {
-		panic(err)
-	}
-	log.Println("balance of account ", balance)
+	log.Println(req_msg)
+	// response := ntcl.RequestReplyChan(req_msg, peer.Req_chan, peer.Rep_chan)
+	// log.Println("response ", response)
+	// var balance int
+	// if err := json.Unmarshal(response.Data, &balance); err != nil {
+	// 	panic(err)
+	// }
+	// log.Println("balance of account ", balance)
 
 	return nil
 }
 
 func Getblockheight(peer ntcl.Peer) error {
 	req_msg := ntcl.EncodeMsgString(ntcl.REQ, ntcl.CMD_BLOCKHEIGHT, "")
-	response := ntcl.RequestReplyChan(req_msg, peer.Req_chan, peer.Rep_chan)
+	log.Println(req_msg)
+	// response := ntcl.RequestReplyChan(req_msg, peer.Req_chan, peer.Rep_chan)
 
-	var blockheight int
-	if err := json.Unmarshal(response.Data, &blockheight); err != nil {
-		panic(err)
-	}
-	log.Println("blockheight ", blockheight)
+	// var blockheight int
+	// if err := json.Unmarshal(response.Data, &blockheight); err != nil {
+	// 	panic(err)
+	// }
+	// log.Println("blockheight ", blockheight)
 
 	return nil
 }
@@ -206,16 +208,16 @@ func Getblockheight(peer ntcl.Peer) error {
 func Gettxpool(peer ntcl.Peer) error {
 	req_msg := ntcl.EncodeMsgString(ntcl.REQ, ntcl.CMD_GETTXPOOL, "")
 	log.Println("> ", req_msg)
-	resp := ntcl.RequestReplyChan(req_msg, peer.Req_chan, peer.Rep_chan)
+	// resp := ntcl.RequestReplyChan(req_msg, peer.Req_chan, peer.Rep_chan)
 
-	log.Println("rcvmsg ", resp)
-	log.Println("data ", resp.Data)
+	// log.Println("rcvmsg ", resp)
+	// log.Println("data ", resp.Data)
 
-	var txp []block.Tx
-	if err := json.Unmarshal(resp.Data, &txp); err != nil {
-		panic(err)
-	}
-	log.Println("txp ", txp)
+	// var txp []block.Tx
+	// if err := json.Unmarshal(resp.Data, &txp); err != nil {
+	// 	panic(err)
+	// }
+	// log.Println("txp ", txp)
 
 	return nil
 }
@@ -228,8 +230,9 @@ func GetFaucet(peer ntcl.Peer) error {
 
 	accountJson, _ := json.Marshal(block.Account{AccountKey: addr})
 	req_msg := ntcl.EncodeMsgString(ntcl.REQ, ntcl.CMD_FAUCET, string(accountJson))
-	resp := ntcl.RequestReplyChan(req_msg, peer.Req_chan, peer.Rep_chan)
-	log.Println("resp ", resp)
+	log.Println(req_msg)
+	// resp := ntcl.RequestReplyChan(req_msg, peer.Req_chan, peer.Rep_chan)
+	// log.Println("resp ", resp)
 
 	return nil
 }
@@ -245,20 +248,6 @@ func readdns() {
 	// 	fmt.Printf(domain+". IN A %s\n", ip.String())
 	// }
 
-}
-
-//setup connection to a peer from client side for requests
-func setupPeerClient(peer ntcl.Peer) error {
-
-	//rw, err := ntcl.OpenOut()
-	ntchan := ntcl.OpenNtchanOut(peer.Address, peer.NodePort)
-	// if err != nil {
-	// 	log.Println("error open ", err)
-	// 	return err
-	// }
-
-	go ntcl.RequestLoop(ntchan, peer.Req_chan, peer.Rep_chan)
-	return nil
 }
 
 func readKeys(keysfile string) crypto.Keypair {
@@ -358,13 +347,13 @@ func setupAllPeers(config Configuration) {
 
 	for _, peerAddress := range config.PeerAddresses {
 		log.Println("setup  peer ", peerAddress)
-		p := ntcl.CreatePeer(peerAddress, config.NodePort)
+		//p := ntcl.CreatePeer(peerAddress, config.NodePort)
 
-		err := setupPeerClient(p)
-		if err != nil {
-			log.Println("connect failed")
-			continue
-		}
+		//err := setupPeerClient(p)
+		// if err != nil {
+		// 	log.Println("connect failed")
+		// 	continue
+		// }
 	}
 
 }
@@ -380,13 +369,13 @@ func runPeermode(option string, config Configuration) {
 		p := ntcl.CreatePeer(peerAddress, config.NodePort)
 		log.Println("add peer ", p)
 
-		err := setupPeerClient(p)
-		if err != nil {
-			//remove peer
-			log.Println("dont add peer to list")
-		} else {
-			addPeerOut(p)
-		}
+		//err := setupPeerClient(p)
+		// if err != nil {
+		// 	//remove peer
+		// 	log.Println("dont add peer to list")
+		// } else {
+		// 	addPeerOut(p)
+		// }
 	}
 
 	switch option {
@@ -397,18 +386,18 @@ func runPeermode(option string, config Configuration) {
 		successCount := 0
 		for _, peerAddress := range config.PeerAddresses {
 			log.Println("setup  peer ", peerAddress, config.NodePort)
-			p := ntcl.CreatePeer(peerAddress, config.NodePort)
+			//p := ntcl.CreatePeer(peerAddress, config.NodePort)
 
-			err := setupPeerClient(p)
-			if err != nil {
-				log.Println("connect failed")
-				continue
-			} else {
-				// success := ntcl.MakePingOld(p)
-				// if success {
-				// 	successCount++
-				// }
-			}
+			//err := setupPeerClient(p)
+			// if err != nil {
+			// 	log.Println("connect failed")
+			// 	continue
+			// } else {
+			// 	// success := ntcl.MakePingOld(p)
+			// 	// if success {
+			// 	// 	successCount++
+			// 	// }
+			// }
 		}
 
 		log.Println("pinged peers ", len(config.PeerAddresses), " successCount:", successCount)
@@ -417,13 +406,13 @@ func runPeermode(option string, config Configuration) {
 
 		for _, peerAddress := range config.PeerAddresses {
 			log.Println("setup  peer ", peerAddress)
-			p := ntcl.CreatePeer(peerAddress, config.NodePort)
+			//p := ntcl.CreatePeer(peerAddress, config.NodePort)
 
-			err := setupPeerClient(p)
-			if err == nil {
-				log.Println("block height ", p)
-				Getblockheight(p)
-			}
+			// err := setupPeerClient(p)
+			// if err == nil {
+			// 	log.Println("block height ", p)
+			// 	Getblockheight(p)
+			// }
 		}
 
 	}

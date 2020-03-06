@@ -52,6 +52,7 @@ type Ntchan struct {
 	PUB_time_out  chan string
 	SUB_time_out  chan string
 	PUB_time_quit chan int
+	verbose       bool
 	// SUB_request_out   chan string
 	// SUB_request_in    chan string
 	// UNSUB_request_out chan string
@@ -61,21 +62,21 @@ type Ntchan struct {
 	// Writer_processed int
 }
 
-func vlog(s string) {
-	verbose := true
+func vlog(ntchan Ntchan, s string) {
+	verbose := ntchan.verbose
 	if verbose {
 		log.Println(s)
 	}
 }
 
-func logmsgd(src string, msg string) {
+func logmsgd(ntchan Ntchan, src string, msg string) {
 	s := fmt.Sprintf("[%s] ### %v", src, msg)
-	vlog(s)
+	vlog(ntchan, s)
 }
 
-func logmsgc(name string, src string, msg string) {
+func logmsgc(ntchan Ntchan, name string, src string, msg string) {
 	s := fmt.Sprintf("%s [%s] ### %v", name, src, msg)
-	vlog(s)
+	vlog(ntchan, s)
 }
 
 //wrap connection in Ntchan
@@ -94,6 +95,7 @@ func ConnNtchan(conn net.Conn, SrcName string, DestName string) Ntchan {
 	ntchan.Conn = conn
 	ntchan.SrcName = SrcName
 	ntchan.DestName = DestName
+	ntchan.verbose = false
 
 	return ntchan
 }
@@ -137,12 +139,12 @@ func NetConnectorSetup(ntchan Ntchan) {
 }
 
 func ReadLoop(ntchan Ntchan) {
-	vlog("init ReadLoop " + ntchan.SrcName + " " + ntchan.DestName)
+	vlog(ntchan, "init ReadLoop "+ntchan.SrcName+" "+ntchan.DestName)
 	d := 300 * time.Millisecond
 	//msg_reader_total := 0
 	for {
 		//read from network and put in channel
-		vlog("iter ReadLoop " + ntchan.SrcName + " " + ntchan.DestName)
+		vlog(ntchan, "iter ReadLoop "+ntchan.SrcName+" "+ntchan.DestName)
 		msg, err := MsgRead(ntchan)
 		if err != nil {
 
@@ -150,9 +152,9 @@ func ReadLoop(ntchan Ntchan) {
 		//handle cases
 		//currently can be empty or len, shoudl fix one style
 		if len(msg) > 0 { //&& msg != EMPTY_MSG {
-			vlog("ntwk read => " + msg)
-			logmsgc(ntchan.SrcName, "ReadLoop", msg)
-			vlog("put " + msg)
+			vlog(ntchan, "ntwk read => "+msg)
+			logmsgc(ntchan, ntchan.SrcName, "ReadLoop", msg)
+			vlog(ntchan, "put "+msg)
 			//put in the queue to process
 			ntchan.Reader_queue <- msg
 		}
@@ -168,10 +170,10 @@ func ReadProcessor(ntchan Ntchan) {
 
 	for {
 		msgString := <-ntchan.Reader_queue
-		logmsgd("ReadProcessor", msgString)
+		logmsgd(ntchan, "ReadProcessor", msgString)
 
 		if len(msgString) > 0 {
-			logmsgc(ntchan.SrcName, "ReadProcessor", msgString) //, ntchan.Reader_processed)
+			logmsgc(ntchan, ntchan.SrcName, "ReadProcessor", msgString) //, ntchan.Reader_processed)
 			//TODO try catch
 
 			msg := ParseMessage(msgString)
@@ -179,7 +181,7 @@ func ReadProcessor(ntchan Ntchan) {
 			if msg.MessageType == REQ {
 
 				msg_string := MsgString(msg)
-				logmsgd("ReadProcessor", "REQ_in")
+				logmsgd(ntchan, "ReadProcessor", "REQ_in")
 
 				//TODO!
 				ntchan.REQ_in <- msg_string
@@ -191,11 +193,11 @@ func ReadProcessor(ntchan Ntchan) {
 				//TODO!
 				//msg_string := MsgString(msg)
 				msg_string := MsgString(msg)
-				logmsgd("ReadProcessor", "REP_in")
+				logmsgd(ntchan, "ReadProcessor", "REP_in")
 				ntchan.REP_in <- msg_string
 
 				x := <-ntchan.REP_in
-				vlog("x " + x)
+				vlog(ntchan, "x "+x)
 			}
 
 			//ntchan.Reader_processed++
@@ -213,11 +215,11 @@ func WriteProcessor(ntchan Ntchan) {
 		case msg := <-ntchan.REP_out:
 			//read from REQ_out
 			//log.Println("[Writeprocessor]  REP_out", msg)
-			logmsgc("WriteProcessor", "REP_out", msg)
+			logmsgc(ntchan, "WriteProcessor", "REP_out", msg)
 			ntchan.Writer_queue <- msg
 
 		case msg := <-ntchan.REQ_out:
-			logmsgc("Writeprocessor", "REQ_out ", msg)
+			logmsgc(ntchan, "Writeprocessor", "REQ_out ", msg)
 			ntchan.Writer_queue <- msg
 
 			//PUB?
@@ -234,7 +236,7 @@ func WriteLoop(ntchan Ntchan, d time.Duration) {
 
 		//take from channel and write
 		msg := <-ntchan.Writer_queue
-		vlog("writeloop " + msg)
+		vlog(ntchan, "writeloop "+msg)
 		NtwkWrite(ntchan, msg)
 		//logmsg(ntchan.Name, "WriteLoop", msg, msg_writer_total)
 		//NetworkWrite(ntchan, msg)
@@ -253,7 +255,7 @@ func PublishTime(ntchan Ntchan) {
 	for {
 		t := time.Now()
 		tf := t.Format(timeFormat)
-		vlog("pub " + tf)
+		vlog(ntchan, "pub "+tf)
 		ntchan.PUB_time_out <- tf
 		<-limiter
 		pubcount++
@@ -267,7 +269,7 @@ func PubWriterLoop(ntchan Ntchan) {
 	for {
 		select {
 		case msg := <-ntchan.PUB_time_out:
-			vlog("sub " + msg)
+			vlog(ntchan, "sub "+msg)
 			ntchan.Writer_queue <- msg
 		case <-ntchan.PUB_time_quit:
 			fmt.Println("stop pub")
