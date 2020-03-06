@@ -39,44 +39,6 @@ func vlog(s string) {
 	log.Println(s)
 }
 
-// main setup of all read and write processes for a single connection
-func ReaderWriterConnector(ntchan Ntchan) {
-	vlog("ReaderWriterConnector")
-	//func (ntchan Ntchan) ReaderWriterConnector() {
-
-	//timers
-	read_loop_time := 800 * time.Millisecond
-	read_time_chan := 300 * time.Millisecond
-	write_loop_time := 300 * time.Millisecond
-	//write_processor_time := 300 * time.Millisecond
-
-	//any coordination between reader and writer
-
-	//init reader
-	//reads from the actual "physical" network
-	go ReadLoop(ntchan, read_loop_time)
-
-	//process of reads
-	go ReadProcessor(ntchan, read_time_chan)
-
-	//init writer
-	//write to network whatever is the reader queue
-	go WriteLoop(ntchan, write_loop_time)
-
-	go Writeprocessor(ntchan, 200*time.Millisecond)
-
-	//REQ processor
-	//go Reqprocessor1(ntchan)
-
-	// go func() {
-	// 	ntchan.REQ_in <- "test"
-	// 	//xchan <- "test"
-	// }()
-
-	//TODO
-	//go WriteProducer(ntchan, write_processor_time)
-}
-
 func logmsgd(src string, msg string) {
 	log.Printf("[%s] ### %v", src, msg)
 }
@@ -109,18 +71,6 @@ func ReadLoop(ntchan Ntchan, d time.Duration) {
 		time.Sleep(d)
 		//fix: need ntchan to be a pointer
 		//msg_reader_total++
-	}
-}
-
-//process replies
-func ReplyProcessor(ntchan *Ntchan, d time.Duration) {
-	vlog("init ReplyProcessor ")
-	for {
-		reply_string := <-ntchan.REP_out
-		//log.Println("reply ", reply)
-		//reply_string := MsgString(reply)
-		ntchan.Writer_queue <- reply_string
-
 	}
 }
 

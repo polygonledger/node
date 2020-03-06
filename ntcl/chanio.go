@@ -125,11 +125,22 @@ func ConnNtchanStub(name string) Ntchan {
 //all major processes to operate
 func NetConnectorSetup(ntchan Ntchan) {
 
+	// read_loop_time := 800 * time.Millisecond
+	// read_time_chan := 300 * time.Millisecond
+	// write_loop_time := 300 * time.Millisecond
+
+	//reads from the actual "physical" network
 	go ReadLoop(ntchan)
+	//process of reads
 	go ReadProcessor(ntchan)
-	go WriteLoop(ntchan, 300*time.Millisecond)
-	//TODO!
+	//processor of REQ_out REP_out
 	go WriteProcessor(ntchan)
+	//write to network whatever is in writer queue
+	go WriteLoop(ntchan, 300*time.Millisecond)
+
+	//TODO
+	//go WriteProducer(ntchan)
+
 }
 
 func ReadLoop(ntchan Ntchan) {

@@ -431,18 +431,6 @@ func runPeermode(option string, config Configuration) {
 
 }
 
-//process replies
-func ReplyProcessor(ntchan *ntwk.Ntchan, d time.Duration) {
-	log.Println("init ReplyProcessor ")
-	for {
-		//msg := <-ntchan.Reader_queue
-
-		//reply_string := MsgString(reply)
-		//ntchan.Writer_queue <- reply_string
-
-	}
-}
-
 func requestreply(ntchan ntwk.Ntchan, req_msg string) {
 
 	//TODO! use readloop and REQ/REP chans

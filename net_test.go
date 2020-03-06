@@ -13,6 +13,7 @@ import (
 const test_node_port = 8888
 
 func initserver() *TCPServer {
+	log.Println("initserver")
 	// Start the new server
 
 	testsrv, err := NewServer(":" + strconv.Itoa(test_node_port))
@@ -51,6 +52,7 @@ func testclient() ntcl.Ntchan {
 }
 
 func TestServer_Run(t *testing.T) {
+	log.Println("TestServer_Run")
 
 	testsrv := initserver()
 	defer testsrv.Close()
@@ -79,6 +81,7 @@ func TestServer_Run(t *testing.T) {
 }
 
 func TestServer_Write(t *testing.T) {
+	log.Println("TestServer_Write")
 
 	testsrv := initserver()
 	defer testsrv.Close()
