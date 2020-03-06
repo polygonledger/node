@@ -35,26 +35,6 @@ func addPeerOut(p ntwk.Peer) {
 	log.Println("peers now", Peers)
 }
 
-func initClient() ntcl.Ntchan {
-	addr := ":" + strconv.Itoa(node_port)
-	log.Println("dial ", addr)
-	conn, err := net.Dial("tcp", addr)
-	if err != nil {
-		log.Println("cant run")
-		//return
-	}
-
-	log.Println("connected")
-	ntchan := ntcl.ConnNtchan(conn, "client", addr)
-
-	go ntcl.ReadLoop(ntchan)
-	go ntcl.ReadProcessor(ntchan)
-	go ntcl.WriteProcessor(ntchan)
-	go ntcl.WriteLoop(ntchan, 300*time.Millisecond)
-	return ntchan
-
-}
-
 func runningtime(s string) (string, time.Time) {
 	log.Println("Start:	", s)
 	return s, time.Now()
@@ -129,7 +109,8 @@ func PushTx(peer ntwk.Peer) error {
 	return nil
 }
 
-func Getbalance(peer ntwk.Peer) error {
+func Getbalance(ntchan ntcl.Ntchan) error {
+	//user input
 	reader := bufio.NewReader(os.Stdin)
 	fmt.Print("Enter address: ")
 	addr, _ := reader.ReadString('\n')
@@ -137,10 +118,17 @@ func Getbalance(peer ntwk.Peer) error {
 
 	txJson, _ := json.Marshal(block.Account{AccountKey: addr})
 	req_msg := ntwk.EncodeMsgString(ntwk.REQ, ntwk.CMD_BALANCE, string(txJson))
-	response := ntwk.RequestReplyChan(req_msg, peer.Req_chan, peer.Rep_chan)
+	//response := ntwk.RequestReplyChan(req_msg, peer.Req_chan, peer.Rep_chan)
+	ntchan.REQ_out <- req_msg
+
+	time.Sleep(1000 * time.Millisecond)
+
+	response := <-ntchan.REP_in
+	resonse_msg := ntwk.ParseMessage(response)
+
 	log.Println("response ", response)
 	var balance int
-	if err := json.Unmarshal(response.Data, &balance); err != nil {
+	if err := json.Unmarshal(resonse_msg.Data, &balance); err != nil {
 		panic(err)
 	}
 	log.Println("balance of account ", balance)
@@ -206,110 +194,13 @@ func readdns() {
 }
 
 //setup connection to a peer from client side for requests
+//TODO old
 func setupPeerClient(peer ntwk.Peer) error {
 
-	//rw, err := ntwk.OpenOut()
 	ntchan := ntwk.OpenNtchanOut(peer.Address, peer.NodePort)
-	// if err != nil {
-	// 	log.Println("error open ", err)
-	// 	return err
-	// }
 
 	go ntwk.RequestLoop(ntchan, peer.Req_chan, peer.Rep_chan)
 	return nil
-}
-
-func readKeys(keysfile string) crypto.Keypair {
-
-	dat, _ := ioutil.ReadFile(keysfile)
-	s := strings.Split(string(dat), string("\n"))
-
-	pubkeyHex := s[0]
-	log.Println("pub ", pubkeyHex)
-
-	privHex := s[1]
-	log.Println("privHex ", privHex)
-
-	return crypto.Keypair{PubKey: crypto.PubKeyFromHex(pubkeyHex), PrivKey: crypto.PrivKeyFromHex(privHex)}
-}
-
-func writeKeys(kp crypto.Keypair, keysfile string) {
-
-	pubkeyHex := crypto.PubKeyToHex(kp.PubKey)
-	log.Println("pub ", pubkeyHex)
-
-	privHex := crypto.PrivKeyToHex(kp.PrivKey)
-	log.Println("privHex ", privHex)
-
-	address := crypto.Address(pubkeyHex)
-
-	t := pubkeyHex + "\n" + privHex + "\n" + address
-	//log.Println("address ", address)
-	ioutil.WriteFile(keysfile, []byte(t), 0644)
-}
-
-func createKeys() {
-
-	log.Println("create keypair")
-
-	reader := bufio.NewReader(os.Stdin)
-	fmt.Print("Enter password: ")
-	pw, _ := reader.ReadString('\n')
-	pw = strings.Trim(pw, string('\n'))
-	fmt.Println(pw)
-
-	//check if exists
-	//dat, _ := ioutil.ReadFile("keys.txt")
-	//check(err)
-
-	kp := crypto.PairFromSecret(pw)
-	log.Println("keypair ", kp)
-
-	writeKeys(kp, "keys.txt")
-
-}
-
-func createtx() {
-	kp := readKeys("keys.txt")
-
-	// reader := bufio.NewReader(os.Stdin)
-	// fmt.Print("Enter password: ")
-	// pw, _ := reader.ReadString('\n')
-	// pw = strings.Trim(pw, string('\n'))
-
-	// keypair := crypto.PairFromSecret(pw)
-
-	pubk := crypto.PubKeyToHex(kp.PubKey)
-	addr := crypto.Address(pubk)
-	s := block.AccountFromString(addr)
-	log.Println("using account ", s)
-
-	reader := bufio.NewReader(os.Stdin)
-	fmt.Print("Enter amount: ")
-	amount, _ := reader.ReadString('\n')
-	amount = strings.Trim(amount, string('\n'))
-	amount_int, _ := strconv.Atoi(amount)
-
-	reader = bufio.NewReader(os.Stdin)
-	fmt.Print("Enter recipient: ")
-	recv, _ := reader.ReadString('\n')
-	recv = strings.Trim(recv, string('\n'))
-
-	tx := block.Tx{Nonce: 1, Amount: amount_int, Sender: block.Account{AccountKey: addr}, Receiver: block.Account{AccountKey: recv}}
-	log.Println("tx ", tx)
-
-	signature := crypto.SignTx(tx, kp)
-	sighex := hex.EncodeToString(signature.Serialize())
-
-	tx.Signature = sighex
-	tx.SenderPubkey = crypto.PubKeyToHex(kp.PubKey)
-	log.Println("tx ", tx)
-
-	txJson, _ := json.Marshal(tx)
-	// //write to file
-	// log.Println(txJson)
-
-	ioutil.WriteFile("tx.json", []byte(txJson), 0644)
 }
 
 func setupAllPeers(config Configuration) {
@@ -402,35 +293,9 @@ func ReplyProcessor(ntchan *ntwk.Ntchan, d time.Duration) {
 	}
 }
 
-func requestreply(ntchan ntwk.Ntchan, req_msg string) {
-
-	//TODO! use readloop and REQ/REP chans
-
-	log.Println("requestreply >> ", req_msg)
-	//REQUEST
-	ntchan.REQ_out <- req_msg
-	//REPLY
-
-	resp_string := <-ntchan.REP_in
-	log.Println("REP_in >> ", resp_string)
-
-	// msg := ntwk.ParseMessage(resp_string)
-	// log.Println("response ", msg.MessageType)
-	// if msg.MessageType == ntwk.REP {
-	// 	//need to match to know this is the same request ID?
-	// 	log.Println("REPLY ", msg)
-	// }
-}
-
 //TODO! move
 func ping(ntchan ntcl.Ntchan) {
 
-	// req_msg := ntwk.EncodeMsgString(ntwk.REQ, ntwk.CMD_PING, "")
-
-	// requestreply(ntchan, req_msg)
-
-	//subscribe example
-	//reqs := "REQ#PING#|"
 	req_msg := ntwk.EncodeMsgString(ntwk.REQ, ntwk.CMD_PING, "")
 	ntchan.REQ_out <- req_msg
 	//ntcl.NtwkWrite(ntchan, reqs)
@@ -441,14 +306,6 @@ func ping(ntchan ntcl.Ntchan) {
 	log.Println("REP_in", x)
 
 }
-
-// func ReplyInProcessor(ntchan ntwk.Ntchan) {
-// 	for {
-// 		log.Println("ReplyInProcessor ")
-// 		msg := <-ntchan.REP_in
-// 		log.Println("ReplyInProcessor >> ", msg)
-// 	}
-// }
 
 //run client against single node, just use first IP address in peers i.e. mainpeer
 func runSingleMode(option string, config Configuration) {
@@ -461,10 +318,8 @@ func runSingleMode(option string, config Configuration) {
 	//conn := ntwk.OpenConn(mainPeerAddress + ":" + strconv.Itoa(config.NodePort))
 	//ntwk.ChannelPeerNetwork(conn, mainPeer)
 	//ntchan := ntwk.ConnNtchan(conn, mainPeerAddress)
-	ntchan := initClient()
+	ntchan := ntcl.initClient()
 	log.Println("init ", ntchan)
-
-	//go ntwk.ReaderWriterConnector(ntchan)
 
 	//TODO need to formalize this
 	//go Reqprocessor(ntchan)
@@ -487,6 +342,11 @@ func runSingleMode(option string, config Configuration) {
 		ping(ntchan)
 
 		time.Sleep(1 * time.Second)
+
+	case "balance":
+		log.Println("balance")
+		ntchan := initClient()
+		Getbalance(ntchan)
 
 		// case "heartbeat":
 		// 	log.Println("heartbeat")
@@ -747,17 +607,17 @@ func main() {
 
 	switch option {
 
-	case "test", "ping", "heartbeat", "getbalance", "faucet", "txpool", "pushtx", "randomtx":
+	case "test", "ping", "heartbeat", "balance", "faucet", "txpool", "pushtx", "randomtx":
 		runSingleMode(option, config)
 
 	case "createkeys", "sign", "createtx", "verify":
 		runOffline(option, config)
 
-	case "pingall", "blockheight":
-		runPeermode(option, config)
+	// case "pingall", "blockheight":
+	// 	runPeermode(option, config)
 
-	case "listen":
-		runListenMode(option, config)
+	// case "listen":
+	// 	runListenMode(option, config)
 
 	default:
 		log.Println("unknown option")

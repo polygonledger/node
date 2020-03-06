@@ -12,10 +12,10 @@ import (
 
 const test_node_port_pub = 8888
 
-func initserverpub() *TCPServer {
+func initserverpub() *TCPNode {
 	// Start the new server
 
-	testsrv, err := NewServer(":" + strconv.Itoa(test_node_port_pub))
+	testsrv, err := NewNode(":" + strconv.Itoa(test_node_port_pub))
 
 	if err != nil {
 		log.Println("error starting TCP server")

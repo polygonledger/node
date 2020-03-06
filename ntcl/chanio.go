@@ -1,5 +1,34 @@
 package ntcl
 
+// functions relating to network stack
+
+// network layer (NTCL)
+
+// NTCL -> semantics of channels
+// TCP/IP -> golang net
+
+// golang has the native net package. as TCP only deals with byte streams we need some form
+// to delinate distinct messages to implement the equivalent of actors. we have
+// channels as the major building block for the networkw
+
+// the struct ntchan is the struct wraps the native readwriter with reads and write queues
+// as channels.
+
+// network reads happen in distinct units of messages which are delimited by the DELIM byte
+// messages have types to indicate the flow of message direction and commands
+// an open question is use of priorities, timing etc.
+
+// the P2P network or any network connection has different behaviour based on the
+// types of messages going through it. a request-reply for example will have a single read
+// and single write in order, publish-subscribe will  push messages from producers to
+// consumers, etc.
+
+// we have only one single two-way channel available as we are on a single
+// socket we need to coordinate the reads and writes. the network is a scarce
+// resource and depending on the context and semantics messages will be sent/received in
+// different style. golangs channels don't fully map to underlying network semantics.
+// TCP does not have waiting block or buffering
+
 import (
 	"fmt"
 	"log"
@@ -14,6 +43,7 @@ const (
 	ERROR_READ = "error_read"
 )
 
+//network channel
 type Ntchan struct {
 	//TODO is only single connection
 	Conn     net.Conn
@@ -165,11 +195,14 @@ func ReadProcessor(ntchan Ntchan) {
 }
 
 //process from higher level chans into write queue
-func WriteProcessor(ntchan Ntchan) {
+func WriteProcessor(ntchan Ntchan, d time.Duration) {
 	for {
-		msg_string := <-ntchan.REQ_out
+		msg_string := <-ntchan.REP_out
+		//TODO! select reqout
+		//msg_string := <-ntchan.REQ_out
 		log.Println("writeprocessor ", msg_string)
 		ntchan.Writer_queue <- msg_string
+		time.Sleep(d)
 	}
 }
 

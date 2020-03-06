@@ -2,7 +2,7 @@ package main
 
 //kill -9 $(lsof -t -i:8888)
 //node should run via DNS
-//nodexample.com
+//polygonnode.com
 
 //basic protocol
 //node receives tx messages
@@ -32,13 +32,10 @@ import (
 	"github.com/polygonledger/node/chain"
 	"github.com/polygonledger/node/crypto"
 	"github.com/polygonledger/node/ntcl"
-	"github.com/polygonledger/node/ntwk"
 	"github.com/polygonledger/node/utils"
 )
 
 //simple node that runs standalone without peers
-
-//var srv Server
 
 const node_port = 8888
 
@@ -54,7 +51,8 @@ type Configuration struct {
 	DelgateEnabled bool
 }
 
-type TCPServer struct {
+//node. TODO! add outbound peers?
+type TCPNode struct {
 	Name          string
 	addr          string
 	server        net.Listener
@@ -63,7 +61,7 @@ type TCPServer struct {
 	Peers         []ntcl.Peer
 }
 
-func (t *TCPServer) GetPeers() []ntcl.Peer {
+func (t *TCPNode) GetPeers() []ntcl.Peer {
 	if &t.Peers == nil {
 		return nil
 	}
@@ -71,7 +69,7 @@ func (t *TCPServer) GetPeers() []ntcl.Peer {
 }
 
 // start listening on tcp and handle connection through channels
-func (t *TCPServer) Run() (err error) {
+func (t *TCPNode) Run() (err error) {
 
 	log.Println("node listen on ", t.addr)
 	t.server, err = net.Listen("tcp", t.addr)
@@ -106,12 +104,12 @@ func (t *TCPServer) Run() (err error) {
 	return
 }
 
-func (t *TCPServer) HandleDisconnect() {
+func (t *TCPNode) HandleDisconnect() {
 
 }
 
 //handle new connection
-func (t *TCPServer) HandleConnect() {
+func (t *TCPNode) HandleConnect() {
 
 	//TODO! hearbeart, check if peers are alive
 	//TODO! handshake
@@ -145,20 +143,20 @@ func echohandler(ins string) string {
 	return resp
 }
 
-func HandlePing(msg ntwk.Message) string {
-	reply_msg := ntwk.EncodeMsgString(ntwk.REP, "PONG", "")
+func HandlePing(msg ntcl.Message) string {
+	reply_msg := ntcl.EncodeMsgString(ntcl.REP, "PONG", "")
 	return reply_msg
 }
 
-func HandleBlockheight(msg ntwk.Message) string {
+func HandleBlockheight(msg ntcl.Message) string {
 	bh := len(chain.Blocks)
 	data := strconv.Itoa(bh)
-	reply_msg := ntwk.EncodeMsgString(ntwk.REP, ntwk.CMD_BLOCKHEIGHT, data)
+	reply_msg := ntcl.EncodeMsgString(ntcl.REP, ntcl.CMD_BLOCKHEIGHT, data)
 	//log.Println("BLOCKHEIGHT ", reply_msg)
 	return reply_msg
 }
 
-func HandleBalance(msg ntwk.Message) string {
+func HandleBalance(msg ntcl.Message) string {
 	dataBytes := msg.Data
 	nlog.Println("data ", string(msg.Data), dataBytes)
 
@@ -175,11 +173,11 @@ func HandleBalance(msg ntwk.Message) string {
 	//s := strconv.Itoa(balance)
 	// data, _ := json.Marshal(balance)
 	data := strconv.Itoa(balance)
-	reply_msg := ntwk.EncodeMsgString(ntwk.REP, ntwk.CMD_BALANCE, data)
+	reply_msg := ntcl.EncodeMsgString(ntcl.REP, ntcl.CMD_BALANCE, data)
 	return reply_msg
 }
 
-func HandleFaucet(msg ntwk.Message) string {
+func HandleFaucet(msg ntcl.Message) string {
 	// dataBytes := msg.Data
 	// var account block.Account
 	// if err := json.Unmarshal(dataBytes, &account); err != nil {
@@ -202,11 +200,11 @@ func HandleFaucet(msg ntwk.Message) string {
 	reply_string := chain.HandleTx(tx)
 	nlog.Println("resp > ", reply_string)
 
-	reply := ntwk.EncodeMsgString(ntwk.REP, ntwk.CMD_FAUCET, reply_string)
+	reply := ntcl.EncodeMsgString(ntcl.REP, ntcl.CMD_FAUCET, reply_string)
 	return reply
 }
 
-func HandleTx(msg ntwk.Message) string {
+func HandleTx(msg ntcl.Message) string {
 	dataBytes := msg.Data
 
 	var tx block.Tx
@@ -217,17 +215,17 @@ func HandleTx(msg ntwk.Message) string {
 	nlog.Println(">> ", tx)
 
 	resp := chain.HandleTx(tx)
-	reply := ntwk.EncodeMsgString(ntwk.REP, ntwk.CMD_TX, resp)
-	//reply_msg := ntwk.EncodeMsgString(ntwk.REP, "PONG", "")
+	reply := ntcl.EncodeMsgString(ntcl.REP, ntcl.CMD_TX, resp)
+	//reply_msg := ntcl.EncodeMsgString(ntcl.REP, "PONG", "")
 	return reply
 }
 
 //handle requests in telnet style i.e. string encoding
-func RequestHandlerTel(ntchan ntcl.Ntchan) {
+func RequestHandlerJson(ntchan ntcl.Ntchan) {
 	for {
 		msg_string := <-ntchan.REQ_in
 		log.Println("handle ", msg_string)
-		msg := ntwk.ParseMessage(msg_string)
+		msg := ntcl.ParseMessage(msg_string)
 
 		var reply_msg string
 
@@ -235,53 +233,39 @@ func RequestHandlerTel(ntchan ntcl.Ntchan) {
 
 		switch msg.Command {
 
-		case ntwk.CMD_PING:
+		case ntcl.CMD_PING:
 			reply_msg = HandlePing(msg)
 
-		case ntwk.CMD_BALANCE:
-			reply_msg = HandleBalance(msg)
+		case ntcl.CMD_BALANCE:
+			nlog.Println("Handle balance")
 
-		case ntwk.CMD_FAUCET:
-			//send money to specified address
-			reply_msg = HandleFaucet(msg)
+			dataBytes := msg.Data
+			nlog.Println("data ", dataBytes)
+			var account block.Account
 
-		case ntwk.CMD_BLOCKHEIGHT:
-			reply_msg = HandleBlockheight(msg)
+			if err := json.Unmarshal(dataBytes, &account); err != nil {
+				panic(err)
+			}
+			nlog.Println("get balance for account ", account)
 
-			//Login would be challenge response protocol
-			// case ntwk.CMD_LOGIN:
-			// 	log.Println("> ", msg.Data)
+			balance := chain.Accounts[account]
+			//s := strconv.Itoa(balance)
+			data, _ := json.Marshal(balance)
+			//reply_msg := ntcl.EncodeMsgBytes(ntcl.REP, ntcl.CMD_BALANCE, data)
+			reply_msg := ntcl.EncodeMsgString(ntcl.REP, ntcl.CMD_BALANCE, string(data))
+			log.Println(">> ", reply_msg)
 
-		case ntwk.CMD_TX:
-			nlog.Println("Handle tx")
-			reply_msg = HandleTx(msg)
-
-		case ntwk.CMD_SUB:
-			log.Println("subscribe to topic ", msg.Data)
-
-			//quitpub := make(chan int)
-			go ntcl.PublishTime(ntchan)
-			go ntcl.PubWriterLoop(ntchan)
-
-		case ntwk.CMD_SUBUN:
-			log.Println("unsubscribe from topic ", msg.Data)
-
-			go func() {
-				//time.Sleep(5000 * time.Millisecond)
-				close(ntchan.PUB_time_quit)
-			}()
-
-			// case ntwk.CMD_GETTXPOOL:
+			// case ntcl.CMD_GETTXPOOL:
 			// 	nlog.Println("get tx pool")
 
 			// 	//TODO
 			// 	data, _ := json.Marshal(chain.Tx_pool)
-			// 	msg := ntwk.EncodeMsg(ntwk.REP, ntwk.CMD_GETTXPOOL, string(data))
+			// 	msg := ntcl.EncodeMsg(ntcl.REP, ntcl.CMD_GETTXPOOL, string(data))
 			// 	rep_chan <- msg
 
 			//var Tx_pool []block.Tx
 
-			// case ntwk.CMD_RANDOM_ACCOUNT:
+			// case ntcl.CMD_RANDOM_ACCOUNT:
 			// 	nlog.Println("Handle random account")
 
 			// 	txJson, _ := json.Marshal(chain.RandomAccount())
@@ -292,16 +276,92 @@ func RequestHandlerTel(ntchan ntcl.Ntchan) {
 	}
 }
 
-func (t *TCPServer) handleConnection(ntchan ntcl.Ntchan) {
+func RequestHandlerTel(ntchan ntcl.Ntchan) {
+	for {
+		msg_string := <-ntchan.REQ_in
+		log.Println("handle ", msg_string)
+		msg := ntcl.ParseMessage(msg_string)
+
+		var reply_msg string
+
+		nlog.Println("Handle ", msg.Command)
+
+		switch msg.Command {
+
+		case ntcl.CMD_PING:
+			reply_msg = HandlePing(msg)
+
+		case ntcl.CMD_BALANCE:
+			reply_msg = HandleBalance(msg)
+
+		case ntcl.CMD_FAUCET:
+			//send money to specified address
+			reply_msg = HandleFaucet(msg)
+
+		case ntcl.CMD_BLOCKHEIGHT:
+			reply_msg = HandleBlockheight(msg)
+
+			//Login would be challenge response protocol
+			// case ntcl.CMD_LOGIN:
+			// 	log.Println("> ", msg.Data)
+
+		case ntcl.CMD_TX:
+			nlog.Println("Handle tx")
+			reply_msg = HandleTx(msg)
+
+		case ntcl.CMD_SUB:
+			log.Println("subscribe to topic ", msg.Data)
+
+			//quitpub := make(chan int)
+			go ntcl.PublishTime(ntchan)
+			go ntcl.PubWriterLoop(ntchan)
+
+		case ntcl.CMD_SUBUN:
+			log.Println("unsubscribe from topic ", msg.Data)
+
+			go func() {
+				//time.Sleep(5000 * time.Millisecond)
+				close(ntchan.PUB_time_quit)
+			}()
+
+			// case ntcl.CMD_GETTXPOOL:
+			// 	nlog.Println("get tx pool")
+
+			// 	//TODO
+			// 	data, _ := json.Marshal(chain.Tx_pool)
+			// 	msg := ntcl.EncodeMsg(ntcl.REP, ntcl.CMD_GETTXPOOL, string(data))
+			// 	rep_chan <- msg
+
+			//var Tx_pool []block.Tx
+
+			// case ntcl.CMD_RANDOM_ACCOUNT:
+			// 	nlog.Println("Handle random account")
+
+			// 	txJson, _ := json.Marshal(chain.RandomAccount())
+
+		}
+
+		//ntchan.Writer_queue <- reply_msg
+		ntchan.REP_out <- reply_msg
+	}
+}
+
+func (t *TCPNode) handleConnection(ntchan ntcl.Ntchan) {
 	//tr := 100 * time.Millisecond
 	//defer ntchan.Conn.Close()
 	log.Println("handleConnection")
 
+	//reads from the actual "physical" network
 	go ntcl.ReadLoop(ntchan)
+	//process of reads
 	go ntcl.ReadProcessor(ntchan)
+	//write to network whatever is the reader queue
 	go ntcl.WriteLoop(ntchan, 500*time.Millisecond)
+	//
+	go ntcl.WriteProcessor(ntchan, 500*time.Millisecond)
 
-	go RequestHandlerTel(ntchan)
+	//go RequestHandlerTel(ntchan)
+	go RequestHandlerJson(ntchan)
 
 	//go ntcl.WriteLoop(ntchan, 100*time.Millisecond)
 
@@ -309,6 +369,7 @@ func (t *TCPServer) handleConnection(ntchan ntcl.Ntchan) {
 
 //HTTP
 func LoadContent() string {
+	//TODO: get content
 	content := ""
 
 	// content += fmt.Sprintf("<h2>Peers</h2>Peers: %d<br>", len(peers))
@@ -368,7 +429,7 @@ func Runweb(webport int) {
 
 //deal with the logic of each connection
 //simple readwriter
-// func (t *TCPServer) handleConnectionReadWriter(ntchan ntcl.Ntchan) {
+// func (t *TCPNode) handleConnectionReadWriter(ntchan ntcl.Ntchan) {
 // 	tr := 100 * time.Millisecond
 // 	defer ntchan.Conn.Close()
 // 	log.Println("handleConnection")
@@ -405,8 +466,8 @@ func Runweb(webport int) {
 // }
 
 // create a new Server
-func NewServer(addr string) (*TCPServer, error) {
-	return &TCPServer{
+func NewNode(addr string) (*TCPNode, error) {
+	return &TCPNode{
 		addr:          addr,
 		accepting:     false,
 		ConnectedChan: make(chan net.Conn),
@@ -415,8 +476,8 @@ func NewServer(addr string) (*TCPServer, error) {
 
 }
 
-// Close shuts down the TCP Server
-func (t *TCPServer) Close() (err error) {
+// Close shuts down the TCP Node
+func (t *TCPNode) Close() (err error) {
 	return t.server.Close()
 }
 
@@ -475,7 +536,7 @@ func run_node(config Configuration) {
 		go utils.DoEvery(blockTime, chain.MakeBlock)
 	}
 
-	srv, err := NewServer(":" + strconv.Itoa(node_port))
+	srv, err := NewNode(":" + strconv.Itoa(node_port))
 
 	if err != nil {
 		log.Println("error creating TCP server")

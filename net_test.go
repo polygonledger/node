@@ -12,10 +12,10 @@ import (
 
 const test_node_port = 8888
 
-func initserver() *TCPServer {
+func initserver() *TCPNode {
 	// Start the new server
 
-	testsrv, err := NewServer(":" + strconv.Itoa(test_node_port))
+	testsrv, err := NewNode(":" + strconv.Itoa(test_node_port))
 
 	if err != nil {
 		log.Println("error starting TCP server")
@@ -36,7 +36,7 @@ func initserver() *TCPServer {
 }
 
 func testclient() ntcl.Ntchan {
-	time.Sleep(200 * time.Millisecond)
+	time.Sleep(100 * time.Millisecond)
 	addr := ":" + strconv.Itoa(test_node_port)
 	conn, err := net.Dial("tcp", addr)
 	if err != nil {

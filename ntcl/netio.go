@@ -7,7 +7,13 @@ import (
 	"bytes"
 	"fmt"
 	"io"
+	"log"
+	"net"
+	"strconv"
 	"strings"
+	"time"
+
+	"github.com/polygonledger/node/ntcl"
 )
 
 const DELIM = '|'
@@ -16,7 +22,7 @@ func EncodeMsg(content string) string {
 	return content + string(DELIM)
 }
 
-//TODO! factor and replace old
+//TODO! replace old in ntwk package
 func NtwkWrite(ntchan Ntchan, content string) (int, error) {
 	//READLINE uses \n
 	NEWLINE := '\n'
@@ -58,4 +64,24 @@ func MsgRead(ntchan Ntchan) (string, error) {
 	msg_string, err := NtwkRead(ntchan, DELIM)
 	msg_string = strings.Trim(msg_string, string(DELIM))
 	return msg_string, err
+}
+
+func initClient() Ntchan {
+	addr := ":" + strconv.Itoa(node_port)
+	log.Println("dial ", addr)
+	conn, err := net.Dial("tcp", addr)
+	if err != nil {
+		log.Println("cant connect to ", addr)
+		//return
+	}
+
+	log.Println("connected")
+	ntchan := ntcl.ConnNtchan(conn, "client", addr)
+
+	go ReadLoop(ntchan)
+	go ReadProcessor(ntchan)
+	go WriteProcessor(ntchan, 100*time.Millisecond)
+	go WriteLoop(ntchan, 300*time.Millisecond)
+	return ntchan
+
 }
