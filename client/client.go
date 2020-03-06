@@ -35,6 +35,26 @@ func addPeerOut(p ntwk.Peer) {
 	log.Println("peers now", Peers)
 }
 
+func initClient() ntcl.Ntchan {
+	addr := ":" + strconv.Itoa(node_port)
+	log.Println("dial ", addr)
+	conn, err := net.Dial("tcp", addr)
+	if err != nil {
+		log.Println("cant run")
+		//return
+	}
+
+	log.Println("connected")
+	ntchan := ntcl.ConnNtchan(conn, "client", addr)
+
+	go ntcl.ReadLoop(ntchan)
+	go ntcl.ReadProcessor(ntchan)
+	go ntcl.WriteProcessor(ntchan)
+	go ntcl.WriteLoop(ntchan, 300*time.Millisecond)
+	return ntchan
+
+}
+
 func runningtime(s string) (string, time.Time) {
 	log.Println("Start:	", s)
 	return s, time.Now()
@@ -403,11 +423,22 @@ func requestreply(ntchan ntwk.Ntchan, req_msg string) {
 }
 
 //TODO! move
-func ping(ntchan ntwk.Ntchan) {
+func ping(ntchan ntcl.Ntchan) {
 
+	// req_msg := ntwk.EncodeMsgString(ntwk.REQ, ntwk.CMD_PING, "")
+
+	// requestreply(ntchan, req_msg)
+
+	//subscribe example
+	//reqs := "REQ#PING#|"
 	req_msg := ntwk.EncodeMsgString(ntwk.REQ, ntwk.CMD_PING, "")
+	ntchan.REQ_out <- req_msg
+	//ntcl.NtwkWrite(ntchan, reqs)
 
-	requestreply(ntchan, req_msg)
+	time.Sleep(1000 * time.Millisecond)
+
+	x := <-ntchan.REP_in
+	log.Println("REP_in", x)
 
 }
 
@@ -422,18 +453,18 @@ func ping(ntchan ntwk.Ntchan) {
 //run client against single node, just use first IP address in peers i.e. mainpeer
 func runSingleMode(option string, config Configuration) {
 
-	mainPeerAddress := config.PeerAddresses[0]
-	log.Println("setup main peer ", mainPeerAddress, config.NodePort)
-	mainPeer := ntwk.CreatePeer(mainPeerAddress, config.NodePort)
-	log.Println("client with mainPeer ", mainPeer)
-
+	//mainPeerAddress := config.PeerAddresses[0]
+	//log.Println("setup main peer ", mainPeerAddress, config.NodePort)
+	//mainPeer := ntwk.CreatePeer(mainPeerAddress, config.NodePort)
+	//log.Println("client with mainPeer ", mainPeer)
 	//setupPeerClient(mainPeer)
-
-	conn := ntwk.OpenConn(mainPeerAddress + ":" + strconv.Itoa(config.NodePort))
+	//conn := ntwk.OpenConn(mainPeerAddress + ":" + strconv.Itoa(config.NodePort))
 	//ntwk.ChannelPeerNetwork(conn, mainPeer)
-	ntchan := ntwk.ConnNtchan(conn, mainPeerAddress)
+	//ntchan := ntwk.ConnNtchan(conn, mainPeerAddress)
+	ntchan := initClient()
+	log.Println("init ", ntchan)
 
-	go ntwk.ReaderWriterConnector(ntchan)
+	//go ntwk.ReaderWriterConnector(ntchan)
 
 	//TODO need to formalize this
 	//go Reqprocessor(ntchan)
@@ -445,57 +476,60 @@ func runSingleMode(option string, config Configuration) {
 
 	switch option {
 
+	case "test":
+		testclient(ntchan)
+		return
+
 	case "ping":
 		log.Println("ping")
 		//ntwk.MakePingOld(mainPeer)
+		ntchan := initClient()
 		ping(ntchan)
+
 		time.Sleep(1 * time.Second)
 
-	case "heartbeat":
-		log.Println("heartbeat")
+		// case "heartbeat":
+		// 	log.Println("heartbeat")
 
-		for {
-			go ping(ntchan)
-			time.Sleep(1 * time.Second)
-		}
+		// 	for {
+		// 		go ping(ntchan)
+		// 		time.Sleep(1 * time.Second)
+		// 	}
 
-		// success := ntwk.MakeHandshake(mainPeer)
-		// if success {
-		// 	log.Println("start heartbeat")
-		// 	ntwk.Hearbeat(mainPeer)
-		// }
+		// 	// success := ntwk.MakeHandshake(mainPeer)
+		// 	// if success {
+		// 	// 	log.Println("start heartbeat")
+		// 	// 	ntwk.Hearbeat(mainPeer)
+		// 	// }
 
-	case "getbalance":
-		log.Println("getbalance")
+		// case "getbalance":
+		// 	log.Println("getbalance")
 
-		Getbalance(mainPeer)
+		// 	Getbalance(mainPeer)
 
-	case "blockheight":
-		log.Println("blockheight")
+		// case "blockheight":
+		// 	log.Println("blockheight")
 
-		Getblockheight(mainPeer)
+		// 	Getblockheight(mainPeer)
 
-	case "faucet":
-		log.Println("faucet")
-		//get coins
-		//GetFaucet(rw)
-		GetFaucet(mainPeer)
+		// case "faucet":
+		// 	log.Println("faucet")
+		// 	//get coins
+		// 	//GetFaucet(rw)
+		// 	GetFaucet(mainPeer)
 
-	case "txpool":
-		_ = Gettxpool(mainPeer)
-		return
+		// case "txpool":
+		// 	_ = Gettxpool(mainPeer)
+		// 	return
 
-	case "pushtx":
-		_ = PushTx(mainPeer)
-		return
+		// case "pushtx":
+		// 	_ = PushTx(mainPeer)
+		// 	return
 
-	case "randomtx":
-		_ = MakeRandomTx(mainPeer)
-		return
+		// case "randomtx":
+		// 	_ = MakeRandomTx(mainPeer)
+		// 	return
 
-	case "test":
-		testclient()
-		return
 	}
 }
 
@@ -503,11 +537,13 @@ func runSingleMode(option string, config Configuration) {
 func runListenMode(option string, config Configuration) {
 	log.Println("listen")
 
-	mainPeerAddress := config.PeerAddresses[0]
-	log.Println("setup main peer ", mainPeerAddress)
-	mainPeer := ntwk.CreatePeer(mainPeerAddress, config.NodePort)
-	success := ntwk.MakeHandshake(mainPeer)
-	log.Println(success)
+	//ntchan := initClient()
+
+	// mainPeerAddress := config.PeerAddresses[0]
+	// log.Println("setup main peer ", mainPeerAddress)
+	// mainPeer := ntwk.CreatePeer(mainPeerAddress, config.NodePort)
+	// success := ntwk.MakeHandshake(mainPeer)
+	// log.Println(success)
 	// log.Println("start heartbeat")
 	// if success {
 	// 	hTime := 2000 * time.Millisecond
@@ -624,23 +660,23 @@ func readOption() string {
 
 const node_port = 8888
 
-func testclient() {
-	time.Sleep(200 * time.Millisecond)
-	addr := ":" + strconv.Itoa(node_port)
-	log.Println("dial ", addr)
-	conn, err := net.Dial("tcp", addr)
-	if err != nil {
-		log.Println("cant run")
-		return
-	}
+func testclient(ntchan ntcl.Ntchan) {
+	// time.Sleep(200 * time.Millisecond)
+	// addr := ":" + strconv.Itoa(node_port)
+	// log.Println("dial ", addr)
+	// conn, err := net.Dial("tcp", addr)
+	// if err != nil {
+	// 	log.Println("cant run")
+	// 	return
+	// }
 
-	log.Println("connected")
-	ntchan := ntcl.ConnNtchan(conn, "client", addr)
+	// log.Println("connected")
+	// ntchan := ntcl.ConnNtchan(conn, "client", addr)
 
-	go ntcl.ReadLoop(ntchan)
-	go ntcl.ReadProcessor(ntchan)
-	go ntcl.WriteProcessor(ntchan)
-	go ntcl.WriteLoop(ntchan, 300*time.Millisecond)
+	// go ntcl.ReadLoop(ntchan)
+	// go ntcl.ReadProcessor(ntchan)
+	// go ntcl.WriteProcessor(ntchan)
+	// go ntcl.WriteLoop(ntchan, 300*time.Millisecond)
 
 	//subscribe example
 	reqs := "REQ#PING#|"
