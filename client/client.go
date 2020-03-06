@@ -20,10 +20,9 @@ import (
 	"github.com/polygonledger/node/block"
 	"github.com/polygonledger/node/crypto"
 	"github.com/polygonledger/node/ntcl"
-	"github.com/polygonledger/node/ntwk"
 )
 
-var Peers []ntwk.Peer
+var Peers []ntcl.Peer
 
 type Configuration struct {
 	PeerAddresses []string
@@ -31,7 +30,7 @@ type Configuration struct {
 	WebPort       int
 }
 
-func addPeerOut(p ntwk.Peer) {
+func addPeerOut(p ntcl.Peer) {
 	Peers = append(Peers, p)
 	log.Println("peers now", Peers)
 }
@@ -109,13 +108,13 @@ func RandomTx(account_s block.Account) block.Tx {
 }
 
 //
-func MakeRandomTx(peer ntwk.Peer) error {
+func MakeRandomTx(peer ntcl.Peer) error {
 	//make a random transaction by requesting random account from node
 	//get random account
 
-	req_msg := ntwk.EncodeMsgString(ntwk.REQ, ntwk.CMD_RANDOM_ACCOUNT, "emptydata")
+	req_msg := ntcl.EncodeMsgString(ntcl.REQ, ntcl.CMD_RANDOM_ACCOUNT, "emptydata")
 
-	response := ntwk.RequestReplyChan(req_msg, peer.Req_chan, peer.Rep_chan)
+	response := ntcl.RequestReplyChan(req_msg, peer.Req_chan, peer.Rep_chan)
 
 	var a block.Account
 	dataBytes := []byte(response.Data)
@@ -127,19 +126,19 @@ func MakeRandomTx(peer ntwk.Peer) error {
 	//use this random account to send coins from
 
 	//send Tx
-	testTx := ntwk.RandomTx(a)
+	testTx := ntcl.RandomTx(a)
 	txJson, _ := json.Marshal(testTx)
 	log.Println("txJson ", txJson)
 
-	req_msg = ntwk.EncodeMessageTx(txJson)
+	req_msg = ntcl.EncodeMessageTx(txJson)
 
-	response = ntwk.RequestReplyChan(req_msg, peer.Req_chan, peer.Rep_chan)
+	response = ntcl.RequestReplyChan(req_msg, peer.Req_chan, peer.Rep_chan)
 	log.Print("response msg ", response)
 
 	return nil
 }
 
-func CreateTx(peer ntwk.Peer) {
+func CreateTx(peer ntcl.Peer) {
 	// keypair := crypto.PairFromSecret("test")
 	// var tx block.Tx
 	// s := block.AccountFromString("Pa033f6528cc1")
@@ -152,7 +151,7 @@ func CreateTx(peer ntwk.Peer) {
 
 }
 
-func PushTx(peer ntwk.Peer) error {
+func PushTx(peer ntcl.Peer) error {
 
 	dat, _ := ioutil.ReadFile("tx.json")
 	var tx block.Tx
@@ -165,22 +164,22 @@ func PushTx(peer ntwk.Peer) error {
 	txJson, _ := json.Marshal(tx)
 	log.Println("txJson ", string(txJson))
 
-	req_msg := ntwk.EncodeMessageTx(txJson)
-	response := ntwk.RequestReplyChan(req_msg, peer.Req_chan, peer.Rep_chan)
+	req_msg := ntcl.EncodeMessageTx(txJson)
+	response := ntcl.RequestReplyChan(req_msg, peer.Req_chan, peer.Rep_chan)
 	log.Print("reply msg ", response)
 
 	return nil
 }
 
-func Getbalance(peer ntwk.Peer) error {
+func Getbalance(peer ntcl.Peer) error {
 	reader := bufio.NewReader(os.Stdin)
 	fmt.Print("Enter address: ")
 	addr, _ := reader.ReadString('\n')
 	addr = strings.Trim(addr, string('\n'))
 
 	txJson, _ := json.Marshal(block.Account{AccountKey: addr})
-	req_msg := ntwk.EncodeMsgString(ntwk.REQ, ntwk.CMD_BALANCE, string(txJson))
-	response := ntwk.RequestReplyChan(req_msg, peer.Req_chan, peer.Rep_chan)
+	req_msg := ntcl.EncodeMsgString(ntcl.REQ, ntcl.CMD_BALANCE, string(txJson))
+	response := ntcl.RequestReplyChan(req_msg, peer.Req_chan, peer.Rep_chan)
 	log.Println("response ", response)
 	var balance int
 	if err := json.Unmarshal(response.Data, &balance); err != nil {
@@ -191,9 +190,9 @@ func Getbalance(peer ntwk.Peer) error {
 	return nil
 }
 
-func Getblockheight(peer ntwk.Peer) error {
-	req_msg := ntwk.EncodeMsgString(ntwk.REQ, ntwk.CMD_BLOCKHEIGHT, "")
-	response := ntwk.RequestReplyChan(req_msg, peer.Req_chan, peer.Rep_chan)
+func Getblockheight(peer ntcl.Peer) error {
+	req_msg := ntcl.EncodeMsgString(ntcl.REQ, ntcl.CMD_BLOCKHEIGHT, "")
+	response := ntcl.RequestReplyChan(req_msg, peer.Req_chan, peer.Rep_chan)
 
 	var blockheight int
 	if err := json.Unmarshal(response.Data, &blockheight); err != nil {
@@ -204,10 +203,10 @@ func Getblockheight(peer ntwk.Peer) error {
 	return nil
 }
 
-func Gettxpool(peer ntwk.Peer) error {
-	req_msg := ntwk.EncodeMsgString(ntwk.REQ, ntwk.CMD_GETTXPOOL, "")
+func Gettxpool(peer ntcl.Peer) error {
+	req_msg := ntcl.EncodeMsgString(ntcl.REQ, ntcl.CMD_GETTXPOOL, "")
 	log.Println("> ", req_msg)
-	resp := ntwk.RequestReplyChan(req_msg, peer.Req_chan, peer.Rep_chan)
+	resp := ntcl.RequestReplyChan(req_msg, peer.Req_chan, peer.Rep_chan)
 
 	log.Println("rcvmsg ", resp)
 	log.Println("data ", resp.Data)
@@ -221,15 +220,15 @@ func Gettxpool(peer ntwk.Peer) error {
 	return nil
 }
 
-func GetFaucet(peer ntwk.Peer) error {
+func GetFaucet(peer ntcl.Peer) error {
 	reader := bufio.NewReader(os.Stdin)
 	fmt.Print("Enter address: ")
 	addr, _ := reader.ReadString('\n')
 	addr = strings.Trim(addr, string('\n'))
 
 	accountJson, _ := json.Marshal(block.Account{AccountKey: addr})
-	req_msg := ntwk.EncodeMsgString(ntwk.REQ, ntwk.CMD_FAUCET, string(accountJson))
-	resp := ntwk.RequestReplyChan(req_msg, peer.Req_chan, peer.Rep_chan)
+	req_msg := ntcl.EncodeMsgString(ntcl.REQ, ntcl.CMD_FAUCET, string(accountJson))
+	resp := ntcl.RequestReplyChan(req_msg, peer.Req_chan, peer.Rep_chan)
 	log.Println("resp ", resp)
 
 	return nil
@@ -249,16 +248,16 @@ func readdns() {
 }
 
 //setup connection to a peer from client side for requests
-func setupPeerClient(peer ntwk.Peer) error {
+func setupPeerClient(peer ntcl.Peer) error {
 
-	//rw, err := ntwk.OpenOut()
-	ntchan := ntwk.OpenNtchanOut(peer.Address, peer.NodePort)
+	//rw, err := ntcl.OpenOut()
+	ntchan := ntcl.OpenNtchanOut(peer.Address, peer.NodePort)
 	// if err != nil {
 	// 	log.Println("error open ", err)
 	// 	return err
 	// }
 
-	go ntwk.RequestLoop(ntchan, peer.Req_chan, peer.Rep_chan)
+	go ntcl.RequestLoop(ntchan, peer.Req_chan, peer.Rep_chan)
 	return nil
 }
 
@@ -359,7 +358,7 @@ func setupAllPeers(config Configuration) {
 
 	for _, peerAddress := range config.PeerAddresses {
 		log.Println("setup  peer ", peerAddress)
-		p := ntwk.CreatePeer(peerAddress, config.NodePort)
+		p := ntcl.CreatePeer(peerAddress, config.NodePort)
 
 		err := setupPeerClient(p)
 		if err != nil {
@@ -378,7 +377,7 @@ func runPeermode(option string, config Configuration) {
 
 	for _, peerAddress := range config.PeerAddresses {
 
-		p := ntwk.CreatePeer(peerAddress, config.NodePort)
+		p := ntcl.CreatePeer(peerAddress, config.NodePort)
 		log.Println("add peer ", p)
 
 		err := setupPeerClient(p)
@@ -398,14 +397,14 @@ func runPeermode(option string, config Configuration) {
 		successCount := 0
 		for _, peerAddress := range config.PeerAddresses {
 			log.Println("setup  peer ", peerAddress, config.NodePort)
-			p := ntwk.CreatePeer(peerAddress, config.NodePort)
+			p := ntcl.CreatePeer(peerAddress, config.NodePort)
 
 			err := setupPeerClient(p)
 			if err != nil {
 				log.Println("connect failed")
 				continue
 			} else {
-				// success := ntwk.MakePingOld(p)
+				// success := ntcl.MakePingOld(p)
 				// if success {
 				// 	successCount++
 				// }
@@ -418,7 +417,7 @@ func runPeermode(option string, config Configuration) {
 
 		for _, peerAddress := range config.PeerAddresses {
 			log.Println("setup  peer ", peerAddress)
-			p := ntwk.CreatePeer(peerAddress, config.NodePort)
+			p := ntcl.CreatePeer(peerAddress, config.NodePort)
 
 			err := setupPeerClient(p)
 			if err == nil {
@@ -431,7 +430,7 @@ func runPeermode(option string, config Configuration) {
 
 }
 
-func requestreply(ntchan ntwk.Ntchan, req_msg string) {
+func requestreply(ntchan ntcl.Ntchan, req_msg string) {
 
 	//TODO! use readloop and REQ/REP chans
 
@@ -443,9 +442,9 @@ func requestreply(ntchan ntwk.Ntchan, req_msg string) {
 	resp_string := <-ntchan.REP_in
 	log.Println("REP_in >> ", resp_string)
 
-	// msg := ntwk.ParseMessage(resp_string)
+	// msg := ntcl.ParseMessage(resp_string)
 	// log.Println("response ", msg.MessageType)
-	// if msg.MessageType == ntwk.REP {
+	// if msg.MessageType == ntcl.REP {
 	// 	//need to match to know this is the same request ID?
 	// 	log.Println("REPLY ", msg)
 	// }
@@ -454,13 +453,13 @@ func requestreply(ntchan ntwk.Ntchan, req_msg string) {
 //TODO! move
 func ping(ntchan ntcl.Ntchan) {
 
-	// req_msg := ntwk.EncodeMsgString(ntwk.REQ, ntwk.CMD_PING, "")
+	// req_msg := ntcl.EncodeMsgString(ntcl.REQ, ntcl.CMD_PING, "")
 
 	// requestreply(ntchan, req_msg)
 
 	//subscribe example
 	//reqs := "REQ#PING#|"
-	req_msg := ntwk.EncodeMsgString(ntwk.REQ, ntwk.CMD_PING, "")
+	req_msg := ntcl.EncodeMsgString(ntcl.REQ, ntcl.CMD_PING, "")
 	ntchan.REQ_out <- req_msg
 	//ntcl.NtwkWrite(ntchan, reqs)
 
@@ -471,7 +470,7 @@ func ping(ntchan ntcl.Ntchan) {
 
 }
 
-// func ReplyInProcessor(ntchan ntwk.Ntchan) {
+// func ReplyInProcessor(ntchan ntcl.Ntchan) {
 // 	for {
 // 		log.Println("ReplyInProcessor ")
 // 		msg := <-ntchan.REP_in
@@ -484,12 +483,12 @@ func runSingleMode(option string, config Configuration) {
 
 	//mainPeerAddress := config.PeerAddresses[0]
 	//log.Println("setup main peer ", mainPeerAddress, config.NodePort)
-	//mainPeer := ntwk.CreatePeer(mainPeerAddress, config.NodePort)
+	//mainPeer := ntcl.CreatePeer(mainPeerAddress, config.NodePort)
 	//log.Println("client with mainPeer ", mainPeer)
 	//setupPeerClient(mainPeer)
-	//conn := ntwk.OpenConn(mainPeerAddress + ":" + strconv.Itoa(config.NodePort))
-	//ntwk.ChannelPeerNetwork(conn, mainPeer)
-	//ntchan := ntwk.ConnNtchan(conn, mainPeerAddress)
+	//conn := ntcl.OpenConn(mainPeerAddress + ":" + strconv.Itoa(config.NodePort))
+	//ntcl.ChannelPeerNetwork(conn, mainPeer)
+	//ntchan := ntcl.ConnNtchan(conn, mainPeerAddress)
 	ntchan := initClient()
 	log.Println("init ", ntchan)
 
@@ -514,10 +513,10 @@ func runSingleMode(option string, config Configuration) {
 		// 		time.Sleep(1 * time.Second)
 		// 	}
 
-		// 	// success := ntwk.MakeHandshake(mainPeer)
+		// 	// success := ntcl.MakeHandshake(mainPeer)
 		// 	// if success {
 		// 	// 	log.Println("start heartbeat")
-		// 	// 	ntwk.Hearbeat(mainPeer)
+		// 	// 	ntcl.Hearbeat(mainPeer)
 		// 	// }
 
 		// case "getbalance":
@@ -559,8 +558,8 @@ func runListenMode(option string, config Configuration) {
 
 	// mainPeerAddress := config.PeerAddresses[0]
 	// log.Println("setup main peer ", mainPeerAddress)
-	// mainPeer := ntwk.CreatePeer(mainPeerAddress, config.NodePort)
-	// success := ntwk.MakeHandshake(mainPeer)
+	// mainPeer := ntcl.CreatePeer(mainPeerAddress, config.NodePort)
+	// success := ntcl.MakeHandshake(mainPeer)
 	// log.Println(success)
 	// log.Println("start heartbeat")
 	// if success {
@@ -568,7 +567,7 @@ func runListenMode(option string, config Configuration) {
 
 	// 	for _ = range time.Tick(hTime) {
 	// 		//log.Println(x)
-	// 		ntwk.Hearbeat(mainPeer)
+	// 		ntcl.Hearbeat(mainPeer)
 	// 	}
 
 	// }

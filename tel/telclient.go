@@ -20,7 +20,7 @@ func main() {
 	//cmd = strings.Trim(cmd, string('\n'))
 
 	mainPeerAddress := "localhost:8888"
-	mainPeer := ntwk.CreatePeer(mainPeerAddress, 8888)
+	mainPeer := ntcl.CreatePeer(mainPeerAddress, 8888)
 	log.Println("client with mainPeer ", mainPeer)
 
 	log.Println("Dial " + mainPeerAddress)
@@ -30,10 +30,10 @@ func main() {
 	}
 
 	content := "telnet"
-	num, err := ntwk.NtwkWrite(conn, content)
+	num, err := ntcl.NtwkWrite(conn, content)
 
 	log.Println(num)
 
-	s, _ := ntwk.NtwkRead(conn, DELIM)
+	s, _ := ntcl.NtwkRead(conn, DELIM)
 	log.Println(s)
 }

@@ -7,10 +7,9 @@ import (
 	"time"
 
 	"github.com/polygonledger/node/ntcl"
-	"github.com/polygonledger/node/ntwk"
 )
 
-func SimulateNetworkInput(ntchan *ntwk.Ntchan) {
+func SimulateNetworkInput(ntchan *ntcl.Ntchan) {
 	for {
 		ntchan.Reader_queue <- "test"
 		//log.Println(len(ntchan.Reader_queue))
@@ -21,7 +20,7 @@ func SimulateNetworkInput(ntchan *ntwk.Ntchan) {
 func TestReaderin(t *testing.T) {
 	log.Println("TestReaderin")
 
-	ntchan := ntwk.ConnNtchanStub("")
+	ntchan := ntcl.ConnNtchanStub("")
 	go SimulateNetworkInput(&ntchan)
 	time.Sleep(300 * time.Millisecond)
 	start := time.Now()
@@ -44,7 +43,7 @@ func TestReaderin(t *testing.T) {
 
 func SimulateRequest(ntchan *ntcl.Ntchan) {
 
-	req_msg := ntwk.EncodeMsgString(ntwk.REQ, ntwk.CMD_PING, ntwk.EMPTY_DATA)
+	req_msg := ntcl.EncodeMsgString(ntcl.REQ, ntcl.CMD_PING, ntcl.EMPTY_DATA)
 	ntchan.Reader_queue <- req_msg
 	//log.Println(len(ntchan.Reader_queue))
 	time.Sleep(100 * time.Millisecond)
@@ -74,7 +73,7 @@ func TestRequestIn(t *testing.T) {
 	}
 
 	req_in := <-ntchan.REQ_in
-	if req_in != ntwk.EncodeMsgString(ntwk.REQ, ntwk.CMD_PING, ntwk.EMPTY_DATA) {
+	if req_in != ntcl.EncodeMsgString(ntcl.REQ, ntcl.CMD_PING, ntcl.EMPTY_DATA) {
 		t.Error("req not")
 	}
 
@@ -90,7 +89,7 @@ func TestRequestOut(t *testing.T) {
 
 	ntchan := ntcl.ConnNtchanStub("")
 
-	req_out_msg := ntwk.EncodeMsgString(ntwk.REQ, ntwk.CMD_PING, ntwk.EMPTY_DATA)
+	req_out_msg := ntcl.EncodeMsgString(ntcl.REQ, ntcl.CMD_PING, ntcl.EMPTY_DATA)
 	log.Println(req_out_msg)
 
 	select {
@@ -212,7 +211,7 @@ func TestReaderRequest(t *testing.T) {
 
 	go ntcl.ReadProcessor(ntchan)
 
-	req_msg := ntwk.EncodeMsgString(ntwk.REQ, ntwk.CMD_PING, ntwk.EMPTY_DATA)
+	req_msg := ntcl.EncodeMsgString(ntcl.REQ, ntcl.CMD_PING, ntcl.EMPTY_DATA)
 
 	ntchan.Reader_queue <- req_msg
 	time.Sleep(50 * time.Millisecond)
@@ -223,7 +222,7 @@ func TestReaderRequest(t *testing.T) {
 	}
 
 	req_in := <-ntchan.REQ_in
-	if req_in != ntwk.EncodeMsgString(ntwk.REQ, ntwk.CMD_PING, ntwk.EMPTY_DATA) {
+	if req_in != ntcl.EncodeMsgString(ntcl.REQ, ntcl.CMD_PING, ntcl.EMPTY_DATA) {
 		t.Error("req not equal")
 	}
 
@@ -237,7 +236,7 @@ func pinghandler(ntchan ntcl.Ntchan) {
 		if req_msg == "" {
 			//<-req_msg
 		}
-		rep_msg := ntwk.EncodeMsgString(ntwk.REP, ntwk.CMD_PONG, "")
+		rep_msg := ntcl.EncodeMsgString(ntcl.REP, ntcl.CMD_PONG, "")
 		ntchan.REP_out <- rep_msg
 		//log.Println("REP_out >> ", rep_msg)
 	}
@@ -249,11 +248,10 @@ func TestReaderPing(t *testing.T) {
 	ntchan := ntcl.ConnNtchanStub("")
 
 	go ntcl.ReadProcessor(ntchan)
-	//TODO!
 
 	go pinghandler(ntchan)
 
-	ntchan.REQ_in <- ntwk.EncodeMsgString(ntwk.REQ, ntwk.CMD_PING, ntwk.EMPTY_DATA)
+	ntchan.REQ_in <- ntcl.EncodeMsgString(ntcl.REQ, ntcl.CMD_PING, ntcl.EMPTY_DATA)
 
 	time.Sleep(50 * time.Millisecond)
 
@@ -262,7 +260,7 @@ func TestReaderPing(t *testing.T) {
 	}
 
 	x := <-ntchan.REP_out
-	if x != ntwk.EncodeMsgString(ntwk.REP, ntwk.CMD_PONG, "") {
+	if x != ntcl.EncodeMsgString(ntcl.REP, ntcl.CMD_PONG, "") {
 		t.Error("not poing")
 	}
 
@@ -279,7 +277,7 @@ func TestAllPingPoingIn(t *testing.T) {
 	go ntcl.WriteProcessor(ntchan)
 	go pinghandler(ntchan)
 
-	ntchan.Reader_queue <- ntwk.EncodeMsgString(ntwk.REQ, ntwk.CMD_PING, ntwk.EMPTY_DATA)
+	ntchan.Reader_queue <- ntcl.EncodeMsgString(ntcl.REQ, ntcl.CMD_PING, ntcl.EMPTY_DATA)
 
 	time.Sleep(50 * time.Millisecond)
 
@@ -300,26 +298,24 @@ func TestAllPingPoingIn(t *testing.T) {
 
 //connect to ntchans to each other
 //this simulates a real network connection
-func ConnectWrite(ntchan1 ntwk.Ntchan, ntchan2 ntwk.Ntchan) {
-
+func ConnectWrite(ntchan1 ntcl.Ntchan, ntchan2 ntcl.Ntchan) {
 	for {
 		xout := <-ntchan1.Writer_queue
 		ntchan2.Reader_queue <- xout
 
 		yout := <-ntchan2.Writer_queue
 		ntchan1.Reader_queue <- yout
-
 	}
 }
 
 func TestAllPingPongDuplex(t *testing.T) {
 	log.Println("TestAllPingPongDuplex")
 
-	ntchan1 := ntwk.ConnNtchanStub("")
-	ntchan2 := ntwk.ConnNtchanStub("")
+	ntchan1 := ntcl.ConnNtchanStub("")
+	ntchan2 := ntcl.ConnNtchanStub("")
 
-	go ntwk.ReadProcessor(ntchan1, 1*time.Millisecond)
-	go ntwk.Writeprocessor(ntchan1, 1*time.Millisecond)
+	go ntcl.ReadProcessor(ntchan1)
+	go ntcl.WriteProcessor(ntchan1)
 	go ConnectWrite(ntchan1, ntchan2)
 
 	ntchan1.Writer_queue <- "test"

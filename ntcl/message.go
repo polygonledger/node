@@ -1,4 +1,4 @@
-package ntwk
+package ntcl
 
 import (
 	"fmt"

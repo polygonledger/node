@@ -32,13 +32,6 @@ import (
 	"log"
 	"net"
 	"time"
-
-	"github.com/polygonledger/node/ntwk"
-)
-
-const (
-	EMPTY_MSG  = "EMPTY"
-	ERROR_READ = "error_read"
 )
 
 type Ntchan struct {
@@ -181,11 +174,11 @@ func ReadProcessor(ntchan Ntchan) {
 			logmsgc(ntchan.SrcName, "ReadProcessor", msgString) //, ntchan.Reader_processed)
 			//TODO try catch
 
-			msg := ntwk.ParseMessage(msgString)
+			msg := ParseMessage(msgString)
 
-			if msg.MessageType == ntwk.REQ {
+			if msg.MessageType == REQ {
 
-				msg_string := ntwk.MsgString(msg)
+				msg_string := MsgString(msg)
 				logmsgd("ReadProcessor", "REQ_in")
 
 				//TODO!
@@ -194,10 +187,10 @@ func ReadProcessor(ntchan Ntchan) {
 				// log.Println(">> ", reply_string)
 				// ntchan.Writer_queue <- reply_string
 
-			} else if msg.MessageType == ntwk.REP {
+			} else if msg.MessageType == REP {
 				//TODO!
 				//msg_string := MsgString(msg)
-				msg_string := ntwk.MsgString(msg)
+				msg_string := MsgString(msg)
 				logmsgd("ReadProcessor", "REP_in")
 				ntchan.REP_in <- msg_string
 
@@ -215,10 +208,20 @@ func ReadProcessor(ntchan Ntchan) {
 //process from higher level chans into write queue
 func WriteProcessor(ntchan Ntchan) {
 	for {
-		msg_string := <-ntchan.REQ_out
-		log.Println("writeprocessor ", msg_string)
-		ntchan.Writer_queue <- msg_string
-		//TODO! select REP_out
+
+		select {
+		case msg := <-ntchan.REP_out:
+			//read from REQ_out
+			//log.Println("[Writeprocessor]  REP_out", msg)
+			logmsgc("WriteProcessor", "REP_out", msg)
+			ntchan.Writer_queue <- msg
+
+		case msg := <-ntchan.REQ_out:
+			logmsgc("Writeprocessor", "REQ_out ", msg)
+			ntchan.Writer_queue <- msg
+
+			//PUB?
+		}
 	}
 }
 

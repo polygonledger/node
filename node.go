@@ -32,7 +32,6 @@ import (
 	"github.com/polygonledger/node/chain"
 	"github.com/polygonledger/node/crypto"
 	"github.com/polygonledger/node/ntcl"
-	"github.com/polygonledger/node/ntwk"
 	"github.com/polygonledger/node/utils"
 )
 
@@ -145,20 +144,20 @@ func echohandler(ins string) string {
 	return resp
 }
 
-func HandlePing(msg ntwk.Message) string {
-	reply_msg := ntwk.EncodeMsgString(ntwk.REP, "PONG", "")
+func HandlePing(msg ntcl.Message) string {
+	reply_msg := ntcl.EncodeMsgString(ntcl.REP, "PONG", "")
 	return reply_msg
 }
 
-func HandleBlockheight(msg ntwk.Message) string {
+func HandleBlockheight(msg ntcl.Message) string {
 	bh := len(chain.Blocks)
 	data := strconv.Itoa(bh)
-	reply_msg := ntwk.EncodeMsgString(ntwk.REP, ntwk.CMD_BLOCKHEIGHT, data)
+	reply_msg := ntcl.EncodeMsgString(ntcl.REP, ntcl.CMD_BLOCKHEIGHT, data)
 	//log.Println("BLOCKHEIGHT ", reply_msg)
 	return reply_msg
 }
 
-func HandleBalance(msg ntwk.Message) string {
+func HandleBalance(msg ntcl.Message) string {
 	dataBytes := msg.Data
 	nlog.Println("data ", string(msg.Data), dataBytes)
 
@@ -175,11 +174,11 @@ func HandleBalance(msg ntwk.Message) string {
 	//s := strconv.Itoa(balance)
 	// data, _ := json.Marshal(balance)
 	data := strconv.Itoa(balance)
-	reply_msg := ntwk.EncodeMsgString(ntwk.REP, ntwk.CMD_BALANCE, data)
+	reply_msg := ntcl.EncodeMsgString(ntcl.REP, ntcl.CMD_BALANCE, data)
 	return reply_msg
 }
 
-func HandleFaucet(msg ntwk.Message) string {
+func HandleFaucet(msg ntcl.Message) string {
 	// dataBytes := msg.Data
 	// var account block.Account
 	// if err := json.Unmarshal(dataBytes, &account); err != nil {
@@ -202,11 +201,11 @@ func HandleFaucet(msg ntwk.Message) string {
 	reply_string := chain.HandleTx(tx)
 	nlog.Println("resp > ", reply_string)
 
-	reply := ntwk.EncodeMsgString(ntwk.REP, ntwk.CMD_FAUCET, reply_string)
+	reply := ntcl.EncodeMsgString(ntcl.REP, ntcl.CMD_FAUCET, reply_string)
 	return reply
 }
 
-func HandleTx(msg ntwk.Message) string {
+func HandleTx(msg ntcl.Message) string {
 	dataBytes := msg.Data
 
 	var tx block.Tx
@@ -217,8 +216,8 @@ func HandleTx(msg ntwk.Message) string {
 	nlog.Println(">> ", tx)
 
 	resp := chain.HandleTx(tx)
-	reply := ntwk.EncodeMsgString(ntwk.REP, ntwk.CMD_TX, resp)
-	//reply_msg := ntwk.EncodeMsgString(ntwk.REP, "PONG", "")
+	reply := ntcl.EncodeMsgString(ntcl.REP, ntcl.CMD_TX, resp)
+	//reply_msg := ntcl.EncodeMsgString(ntcl.REP, "PONG", "")
 	return reply
 }
 
@@ -227,7 +226,7 @@ func RequestHandlerTel(ntchan ntcl.Ntchan) {
 	for {
 		msg_string := <-ntchan.REQ_in
 		log.Println("handle ", msg_string)
-		msg := ntwk.ParseMessage(msg_string)
+		msg := ntcl.ParseMessage(msg_string)
 
 		var reply_msg string
 
@@ -235,35 +234,35 @@ func RequestHandlerTel(ntchan ntcl.Ntchan) {
 
 		switch msg.Command {
 
-		case ntwk.CMD_PING:
+		case ntcl.CMD_PING:
 			reply_msg = HandlePing(msg)
 
-		case ntwk.CMD_BALANCE:
+		case ntcl.CMD_BALANCE:
 			reply_msg = HandleBalance(msg)
 
-		case ntwk.CMD_FAUCET:
+		case ntcl.CMD_FAUCET:
 			//send money to specified address
 			reply_msg = HandleFaucet(msg)
 
-		case ntwk.CMD_BLOCKHEIGHT:
+		case ntcl.CMD_BLOCKHEIGHT:
 			reply_msg = HandleBlockheight(msg)
 
 			//Login would be challenge response protocol
-			// case ntwk.CMD_LOGIN:
+			// case ntcl.CMD_LOGIN:
 			// 	log.Println("> ", msg.Data)
 
-		case ntwk.CMD_TX:
+		case ntcl.CMD_TX:
 			nlog.Println("Handle tx")
 			reply_msg = HandleTx(msg)
 
-		case ntwk.CMD_SUB:
+		case ntcl.CMD_SUB:
 			log.Println("subscribe to topic ", msg.Data)
 
 			//quitpub := make(chan int)
 			go ntcl.PublishTime(ntchan)
 			go ntcl.PubWriterLoop(ntchan)
 
-		case ntwk.CMD_SUBUN:
+		case ntcl.CMD_SUBUN:
 			log.Println("unsubscribe from topic ", msg.Data)
 
 			go func() {
@@ -271,17 +270,17 @@ func RequestHandlerTel(ntchan ntcl.Ntchan) {
 				close(ntchan.PUB_time_quit)
 			}()
 
-			// case ntwk.CMD_GETTXPOOL:
+			// case ntcl.CMD_GETTXPOOL:
 			// 	nlog.Println("get tx pool")
 
 			// 	//TODO
 			// 	data, _ := json.Marshal(chain.Tx_pool)
-			// 	msg := ntwk.EncodeMsg(ntwk.REP, ntwk.CMD_GETTXPOOL, string(data))
+			// 	msg := ntcl.EncodeMsg(ntcl.REP, ntcl.CMD_GETTXPOOL, string(data))
 			// 	rep_chan <- msg
 
 			//var Tx_pool []block.Tx
 
-			// case ntwk.CMD_RANDOM_ACCOUNT:
+			// case ntcl.CMD_RANDOM_ACCOUNT:
 			// 	nlog.Println("Handle random account")
 
 			// 	txJson, _ := json.Marshal(chain.RandomAccount())
