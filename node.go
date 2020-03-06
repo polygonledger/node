@@ -288,7 +288,8 @@ func RequestHandlerTel(ntchan ntcl.Ntchan) {
 
 		}
 
-		ntchan.Writer_queue <- reply_msg
+		//ntchan.Writer_queue <- reply_msg
+		ntchan.REP_out <- reply_msg
 	}
 }
 
@@ -297,9 +298,7 @@ func (t *TCPServer) handleConnection(ntchan ntcl.Ntchan) {
 	//defer ntchan.Conn.Close()
 	log.Println("handleConnection")
 
-	go ntcl.ReadLoop(ntchan)
-	go ntcl.ReadProcessor(ntchan)
-	go ntcl.WriteLoop(ntchan, 500*time.Millisecond)
+	ntcl.NetConnectorSetup(ntchan)
 
 	go RequestHandlerTel(ntchan)
 

@@ -505,16 +505,6 @@ func runSingleMode(option string, config Configuration) {
 	ntchan := initClient()
 	log.Println("init ", ntchan)
 
-	//go ntwk.ReaderWriterConnector(ntchan)
-
-	//TODO need to formalize this
-	//go Reqprocessor(ntchan)
-
-	//go Reqoutprocessor(ntchan)
-
-	//ntwk.ReaderWriterConnector(ntchan)
-	//go ReplyInProcessor(ntchan)
-
 	switch option {
 
 	case "test":

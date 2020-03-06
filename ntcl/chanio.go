@@ -122,6 +122,16 @@ func ConnNtchanStub(name string) Ntchan {
 	return ntchan
 }
 
+//all major processes to operate
+func NetConnectorSetup(ntchan Ntchan) {
+
+	go ReadLoop(ntchan)
+	go ReadProcessor(ntchan)
+	go WriteLoop(ntchan, 300*time.Millisecond)
+	//TODO!
+	go WriteProcessor(ntchan)
+}
+
 func ReadLoop(ntchan Ntchan) {
 	vlog("init ReadLoop " + ntchan.SrcName + " " + ntchan.DestName)
 	d := 300 * time.Millisecond
@@ -197,6 +207,7 @@ func WriteProcessor(ntchan Ntchan) {
 		msg_string := <-ntchan.REQ_out
 		log.Println("writeprocessor ", msg_string)
 		ntchan.Writer_queue <- msg_string
+		//TODO! select REP_out
 	}
 }
 
