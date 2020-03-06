@@ -261,7 +261,7 @@ func RequestHandlerTel(ntchan ntcl.Ntchan) {
 
 			//quitpub := make(chan int)
 			go ntcl.PublishTime(ntchan)
-			go ntcl.PubWriterLoop(ntchan, ntchan.PUB_time_quit)
+			go ntcl.PubWriterLoop(ntchan)
 
 		case ntwk.CMD_SUBUN:
 			log.Println("unsubscribe from topic ", msg.Data)

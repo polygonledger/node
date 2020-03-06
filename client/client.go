@@ -492,6 +492,10 @@ func runSingleMode(option string, config Configuration) {
 	case "randomtx":
 		_ = MakeRandomTx(mainPeer)
 		return
+
+	case "test":
+		testclient()
+		return
 	}
 }
 
@@ -699,30 +703,28 @@ func testclient_subscribe() {
 //run client based on options
 func main() {
 
-	testclient()
+	config := getConfig()
 
-	// config := getConfig()
+	option := readOption()
 
-	// option := readOption()
+	//dnslook()
 
-	// //dnslook()
+	switch option {
 
-	// switch option {
+	case "test", "ping", "heartbeat", "getbalance", "faucet", "txpool", "pushtx", "randomtx":
+		runSingleMode(option, config)
 
-	// case "test", "ping", "heartbeat", "getbalance", "faucet", "txpool", "pushtx", "randomtx":
-	// 	runSingleMode(option, config)
+	case "createkeys", "sign", "createtx", "verify":
+		runOffline(option, config)
 
-	// case "createkeys", "sign", "createtx", "verify":
-	// 	runOffline(option, config)
+	case "pingall", "blockheight":
+		runPeermode(option, config)
 
-	// case "pingall", "blockheight":
-	// 	runPeermode(option, config)
+	case "listen":
+		runListenMode(option, config)
 
-	// case "listen":
-	// 	runListenMode(option, config)
-
-	// default:
-	// 	log.Println("unknown option")
-	// }
+	default:
+		log.Println("unknown option")
+	}
 
 }

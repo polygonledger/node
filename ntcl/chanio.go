@@ -210,14 +210,14 @@ func PublishTime(ntchan Ntchan) {
 }
 
 //publication to writer queue. requires quit channel
-func PubWriterLoop(ntchan Ntchan, quit chan int) {
+func PubWriterLoop(ntchan Ntchan) {
 
 	for {
 		select {
 		case msg := <-ntchan.PUB_time_out:
 			vlog("sub " + msg)
 			ntchan.Writer_queue <- msg
-		case <-quit:
+		case <-ntchan.PUB_time_quit:
 			fmt.Println("stop pub")
 			return
 			// default:
