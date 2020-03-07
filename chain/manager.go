@@ -14,6 +14,13 @@ import (
 	"github.com/polygonledger/node/crypto"
 )
 
+type ChainManager struct {
+	Tx_pool      []block.Tx
+	Blocks       []block.Block
+	Latest_block block.Block
+	Accounts     map[block.Account]int
+}
+
 var Tx_pool []block.Tx
 var Blocks []block.Block
 var Latest_block block.Block
@@ -34,6 +41,15 @@ func GenesisKeys() crypto.Keypair {
 	keypair := crypto.PairFromSecret("genesis")
 	return keypair
 
+}
+
+func CreateManager() ChainManager {
+	mgr := ChainManager{Tx_pool: []block.Tx{}, Blocks: []block.Block{}, Latest_block: block.Block{}, Accounts: make(map[block.Account]int)}
+	return mgr
+}
+
+func (mgr *ChainManager) BlockHeight() int {
+	return len(mgr.Blocks)
 }
 
 //testing
@@ -201,9 +217,9 @@ func MakeGenesisBlock() block.Block {
 }
 
 //append block to chain of blocks
-func AppendBlock(new_block block.Block) {
+func (mgr *ChainManager) AppendBlock(new_block block.Block) {
 	Latest_block = new_block
-	Blocks = append(Blocks, new_block)
+	mgr.Blocks = append(Blocks, new_block)
 }
 
 //apply block to the state
@@ -219,13 +235,13 @@ func ApplyBlock(block block.Block) {
 }
 
 //trivial json storage
-func writeChain() {
-	dataJson, _ := json.Marshal(Blocks)
+func (mgr *ChainManager) WriteChain() {
+	dataJson, _ := json.Marshal(mgr.Blocks)
 	ioutil.WriteFile(ChainStorageFile, []byte(dataJson), 0644)
 }
 
 //TODO error
-func ReadChain() bool {
+func (mgr *ChainManager) ReadChain() bool {
 
 	if _, err := os.Stat(ChainStorageFile); os.IsNotExist(err) {
 		// path/to/whatever does not exist
@@ -235,11 +251,11 @@ func ReadChain() bool {
 
 	dat, _ := ioutil.ReadFile(ChainStorageFile)
 
-	if err := json.Unmarshal(dat, &Blocks); err != nil {
+	if err := json.Unmarshal(dat, &mgr.Blocks); err != nil {
 		panic(err)
 	}
 
-	log.Printf("read chain success from %s. block height %d", ChainStorageFile, len(Blocks))
+	log.Printf("read chain success from %s. block height %d", ChainStorageFile, len(mgr.Blocks))
 	return true
 
 }
@@ -297,14 +313,16 @@ func MakeBlock(t time.Time) {
 		new_block := block.Block{Height: len(Blocks), Txs: Tx_pool, Prev_Block_Hash: Latest_block.Hash, Timestamp: timestamp}
 		new_block = blockHash(new_block)
 		ApplyBlock(new_block)
-		AppendBlock(new_block)
+		//TODO! fix
+		//AppendBlock(new_block)
 
 		log.Printf("new block %v", new_block)
 		EmptyPool()
 
 		Latest_block = new_block
 
-		writeChain()
+		//TODO! mgr
+		//WriteChain()
 
 	} else {
 		log.Printf("no block to make")

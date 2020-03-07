@@ -167,8 +167,8 @@ func RandomTx(account_s block.Account) block.Tx {
 	rand.Seed(time.Now().UnixNano())
 	randomAmount := rand.Intn(20)
 
-	log.Printf("randomAmount ", randomAmount)
-	log.Printf("randNonce ", randNonce)
+	// log.Printf("randomAmount %s", randomAmount)
+	// log.Printf("randNonce %d", randNonce)
 	testTx := block.Tx{Nonce: randNonce, Sender: account_s, Receiver: account_r, Amount: randomAmount}
 	sig := crypto.SignTx(testTx, kp)
 	sighex := hex.EncodeToString(sig.Serialize())
