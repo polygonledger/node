@@ -159,7 +159,7 @@ func HandleBlockheight(msg ntcl.Message) string {
 
 func HandleBalance(msg ntcl.Message) string {
 	dataBytes := msg.Data
-	nlog.Println("data ", string(msg.Data), dataBytes)
+	log.Println("data ", string(msg.Data), dataBytes)
 
 	a := block.Account{AccountKey: string(msg.Data)}
 
@@ -230,7 +230,7 @@ func RequestHandlerTel(ntchan ntcl.Ntchan) {
 
 		var reply_msg string
 
-		nlog.Println("Handle ", msg.Command)
+		log.Println("Handle ", msg.Command)
 
 		switch msg.Command {
 
@@ -252,7 +252,7 @@ func RequestHandlerTel(ntchan ntcl.Ntchan) {
 			// 	log.Println("> ", msg.Data)
 
 		case ntcl.CMD_TX:
-			nlog.Println("Handle tx")
+			log.Println("Handle tx")
 			reply_msg = HandleTx(msg)
 
 		case ntcl.CMD_SUB:

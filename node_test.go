@@ -7,31 +7,49 @@ import (
 	"github.com/polygonledger/node/ntcl"
 )
 
-func TestReaderPing(t *testing.T) {
-	log.Println("TestReaderPing")
+func TestBasicCommand(t *testing.T) {
 
-	ntchan := ntcl.ConnNtchanStub("")
-
-	go ntcl.ReadProcessor(ntchan)
-
-	//TODO
-	//go pinghandler(ntchan)
+	log.Println("TestBasicCommand")
 
 	req_msg := ntcl.EncodeMsgString(ntcl.REQ, ntcl.CMD_PING, ntcl.EMPTY_DATA)
 	msg := ntcl.ParseMessage(req_msg)
 	//ntchan.REQ_in <- msg
-
 	reply_msg := HandlePing(msg)
+	if reply_msg != "REP#PONG#|" {
+		t.Error(reply_msg)
+	}
 
-	// time.Sleep(50 * time.Millisecond)
+	ntchan := ntcl.ConnNtchanStub("")
+	go RequestHandlerTel(ntchan)
+	ntchan.REQ_in <- req_msg
+	reply := <-ntchan.REP_out
 
-	// if !isEmpty(ntchan.REQ_in, 1*time.Second) {
-	// 	t.Error("REQ_in not processed")
+	if reply != "REP#PONG#|" {
+		t.Error(reply_msg)
+	}
+
+}
+
+func TestBalance(t *testing.T) {
+
+	log.Println("TestBalance")
+
+	req_msg := ntcl.EncodeMsgString(ntcl.REQ, ntcl.CMD_BALANCE, "abc")
+	msg := ntcl.ParseMessage(req_msg)
+
+	reply_msg := HandleBalance(msg)
+	if reply_msg != "REP#BALANCE#0|" {
+		t.Error(reply_msg)
+	}
+
+	//TODO with chain setup
+
+	// ntchan := ntcl.ConnNtchanStub("")
+	// go RequestHandlerTel(ntchan)
+	// ntchan.REQ_in <- req_msg
+	// reply := <-ntchan.REP_out
+
+	// if reply != "REP#PONG#|" {
+	// 	t.Error(reply_msg)
 	// }
-
-	// x := <-ntchan.REP_out
-	// if x != ntcl.EncodeMsgString(ntcl.REP, ntcl.CMD_PONG, "") {
-	// 	t.Error("not poing")
-	// }
-
 }

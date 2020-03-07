@@ -1,8 +1,13 @@
 package ntcl
 
 // functions relating to network stack
-// TCP implementation currently works this way
+// TCP implementation currently works like this
 // we expect messages which are delimited by special byte DELIM
+// we read and write from the network whenever we can
+// the types of read/write operations depends on the type of message flow
+// the network reads are not optimized we just read until we see the DELIM byte
+// any heartbeating and higher level protocols can be added on top of this
+// disconnects and throttling can be added
 
 import (
 	"bufio"
