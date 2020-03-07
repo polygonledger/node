@@ -31,8 +31,8 @@ const GenblockStorageFile = "data/genesis.json"
 
 //TODO fix circular import
 const (
-	//Genesis_Address string = "P0614579c42f2"
-	Genesis_Address string = "P2e2bfb58c9db"
+	//Treasury_Address string = "P0614579c42f2"
+	Treasury_Address string = "P2e2bfb58c9db"
 	//Treasury_Address string = "PXXXXX"
 )
 
@@ -52,15 +52,19 @@ func (mgr *ChainManager) BlockHeight() int {
 	return len(mgr.Blocks)
 }
 
-//testing
-func InitAccounts() {
-	Accounts = make(map[block.Account]int)
+func (mgr *ChainManager) IsTreasury(account block.Account) bool {
+	return account.AccountKey == Treasury_Address
+}
 
-	log.Printf("init accounts %d", len(Accounts))
-	//Genesis_Account := block.AccountFromString(Genesis_Address)
+//testing
+func (mgr *ChainManager) InitAccounts() {
+	mgr.Accounts = make(map[block.Account]int)
+
+	log.Printf("init accounts %d", len(mgr.Accounts))
+	//Genesis_Account := block.AccountFromString(Treasury_Address)
 	//set genesiss account, this is the amount that the genesis address receives
 	genesisAmount := 400
-	SetAccount(block.AccountFromString(Genesis_Address), genesisAmount)
+	mgr.SetAccount(block.AccountFromString(Treasury_Address), genesisAmount)
 }
 
 //valid cash transaction
@@ -138,26 +142,26 @@ func blockHash(block block.Block) block.Block {
 }
 
 //move cash in the chain, we should know tx is checked to be valid by now
-func moveCash(SenderAccount block.Account, ReceiverAccount block.Account, amount int) {
+func (mgr *ChainManager) moveCash(SenderAccount block.Account, ReceiverAccount block.Account, amount int) {
 	log.Printf("move cash %v %v %v %v %d", SenderAccount, ReceiverAccount, Accounts[SenderAccount], Accounts[ReceiverAccount], amount)
 
-	Accounts[SenderAccount] -= amount
-	Accounts[ReceiverAccount] += amount
+	mgr.Accounts[SenderAccount] -= amount
+	mgr.Accounts[ReceiverAccount] += amount
 }
 
-func applyTx(tx block.Tx) {
+func (mgr *ChainManager) applyTx(tx block.Tx) {
 	//TODO check transaction type, not implemented yet
 	valid := true //txValid(tx)
 	if valid {
-		moveCash(tx.Sender, tx.Receiver, tx.Amount)
+		mgr.moveCash(tx.Sender, tx.Receiver, tx.Amount)
 	} else {
 		log.Printf("tx invalid, dont apply")
 		//handle error
 	}
 }
 
-func SetAccount(account block.Account, balance int) {
-	Accounts[account] = balance
+func (mgr *ChainManager) SetAccount(account block.Account, balance int) {
+	mgr.Accounts[account] = balance
 }
 
 func ShowAccount(account block.Account) {
@@ -182,7 +186,7 @@ func RandomAccount() block.Account {
 }
 
 func GenesisTx() block.Tx {
-	Genesis_Account := block.AccountFromString(Genesis_Address)
+	Genesis_Account := block.AccountFromString(Treasury_Address)
 
 	//log.Printf("%s", s)
 	rand.Seed(time.Now().UnixNano())
@@ -207,7 +211,8 @@ func MakeGenesisBlock() block.Block {
 
 	//add 10 genesis tx
 	genesisTx := []block.Tx{}
-	for i := 0; i < 10; i++ {
+	numseeder := 10
+	for i := 0; i < numseeder; i++ {
 		someTx := GenesisTx()
 		genesisTx = append(genesisTx, someTx)
 	}
@@ -223,10 +228,10 @@ func (mgr *ChainManager) AppendBlock(new_block block.Block) {
 }
 
 //apply block to the state
-func ApplyBlock(block block.Block) {
+func (mgr *ChainManager) ApplyBlock(block block.Block) {
 	//apply
 	for j := 0; j < len(block.Txs); j++ {
-		applyTx(block.Txs[j])
+		mgr.applyTx(block.Txs[j])
 		//if success
 		//assign id
 		//block.Txs[j].Id = txHash(block.Txs[j])
@@ -312,7 +317,8 @@ func MakeBlock(t time.Time) {
 		timestamp := time.Now() //.Unix()
 		new_block := block.Block{Height: len(Blocks), Txs: Tx_pool, Prev_Block_Hash: Latest_block.Hash, Timestamp: timestamp}
 		new_block = blockHash(new_block)
-		ApplyBlock(new_block)
+		//TODO! fix
+		//ApplyBlock(new_block)
 		//TODO! fix
 		//AppendBlock(new_block)
 

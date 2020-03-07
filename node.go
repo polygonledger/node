@@ -411,7 +411,7 @@ func run_node(config Configuration) {
 
 	mgr := chain.CreateManager()
 	// 	//TODO signatures of genesis
-	chain.InitAccounts()
+	mgr.InitAccounts()
 
 	// 	nlog.Println("PeerAddresses: ", config.PeerAddresses)
 
@@ -424,7 +424,7 @@ func run_node(config Configuration) {
 	createDemo := true //!success
 	if createDemo {
 		genBlock := chain.MakeGenesisBlock()
-		chain.ApplyBlock(genBlock)
+		mgr.ApplyBlock(genBlock)
 		//TODO!
 		//chain.AppendBlock(genBlock)
 	}
