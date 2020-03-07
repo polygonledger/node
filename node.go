@@ -364,44 +364,6 @@ func Runweb(webport int) {
 
 }
 
-//deal with the logic of each connection
-//simple readwriter
-// func (t *TCPServer) handleConnectionReadWriter(ntchan ntcl.Ntchan) {
-// 	tr := 100 * time.Millisecond
-// 	defer ntchan.Conn.Close()
-// 	log.Println("handleConnection")
-
-// 	for {
-
-// 		log.Println("read with delim ", ntcl.DELIM)
-// 		req, err := ntcl.NtwkRead(ntchan, ntcl.DELIM)
-
-// 		if err != nil {
-// 			log.Println(err)
-// 		}
-
-// 		if len(req) > 0 {
-// 			log.Println("=> ", req, len(req))
-// 			req = strings.Trim(req, string(ntcl.DELIM))
-// 			resp := echohandler(req)
-
-// 			log.Println("resp => ", resp)
-// 			ntcl.NtwkWrite(ntchan, resp)
-
-// 		} else {
-// 			//empty read next read slower
-// 			tr += 100 * time.Millisecond
-// 		}
-
-// 		time.Sleep(tr)
-// 		//on empty reads increase time, but max at 800
-// 		if tr > 800*time.Millisecond {
-// 			tr = 800 * time.Millisecond
-// 		}
-
-// 	}
-// }
-
 // create a new Server
 func NewServer(addr string) (*TCPServer, error) {
 	return &TCPServer{

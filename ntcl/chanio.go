@@ -237,7 +237,7 @@ func WriteLoop(ntchan Ntchan, d time.Duration) {
 		//take from channel and write
 		msg := <-ntchan.Writer_queue
 		vlog(ntchan, "writeloop "+msg)
-		NtwkWrite(ntchan, msg)
+		NetWrite(ntchan, msg)
 		//logmsg(ntchan.Name, "WriteLoop", msg, msg_writer_total)
 		//NetworkWrite(ntchan, msg)
 

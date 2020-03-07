@@ -74,7 +74,6 @@ func EncodeMessageTx(txJson []byte) string {
 }
 
 func ConstructMessage(cmd string) string {
-	//delim := "\n"
 	msg := cmd + string(DELIM)
 	return msg
 }

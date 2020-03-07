@@ -1,6 +1,8 @@
 package ntcl
 
-// netio contains functions relating to network stack
+// functions relating to network stack
+// TCP implementation currently works this way
+// we expect messages which are delimited by special byte DELIM
 
 import (
 	"bufio"
@@ -15,8 +17,8 @@ import (
 	"github.com/pkg/errors"
 )
 
-func NtwkWrite(ntchan Ntchan, content string) (int, error) {
-	//READLINE uses \n
+func NetWrite(ntchan Ntchan, content string) (int, error) {
+	//since Netread READLINE uses \n add it here
 	NEWLINE := '\n'
 	//respContent := fmt.Sprintf("%s%c%c", content, DELIM, NEWLINE)
 	respContent := fmt.Sprintf("%s%c", content, NEWLINE)
@@ -26,14 +28,23 @@ func NtwkWrite(ntchan Ntchan, content string) (int, error) {
 	if err == nil {
 		err = writer.Flush()
 	}
-	s := fmt.Sprintf("bytes written", n, " ", ntchan.SrcName, ntchan.DestName)
+	s := fmt.Sprintf("bytes written %d %s %s", n, ntchan.SrcName, ntchan.DestName)
 	vlog(ntchan, s)
 	return n, err
 }
 
-func NtwkRead(ntchan Ntchan, delim byte) (string, error) {
-	//log.Println("NtwkRead ", ntchan.SrcName, ntchan.DestName)
+// func NetReadOpt() {
+// 	//TOOD user buffer and scanner
+// 	//would work like this. we expect delimiter to denote end of the message
+// 	//we dont worry about large message length for now. if we do we need some expection of the
+// 	//size of the message, could add this to a header of the message
+// 	//conn.Read(buf[0:])
+// }
+
+func NetRead(ntchan Ntchan, delim byte) (string, error) {
+	//log.Println("NetRead ", ntchan.SrcName, ntchan.DestName)
 	reader := bufio.NewReader(ntchan.Conn)
+
 	var buffer bytes.Buffer
 	for {
 		//READLINE uses \n
@@ -53,7 +64,7 @@ func NtwkRead(ntchan Ntchan, delim byte) (string, error) {
 }
 
 func MsgRead(ntchan Ntchan) (string, error) {
-	msg_string, err := NtwkRead(ntchan, DELIM)
+	msg_string, err := NetRead(ntchan, DELIM)
 	msg_string = strings.Trim(msg_string, string(DELIM))
 	return msg_string, err
 }

@@ -1,36 +1,37 @@
 package main
 
-//TODO!
-// func TestBasicPing(t *testing.T) {
+import (
+	"log"
+	"testing"
 
-// 	msg_out_chan := make(chan protocol.Message)
+	"github.com/polygonledger/node/ntcl"
+)
 
-// 	go HandlePing(msg_out_chan)
-// 	msg := <-msg_out_chan
-// 	msgString := protocol.MsgString(msg)
+func TestReaderPing(t *testing.T) {
+	log.Println("TestReaderPing")
 
-// 	if !(msgString == "REP#PONG#EMPTY|") {
-// 		t.Error("ping failed ", msg)
-// 	}
-// }
+	ntchan := ntcl.ConnNtchanStub("")
 
-// func TestBasicPingMsg(t *testing.T) {
+	go ntcl.ReadProcessor(ntchan)
 
-// 	setupLogfile()
+	//TODO
+	//go pinghandler(ntchan)
 
-// 	msg_in := make(chan protocol.Message)
-// 	msg_out := make(chan protocol.Message)
+	req_msg := ntcl.EncodeMsgString(ntcl.REQ, ntcl.CMD_PING, ntcl.EMPTY_DATA)
+	msg := ntcl.ParseMessage(req_msg)
+	//ntchan.REQ_in <- msg
 
-// 	emptydata := ""
-// 	//req_msg := protocol.EncodeMsgString(protocol.REQ, protocol.CMD_PING, emptydata)
-// 	req_msg := protocol.EncodeMsg(protocol.REQ, protocol.CMD_PING, emptydata)
-// 	go func() {
-// 		msg_in <- req_msg
-// 	}()
-// 	go HandleMsg(msg_in, msg_out)
-// 	msg := <-msg_out
-// 	msgString := protocol.MsgString(msg)
-// 	if !(msgString == "REP#PONG#EMPTY|") {
-// 		t.Error("ping failed ", msg)
-// 	}
-// }
+	reply_msg := HandlePing(msg)
+
+	// time.Sleep(50 * time.Millisecond)
+
+	// if !isEmpty(ntchan.REQ_in, 1*time.Second) {
+	// 	t.Error("REQ_in not processed")
+	// }
+
+	// x := <-ntchan.REP_out
+	// if x != ntcl.EncodeMsgString(ntcl.REP, ntcl.CMD_PONG, "") {
+	// 	t.Error("not poing")
+	// }
+
+}

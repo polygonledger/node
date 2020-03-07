@@ -30,10 +30,10 @@ func main() {
 	}
 
 	content := "telnet"
-	num, err := ntcl.NtwkWrite(conn, content)
+	num, err := ntcl.NetWrite(conn, content)
 
 	log.Println(num)
 
-	s, _ := ntcl.NtwkRead(conn, DELIM)
+	s, _ := ntcl.NetRead(conn, DELIM)
 	log.Println(s)
 }

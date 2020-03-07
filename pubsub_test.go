@@ -66,7 +66,7 @@ func TestServer_Pub(t *testing.T) {
 	// go SubLoop(ntchan)
 
 	// reqs := "hello world"
-	// n, err := ntcl.NtwkWrite(firstpeer.NTchan, reqs)
+	// n, err := ntcl.NetWrite(firstpeer.NTchan, reqs)
 
 	// if err != nil {
 	// 	t.Error("could not write to server:", err)

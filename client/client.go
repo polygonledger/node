@@ -450,7 +450,7 @@ func ping(ntchan ntcl.Ntchan) {
 	//reqs := "REQ#PING#|"
 	req_msg := ntcl.EncodeMsgString(ntcl.REQ, ntcl.CMD_PING, "")
 	ntchan.REQ_out <- req_msg
-	//ntcl.NtwkWrite(ntchan, reqs)
+	//ntcl.NetWrite(ntchan, reqs)
 
 	time.Sleep(1000 * time.Millisecond)
 
@@ -687,7 +687,7 @@ func testclient(ntchan ntcl.Ntchan) {
 	//subscribe example
 	reqs := "REQ#PING#|"
 	ntchan.REQ_out <- reqs
-	//ntcl.NtwkWrite(ntchan, reqs)
+	//ntcl.NetWrite(ntchan, reqs)
 
 	time.Sleep(1000 * time.Millisecond)
 
@@ -718,7 +718,7 @@ func testclient_subscribe() {
 	//reqs := "REQ#PING#|"
 	reqs := "REQ#SUBTO#TIME|"
 	log.Println("subscribe")
-	ntcl.NtwkWrite(ntchan, reqs)
+	ntcl.NetWrite(ntchan, reqs)
 
 	//log.Println(clientNt.SrcName)
 
@@ -731,7 +731,7 @@ func testclient_subscribe() {
 	time.Sleep(2000 * time.Millisecond)
 
 	reqs = "REQ#SUBUN#TIME|"
-	ntcl.NtwkWrite(ntchan, reqs)
+	ntcl.NetWrite(ntchan, reqs)
 
 	log.Println("unsubscribe")
 

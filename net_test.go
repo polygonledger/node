@@ -104,7 +104,7 @@ func TestServer_Write(t *testing.T) {
 	}
 
 	reqs := "hello world"
-	n, err := ntcl.NtwkWrite(firstpeer.NTchan, reqs)
+	n, err := ntcl.NetWrite(firstpeer.NTchan, reqs)
 
 	if err != nil {
 		t.Error("could not write to server:", err)
@@ -141,7 +141,7 @@ func TestServer_Write(t *testing.T) {
 
 // 	reqs := "hello world"
 
-// 	n, err := ntcl.NtwkWrite(conn, reqs)
+// 	n, err := ntcl.NetWrite(conn, reqs)
 // 	if err != nil {
 // 		t.Error("could not write payload to server:", err)
 // 	} else {
