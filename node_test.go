@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"log"
 	"testing"
 
@@ -48,33 +47,41 @@ func TestBalance(t *testing.T) {
 
 	mgr := chain.CreateManager()
 	mgr.InitAccounts()
-	genBlock := chain.MakeGenesisBlock()
-	mgr.ApplyBlock(genBlock)
-	//chain.SetAccount()
+	log.Println(mgr.Accounts)
+	ra := mgr.RandomAccount()
+	log.Println(ra)
 
-	for k, v := range mgr.Accounts {
-		fmt.Println(k, v)
-		if !mgr.IsTreasury(k) {
-			if v != 20 {
-				t.Error("...")
-			}
-		} else {
-			if v != 200 {
-				t.Error("...")
-			}
-		}
-
-	}
-
-	// 	//TODO signatures of genesis
-	//mgr.InitAccounts()
-
-	// ntchan := ntcl.ConnNtchanStub("")
-	// go RequestHandlerTel(ntchan)
-	// ntchan.REQ_in <- req_msg
-	// reply := <-ntchan.REP_out
-
-	// if reply != "REP#PONG#|" {
-	// 	t.Error(reply_msg)
-	// }
+	// b := block.Block{}
+	// tx := tx.Tx{}
+	// mgr.ApplyBlock(b)
 }
+
+// genBlock := chain.MakeGenesisBlock()
+// mgr.ApplyBlock(genBlock)
+// //chain.SetAccount()
+
+// for k, v := range mgr.Accounts {
+// 	fmt.Println(k, v)
+// 	if !mgr.IsTreasury(k) {
+// 		if v != 20 {
+// 			t.Error("...")
+// 		}
+// 	} else {
+// 		if v != 200 {
+// 			t.Error("...")
+// 		}
+// 	}
+
+// }
+
+// 	//TODO signatures of genesis
+//mgr.InitAccounts()
+
+// ntchan := ntcl.ConnNtchanStub("")
+// go RequestHandlerTel(ntchan)
+// ntchan.REQ_in <- req_msg
+// reply := <-ntchan.REP_out
+
+// if reply != "REP#PONG#|" {
+// 	t.Error(reply_msg)
+// }

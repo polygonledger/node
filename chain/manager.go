@@ -56,7 +56,7 @@ func (mgr *ChainManager) IsTreasury(account block.Account) bool {
 	return account.AccountKey == Treasury_Address
 }
 
-//testing
+//init genesis account
 func (mgr *ChainManager) InitAccounts() {
 	mgr.Accounts = make(map[block.Account]int)
 
@@ -64,7 +64,9 @@ func (mgr *ChainManager) InitAccounts() {
 	//Genesis_Account := block.AccountFromString(Treasury_Address)
 	//set genesiss account, this is the amount that the genesis address receives
 	genesisAmount := 400
-	mgr.SetAccount(block.AccountFromString(Treasury_Address), genesisAmount)
+	tr := block.AccountFromString(Treasury_Address)
+	mgr.SetAccount(tr, genesisAmount)
+	log.Println("mgr.Accounts ", mgr.Accounts)
 }
 
 //valid cash transaction
@@ -168,20 +170,24 @@ func ShowAccount(account block.Account) {
 	log.Printf("%s %d", account, Accounts[account])
 }
 
-func RandomAccount() block.Account {
-	lenk := len(Accounts)
+func (mgr *ChainManager) RandomAccount() block.Account {
+	lenk := len(mgr.Accounts)
+	log.Println("lenk ", lenk)
 
-	keys := make([]block.Account, 0, len(Accounts))
-	for k := range Accounts {
+	//TODO
+	keys := make([]block.Account, 0, len(mgr.Accounts))
+	for k := range mgr.Accounts {
+		log.Println("k ", k)
 		keys = append(keys, k)
 	}
 
 	rand.Seed(time.Now().UnixNano())
 
 	ran := rand.Intn(lenk)
+	log.Println(ran, keys)
 
 	randomAccount := keys[ran]
-	//	log.Println("random account ", randomAccount)
+	log.Println("random account ", randomAccount)
 	return randomAccount
 }
 
