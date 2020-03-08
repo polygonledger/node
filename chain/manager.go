@@ -21,10 +21,10 @@ type ChainManager struct {
 	Accounts     map[block.Account]int
 }
 
-var Tx_pool []block.Tx
-var Blocks []block.Block
-var Latest_block block.Block
-var Accounts map[block.Account]int
+// var Tx_pool []block.Tx
+// var Blocks []block.Block
+// var Latest_block block.Block
+// var Accounts map[block.Account]int
 
 const ChainStorageFile = "data/chain.json"
 const GenblockStorageFile = "data/genesis.json"
@@ -75,11 +75,11 @@ func (mgr *ChainManager) InitAccounts() {
 //* the sender is who he says he is (authorized access to funds)
 //speed of evaluation should be way less than 1 msec
 //TODO check nonce
-func txValid(tx block.Tx) bool {
+func txValid(mgr *ChainManager, tx block.Tx) bool {
 
 	//TODO check receiver has valid address format
 
-	sufficientBalance := Accounts[tx.Sender] >= tx.Amount
+	sufficientBalance := mgr.Accounts[tx.Sender] >= tx.Amount
 	if !sufficientBalance {
 		log.Println("insufficientBalance")
 	} else {
@@ -101,7 +101,7 @@ func txValid(tx block.Tx) bool {
 
 //handlers
 
-func HandleTx(tx block.Tx) string {
+func HandleTx(mgr *ChainManager, tx block.Tx) string {
 	//hash of timestamp is same, check lenght of bytes used??
 	//timestamp := time.Now().Unix()
 
@@ -109,9 +109,9 @@ func HandleTx(tx block.Tx) string {
 	//log.Println("hash %x time %s sign %x", tx.Id, timestamp, tx.Signature)
 
 	//TODO its own function
-	if txValid(tx) {
+	if txValid(mgr, tx) {
 		tx.Id = crypto.TxHash(tx)
-		Tx_pool = append(Tx_pool, tx)
+		mgr.Tx_pool = append(mgr.Tx_pool, tx)
 		return "ok"
 	} else {
 		log.Println("invalid tx")
@@ -128,8 +128,8 @@ func HandleTx(tx block.Tx) string {
 //#### blockchain functions
 
 //empty the tx pool
-func EmptyPool() {
-	Tx_pool = []block.Tx{}
+func EmptyPool(mgr *ChainManager) {
+	mgr.Tx_pool = []block.Tx{}
 }
 
 func blockHash(block block.Block) block.Block {
@@ -145,7 +145,7 @@ func blockHash(block block.Block) block.Block {
 
 //move cash in the chain, we should know tx is checked to be valid by now
 func (mgr *ChainManager) moveCash(SenderAccount block.Account, ReceiverAccount block.Account, amount int) {
-	log.Printf("move cash %v %v %v %v %d", SenderAccount, ReceiverAccount, Accounts[SenderAccount], Accounts[ReceiverAccount], amount)
+	log.Printf("move cash %v %v %v %v %d", SenderAccount, ReceiverAccount, mgr.Accounts[SenderAccount], mgr.Accounts[ReceiverAccount], amount)
 
 	mgr.Accounts[SenderAccount] -= amount
 	mgr.Accounts[ReceiverAccount] += amount
@@ -166,8 +166,8 @@ func (mgr *ChainManager) SetAccount(account block.Account, balance int) {
 	mgr.Accounts[account] = balance
 }
 
-func ShowAccount(account block.Account) {
-	log.Printf("%s %d", account, Accounts[account])
+func ShowAccount(mgr *ChainManager, account block.Account) {
+	log.Printf("%s %d", account, mgr.Accounts[account])
 }
 
 func (mgr *ChainManager) RandomAccount() block.Account {
@@ -229,12 +229,13 @@ func MakeGenesisBlock() block.Block {
 
 //append block to chain of blocks
 func (mgr *ChainManager) AppendBlock(new_block block.Block) {
-	Latest_block = new_block
-	mgr.Blocks = append(Blocks, new_block)
+	mgr.Latest_block = new_block
+	mgr.Blocks = append(mgr.Blocks, new_block)
 }
 
 //apply block to the state
 func (mgr *ChainManager) ApplyBlock(block block.Block) {
+	log.Println("ApplyBlock")
 	//apply
 	for j := 0; j < len(block.Txs); j++ {
 		mgr.applyTx(block.Txs[j])
@@ -310,7 +311,7 @@ func ReadGenBlock() block.Block {
 
 // function to create blocks, called periodically
 // currently assumes we can create blocks at will and we don't sync
-func MakeBlock(t time.Time) {
+func MakeBlock(mgr *ChainManager) {
 
 	log.Printf("make block?")
 	start := time.Now()
@@ -318,10 +319,10 @@ func MakeBlock(t time.Time) {
 	log.Printf("%s", start)
 
 	//create new block if there is tx in the pool
-	if len(Tx_pool) > 0 {
+	if len(mgr.Tx_pool) > 0 {
 
 		timestamp := time.Now() //.Unix()
-		new_block := block.Block{Height: len(Blocks), Txs: Tx_pool, Prev_Block_Hash: Latest_block.Hash, Timestamp: timestamp}
+		new_block := block.Block{Height: len(mgr.Blocks), Txs: mgr.Tx_pool, Prev_Block_Hash: mgr.Latest_block.Hash, Timestamp: timestamp}
 		new_block = blockHash(new_block)
 		//TODO! fix
 		//ApplyBlock(new_block)
@@ -329,9 +330,9 @@ func MakeBlock(t time.Time) {
 		//AppendBlock(new_block)
 
 		log.Printf("new block %v", new_block)
-		EmptyPool()
+		EmptyPool(mgr)
 
-		Latest_block = new_block
+		mgr.Latest_block = new_block
 
 		//TODO! mgr
 		//WriteChain()
@@ -342,4 +343,14 @@ func MakeBlock(t time.Time) {
 		//now we don't add blocks, which means there are empty periods and blocks are not evenly spaced in time
 	}
 
+}
+
+func MakeBlockLoop(mgr *ChainManager, blocktime time.Duration) {
+
+	go func() {
+		for {
+			MakeBlock(mgr)
+			time.Sleep(blocktime)
+		}
+	}()
 }

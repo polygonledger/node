@@ -24,17 +24,18 @@ const (
 )
 
 const (
-	CMD_PING             = "PING" //ping
-	CMD_PONG             = "PONG" //pong
+	CMD_PING             = "PING"
+	CMD_PONG             = "PONG"
 	CMD_HANDSHAKE_HELLO  = "HELLO"
 	CMD_HANDSHAKE_STABLE = "STABLE"
 	CMD_HEARTBEAT        = "HEARTBEAT"
 	CMD_BALANCE          = "BALANCE" //get balance of account
 	CMD_FAUCET           = "FAUCET"
 	CMD_TX               = "TX" //send transaction
-	CMD_LOGIN            = "LOGIN"
 	CMD_BLOCKHEIGHT      = "BLOCKHEIGHT"
 	CMD_RANDOM_ACCOUNT   = "RANACC" //get some random account
+
+	//CMD_LOGIN            = "LOGIN"
 	//GET
 	CMD_GETTXPOOL = "GETTXPOOL"
 	CMD_GETPEERS  = "GETPEERS"
