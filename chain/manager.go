@@ -14,6 +14,13 @@ import (
 	"github.com/polygonledger/node/crypto"
 )
 
+type ChainManager struct {
+	Tx_pool      []block.Tx
+	Blocks       []block.Block
+	Latest_block block.Block
+	Accounts     map[block.Account]int
+}
+
 var Tx_pool []block.Tx
 var Blocks []block.Block
 var Latest_block block.Block
@@ -24,8 +31,8 @@ const GenblockStorageFile = "data/genesis.json"
 
 //TODO fix circular import
 const (
-	//Genesis_Address string = "P0614579c42f2"
-	Genesis_Address string = "P2e2bfb58c9db"
+	//Treasury_Address string = "P0614579c42f2"
+	Treasury_Address string = "P2e2bfb58c9db"
 	//Treasury_Address string = "PXXXXX"
 )
 
@@ -36,15 +43,30 @@ func GenesisKeys() crypto.Keypair {
 
 }
 
-//testing
-func InitAccounts() {
-	Accounts = make(map[block.Account]int)
+func CreateManager() ChainManager {
+	mgr := ChainManager{Tx_pool: []block.Tx{}, Blocks: []block.Block{}, Latest_block: block.Block{}, Accounts: make(map[block.Account]int)}
+	return mgr
+}
 
-	log.Printf("init accounts %d", len(Accounts))
-	//Genesis_Account := block.AccountFromString(Genesis_Address)
+func (mgr *ChainManager) BlockHeight() int {
+	return len(mgr.Blocks)
+}
+
+func (mgr *ChainManager) IsTreasury(account block.Account) bool {
+	return account.AccountKey == Treasury_Address
+}
+
+//init genesis account
+func (mgr *ChainManager) InitAccounts() {
+	mgr.Accounts = make(map[block.Account]int)
+
+	log.Printf("init accounts %d", len(mgr.Accounts))
+	//Genesis_Account := block.AccountFromString(Treasury_Address)
 	//set genesiss account, this is the amount that the genesis address receives
 	genesisAmount := 400
-	SetAccount(block.AccountFromString(Genesis_Address), genesisAmount)
+	tr := block.AccountFromString(Treasury_Address)
+	mgr.SetAccount(tr, genesisAmount)
+	log.Println("mgr.Accounts ", mgr.Accounts)
 }
 
 //valid cash transaction
@@ -122,51 +144,55 @@ func blockHash(block block.Block) block.Block {
 }
 
 //move cash in the chain, we should know tx is checked to be valid by now
-func moveCash(SenderAccount block.Account, ReceiverAccount block.Account, amount int) {
+func (mgr *ChainManager) moveCash(SenderAccount block.Account, ReceiverAccount block.Account, amount int) {
 	log.Printf("move cash %v %v %v %v %d", SenderAccount, ReceiverAccount, Accounts[SenderAccount], Accounts[ReceiverAccount], amount)
 
-	Accounts[SenderAccount] -= amount
-	Accounts[ReceiverAccount] += amount
+	mgr.Accounts[SenderAccount] -= amount
+	mgr.Accounts[ReceiverAccount] += amount
 }
 
-func applyTx(tx block.Tx) {
+func (mgr *ChainManager) applyTx(tx block.Tx) {
 	//TODO check transaction type, not implemented yet
 	valid := true //txValid(tx)
 	if valid {
-		moveCash(tx.Sender, tx.Receiver, tx.Amount)
+		mgr.moveCash(tx.Sender, tx.Receiver, tx.Amount)
 	} else {
 		log.Printf("tx invalid, dont apply")
 		//handle error
 	}
 }
 
-func SetAccount(account block.Account, balance int) {
-	Accounts[account] = balance
+func (mgr *ChainManager) SetAccount(account block.Account, balance int) {
+	mgr.Accounts[account] = balance
 }
 
 func ShowAccount(account block.Account) {
 	log.Printf("%s %d", account, Accounts[account])
 }
 
-func RandomAccount() block.Account {
-	lenk := len(Accounts)
+func (mgr *ChainManager) RandomAccount() block.Account {
+	lenk := len(mgr.Accounts)
+	log.Println("lenk ", lenk)
 
-	keys := make([]block.Account, 0, len(Accounts))
-	for k := range Accounts {
+	//TODO
+	keys := make([]block.Account, 0, len(mgr.Accounts))
+	for k := range mgr.Accounts {
+		log.Println("k ", k)
 		keys = append(keys, k)
 	}
 
 	rand.Seed(time.Now().UnixNano())
 
 	ran := rand.Intn(lenk)
+	log.Println(ran, keys)
 
 	randomAccount := keys[ran]
-	//	log.Println("random account ", randomAccount)
+	log.Println("random account ", randomAccount)
 	return randomAccount
 }
 
 func GenesisTx() block.Tx {
-	Genesis_Account := block.AccountFromString(Genesis_Address)
+	Genesis_Account := block.AccountFromString(Treasury_Address)
 
 	//log.Printf("%s", s)
 	rand.Seed(time.Now().UnixNano())
@@ -191,7 +217,8 @@ func MakeGenesisBlock() block.Block {
 
 	//add 10 genesis tx
 	genesisTx := []block.Tx{}
-	for i := 0; i < 10; i++ {
+	numseeder := 10
+	for i := 0; i < numseeder; i++ {
 		someTx := GenesisTx()
 		genesisTx = append(genesisTx, someTx)
 	}
@@ -201,16 +228,16 @@ func MakeGenesisBlock() block.Block {
 }
 
 //append block to chain of blocks
-func AppendBlock(new_block block.Block) {
+func (mgr *ChainManager) AppendBlock(new_block block.Block) {
 	Latest_block = new_block
-	Blocks = append(Blocks, new_block)
+	mgr.Blocks = append(Blocks, new_block)
 }
 
 //apply block to the state
-func ApplyBlock(block block.Block) {
+func (mgr *ChainManager) ApplyBlock(block block.Block) {
 	//apply
 	for j := 0; j < len(block.Txs); j++ {
-		applyTx(block.Txs[j])
+		mgr.applyTx(block.Txs[j])
 		//if success
 		//assign id
 		//block.Txs[j].Id = txHash(block.Txs[j])
@@ -219,13 +246,13 @@ func ApplyBlock(block block.Block) {
 }
 
 //trivial json storage
-func writeChain() {
-	dataJson, _ := json.Marshal(Blocks)
+func (mgr *ChainManager) WriteChain() {
+	dataJson, _ := json.Marshal(mgr.Blocks)
 	ioutil.WriteFile(ChainStorageFile, []byte(dataJson), 0644)
 }
 
 //TODO error
-func ReadChain() bool {
+func (mgr *ChainManager) ReadChain() bool {
 
 	if _, err := os.Stat(ChainStorageFile); os.IsNotExist(err) {
 		// path/to/whatever does not exist
@@ -235,11 +262,11 @@ func ReadChain() bool {
 
 	dat, _ := ioutil.ReadFile(ChainStorageFile)
 
-	if err := json.Unmarshal(dat, &Blocks); err != nil {
+	if err := json.Unmarshal(dat, &mgr.Blocks); err != nil {
 		panic(err)
 	}
 
-	log.Printf("read chain success from %s. block height %d", ChainStorageFile, len(Blocks))
+	log.Printf("read chain success from %s. block height %d", ChainStorageFile, len(mgr.Blocks))
 	return true
 
 }
@@ -296,15 +323,18 @@ func MakeBlock(t time.Time) {
 		timestamp := time.Now() //.Unix()
 		new_block := block.Block{Height: len(Blocks), Txs: Tx_pool, Prev_Block_Hash: Latest_block.Hash, Timestamp: timestamp}
 		new_block = blockHash(new_block)
-		ApplyBlock(new_block)
-		AppendBlock(new_block)
+		//TODO! fix
+		//ApplyBlock(new_block)
+		//TODO! fix
+		//AppendBlock(new_block)
 
 		log.Printf("new block %v", new_block)
 		EmptyPool()
 
 		Latest_block = new_block
 
-		writeChain()
+		//TODO! mgr
+		//WriteChain()
 
 	} else {
 		log.Printf("no block to make")

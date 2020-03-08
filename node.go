@@ -409,12 +409,13 @@ func run_node(config Configuration) {
 
 	nlog.Println("run node ", config.NodePort)
 
+	mgr := chain.CreateManager()
 	// 	//TODO signatures of genesis
-	chain.InitAccounts()
+	mgr.InitAccounts()
 
 	// 	nlog.Println("PeerAddresses: ", config.PeerAddresses)
 
-	success := chain.ReadChain()
+	success := mgr.ReadChain()
 	log.Println("read chain success ", success)
 	nlog.Printf("block height %d", len(chain.Blocks))
 	//chain.WriteGenBlock(chain.Blocks[0])
@@ -423,8 +424,9 @@ func run_node(config Configuration) {
 	createDemo := true //!success
 	if createDemo {
 		genBlock := chain.MakeGenesisBlock()
-		chain.ApplyBlock(genBlock)
-		chain.AppendBlock(genBlock)
+		mgr.ApplyBlock(genBlock)
+		//TODO!
+		//chain.AppendBlock(genBlock)
 	}
 
 	// 	//if file exists read the chain
@@ -464,13 +466,7 @@ func LoadConfiguration(file string) Configuration {
 	return config
 }
 
-func main() {
-
-	config := LoadConfiguration("nodeconf.json")
-
-	go run_node(config)
-
-	Runweb(config.WebPort)
+func pubexample() {
 
 	// ntchan := ntcl.ConnNtchanStub("test")
 
@@ -479,5 +475,19 @@ func main() {
 	// go ntcl.WriteLoop(ntchan, 100*time.Millisecond)
 
 	// time.Sleep(2000 * time.Millisecond)
+}
+
+func main() {
+
+	// config := LoadConfiguration("nodeconf.json")
+
+	// go run_node(config)
+
+	// Runweb(config.WebPort)
+
+	mgr := chain.CreateManager()
+	log.Println(mgr)
+	//chain.ReadChain(&mgr)
+	log.Println(mgr.BlockHeight())
 
 }

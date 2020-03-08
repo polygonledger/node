@@ -1,5 +1,5 @@
 {    
-    "PeerAddresses": ["polygonnode.com", "polygon.cc"],
+    "PeerAddresses": ["polygonnode.com", "polygon.cc", "swix.io"],
     
     "NodePort": 8888,
 
