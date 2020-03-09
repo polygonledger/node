@@ -188,7 +188,7 @@ func HandleFaucet(mgr *chain.ChainManager, msg ntcl.Message) string {
 	// }
 
 	account := block.Account{AccountKey: string(msg.Data)}
-	nlog.Println("faucet for ... ", account)
+	log.Println("faucet for ... ", account.AccountKey)
 
 	randNonce := 0
 	amount := 10
@@ -201,7 +201,7 @@ func HandleFaucet(mgr *chain.ChainManager, msg ntcl.Message) string {
 
 	tx = crypto.SignTxAdd(tx, keypair)
 	reply_string := chain.HandleTx(mgr, tx)
-	nlog.Println("resp > ", reply_string)
+	log.Println("resp > ", reply_string)
 
 	reply := ntcl.EncodeMsgString(ntcl.REP, ntcl.CMD_FAUCET, reply_string)
 	return reply
@@ -218,7 +218,7 @@ func HandleTx(mgr *chain.ChainManager, msg ntcl.Message) string {
 	if err := json.Unmarshal(dataBytes, &tx); err != nil {
 		panic(err)
 	}
-	nlog.Println(">> ", tx)
+	log.Println(">> ", tx)
 
 	resp := chain.HandleTx(mgr, tx)
 	reply := ntcl.EncodeMsgString(ntcl.REP, ntcl.CMD_TX, resp)

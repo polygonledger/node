@@ -1,10 +1,15 @@
 package main
 
 import (
+	"encoding/hex"
+	"encoding/json"
 	"log"
 	"testing"
+	"time"
 
+	"github.com/polygonledger/node/block"
 	chain "github.com/polygonledger/node/chain"
+	"github.com/polygonledger/node/crypto"
 	"github.com/polygonledger/node/ntcl"
 )
 
@@ -71,6 +76,72 @@ func TestBalance(t *testing.T) {
 	// b := block.Block{}
 	// tx := tx.Tx{}
 	// mgr.ApplyBlock(b)
+}
+
+func TestFaucetTx(t *testing.T) {
+
+	kp := crypto.PairFromSecret("test")
+	pubk := crypto.PubKeyToHex(kp.PubKey)
+	addr := crypto.Address(pubk)
+	//faucet_to := block.AccountFromString(addr)
+
+	//accountJson, _ := json.Marshal(faucet_to)
+	//req_msg := ntcl.EncodeMsgString(ntcl.REQ, ntcl.CMD_FAUCET, string(accountJson))
+	req_msg := ntcl.EncodeMsgString(ntcl.REQ, ntcl.CMD_FAUCET, addr)
+	msg := ntcl.ParseMessage(req_msg)
+
+	mgr := chain.CreateManager()
+	mgr.InitAccounts()
+
+	reply_msg := HandleFaucet(&mgr, msg)
+	if reply_msg != "REP#FAUCET#ok|" {
+		t.Error(reply_msg)
+	}
+	chain.MakeBlock(&mgr)
+
+	time.Sleep(1000 * time.Millisecond)
+
+	req_msg = ntcl.EncodeMsgString(ntcl.REQ, ntcl.CMD_BALANCE, addr)
+	msg = ntcl.ParseMessage(req_msg)
+
+	reply_msg = HandleBalance(&mgr, msg)
+	if reply_msg != "REP#BALANCE#10|" {
+		t.Error(reply_msg)
+	}
+
+}
+
+func TestTx(t *testing.T) {
+	kp := crypto.PairFromSecret("test")
+	pubk := crypto.PubKeyToHex(kp.PubKey)
+	addr := crypto.Address(pubk)
+	sender := block.AccountFromString(addr)
+
+	kp2 := crypto.PairFromSecret("test2")
+	pubk2 := crypto.PubKeyToHex(kp2.PubKey)
+	addr2 := crypto.Address(pubk2)
+	recv := block.AccountFromString(addr2)
+
+	amount := 10
+	tx := block.Tx{Nonce: 1, Amount: amount, Sender: sender, Receiver: recv}
+	signature := crypto.SignTx(tx, kp)
+	sighex := hex.EncodeToString(signature.Serialize())
+	if sighex != "3045022100c360a962aeb6dcee880c45e5be84ee20df7169d6ab2ea5a94228e2fb16b955e5022048a411bc2a85e2aff76d8172abaced9780f03527ab8efbfc8cc380bdb40ccb7a" {
+		t.Error(sighex)
+	}
+
+	txJson, _ := json.Marshal(tx)
+	req_msg := ntcl.EncodeMessageTx(txJson)
+	msg := ntcl.ParseMessage(req_msg)
+
+	mgr := chain.CreateManager()
+	mgr.InitAccounts()
+
+	reply_msg := HandleTx(&mgr, msg)
+	//TODO!
+	if reply_msg == "" {
+		// 	t.Error(reply_msg)
+	}
 }
 
 func TestRanaccount(t *testing.T) {

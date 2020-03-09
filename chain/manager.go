@@ -112,6 +112,7 @@ func HandleTx(mgr *ChainManager, tx block.Tx) string {
 	if txValid(mgr, tx) {
 		tx.Id = crypto.TxHash(tx)
 		mgr.Tx_pool = append(mgr.Tx_pool, tx)
+		log.Println("append tx to pool", mgr.Tx_pool)
 		return "ok"
 	} else {
 		log.Println("invalid tx")
@@ -313,7 +314,7 @@ func ReadGenBlock() block.Block {
 // currently assumes we can create blocks at will and we don't sync
 func MakeBlock(mgr *ChainManager) {
 
-	log.Printf("make block?")
+	log.Printf("make block? ")
 	start := time.Now()
 	//elapsed := time.Since(start)
 	log.Printf("%s", start)
@@ -325,7 +326,7 @@ func MakeBlock(mgr *ChainManager) {
 		new_block := block.Block{Height: len(mgr.Blocks), Txs: mgr.Tx_pool, Prev_Block_Hash: mgr.Latest_block.Hash, Timestamp: timestamp}
 		new_block = blockHash(new_block)
 		//TODO! fix
-		//ApplyBlock(new_block)
+		mgr.ApplyBlock(new_block)
 		//TODO! fix
 		//AppendBlock(new_block)
 
