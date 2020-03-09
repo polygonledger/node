@@ -218,7 +218,7 @@ func HandleTx(mgr *chain.ChainManager, msg ntcl.Message) string {
 	if err := json.Unmarshal(dataBytes, &tx); err != nil {
 		panic(err)
 	}
-	log.Println(">> ", tx)
+	log.Println("tx >> ", tx)
 
 	resp := chain.HandleTx(mgr, tx)
 	reply := ntcl.EncodeMsgString(ntcl.REP, ntcl.CMD_TX, resp)

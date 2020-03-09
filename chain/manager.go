@@ -75,7 +75,7 @@ func (mgr *ChainManager) InitAccounts() {
 //* the sender is who he says he is (authorized access to funds)
 //speed of evaluation should be way less than 1 msec
 //TODO check nonce
-func txValid(mgr *ChainManager, tx block.Tx) bool {
+func TxValid(mgr *ChainManager, tx block.Tx) bool {
 
 	//TODO check receiver has valid address format
 
@@ -92,10 +92,10 @@ func txValid(mgr *ChainManager, tx block.Tx) bool {
 	//TODO fix this is only for testing
 
 	verified := crypto.VerifyTxSig(tx)
-	btxValid := sufficientBalance && verified
+	bTxValid := sufficientBalance && verified
 	log.Println("sigvalid ", verified)
 	//TODO check sig
-	return btxValid
+	return bTxValid
 	//return true
 }
 
@@ -109,7 +109,7 @@ func HandleTx(mgr *ChainManager, tx block.Tx) string {
 	//log.Println("hash %x time %s sign %x", tx.Id, timestamp, tx.Signature)
 
 	//TODO its own function
-	if txValid(mgr, tx) {
+	if TxValid(mgr, tx) {
 		tx.Id = crypto.TxHash(tx)
 		mgr.Tx_pool = append(mgr.Tx_pool, tx)
 		log.Println("append tx to pool", mgr.Tx_pool)
@@ -154,7 +154,7 @@ func (mgr *ChainManager) moveCash(SenderAccount block.Account, ReceiverAccount b
 
 func (mgr *ChainManager) applyTx(tx block.Tx) {
 	//TODO check transaction type, not implemented yet
-	valid := true //txValid(tx)
+	valid := true //TxValid(tx)
 	if valid {
 		mgr.moveCash(tx.Sender, tx.Receiver, tx.Amount)
 	} else {

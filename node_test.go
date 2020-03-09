@@ -2,7 +2,6 @@ package main
 
 import (
 	"encoding/hex"
-	"encoding/json"
 	"log"
 	"testing"
 	"time"
@@ -112,9 +111,29 @@ func TestFaucetTx(t *testing.T) {
 }
 
 func TestTx(t *testing.T) {
+
+	mgr := chain.CreateManager()
+	mgr.InitAccounts()
 	kp := crypto.PairFromSecret("test")
 	pubk := crypto.PubKeyToHex(kp.PubKey)
 	addr := crypto.Address(pubk)
+	req_msg := ntcl.EncodeMsgString(ntcl.REQ, ntcl.CMD_FAUCET, addr)
+	msg := ntcl.ParseMessage(req_msg)
+
+	reply_msg := HandleFaucet(&mgr, msg)
+	if reply_msg != "REP#FAUCET#ok|" {
+		t.Error(reply_msg)
+	}
+	chain.MakeBlock(&mgr)
+	time.Sleep(100 * time.Millisecond)
+	req_msg = ntcl.EncodeMsgString(ntcl.REQ, ntcl.CMD_BALANCE, addr)
+	msg = ntcl.ParseMessage(req_msg)
+
+	reply_msg = HandleBalance(&mgr, msg)
+	if reply_msg != "REP#BALANCE#10|" {
+		t.Error(reply_msg)
+	}
+
 	sender := block.AccountFromString(addr)
 
 	kp2 := crypto.PairFromSecret("test2")
@@ -122,26 +141,37 @@ func TestTx(t *testing.T) {
 	addr2 := crypto.Address(pubk2)
 	recv := block.AccountFromString(addr2)
 
-	amount := 10
+	amount := 5
 	tx := block.Tx{Nonce: 1, Amount: amount, Sender: sender, Receiver: recv}
 	signature := crypto.SignTx(tx, kp)
 	sighex := hex.EncodeToString(signature.Serialize())
-	if sighex != "3045022100c360a962aeb6dcee880c45e5be84ee20df7169d6ab2ea5a94228e2fb16b955e5022048a411bc2a85e2aff76d8172abaced9780f03527ab8efbfc8cc380bdb40ccb7a" {
-		t.Error(sighex)
+	// if sighex != "3045022100c360a962aeb6dcee880c45e5be84ee20df7169d6ab2ea5a94228e2fb16b955e5022048a411bc2a85e2aff76d8172abaced9780f03527ab8efbfc8cc380bdb40ccb7a" {
+	// 	t.Error(sighex)
+	// }
+	tx.Signature = sighex
+	tx.SenderPubkey = crypto.PubKeyToHex(kp.PubKey)
+
+	verified := crypto.VerifyTxSig(tx)
+
+	if !verified {
+		t.Error("not verified")
 	}
 
-	txJson, _ := json.Marshal(tx)
-	req_msg := ntcl.EncodeMessageTx(txJson)
-	msg := ntcl.ParseMessage(req_msg)
+	valid := chain.TxValid(&mgr, tx)
 
-	mgr := chain.CreateManager()
-	mgr.InitAccounts()
-
-	reply_msg := HandleTx(&mgr, msg)
-	//TODO!
-	if reply_msg == "" {
-		// 	t.Error(reply_msg)
+	if !valid {
+		t.Error("not valid")
 	}
+
+	// txJson, _ := json.Marshal(tx)
+	// req_msg = ntcl.EncodeMessageTx(txJson)
+	// msg = ntcl.ParseMessage(req_msg)
+
+	// reply_msg = HandleTx(&mgr, msg)
+	// //TODO!
+	// if reply_msg == "" {
+	// 	// 	t.Error(reply_msg)
+	// }
 }
 
 func TestRanaccount(t *testing.T) {
