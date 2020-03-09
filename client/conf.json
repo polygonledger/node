@@ -1,6 +1,6 @@
 {
     
-    "PeerAddresses": ["polygonnode.com", "swix.io", "54.162.206.72"],
+    "PeerAddresses": ["localhost", "polygonnode.com", "swix.io", "54.162.206.72"],
     
     "Nodeport": 8888,
 

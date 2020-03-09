@@ -467,6 +467,28 @@ func ping(ntchan ntcl.Ntchan) {
 
 }
 
+func testPushtx(ntchan ntcl.Ntchan) {
+	kp := crypto.PairFromSecret("test")
+	pubk := crypto.PubKeyToHex(kp.PubKey)
+	addr := crypto.Address(pubk)
+	req_msg := ntcl.EncodeMsgString(ntcl.REQ, ntcl.CMD_FAUCET, addr)
+	//msg := ntcl.ParseMessage(req_msg)
+
+	ntchan.REQ_out <- req_msg
+
+	rep := <-ntchan.REP_in
+	log.Println("reply ", rep)
+
+	req_msg2 := ntcl.EncodeMsgString(ntcl.REQ, ntcl.CMD_BALANCE, addr)
+	ntchan.REQ_out <- req_msg2
+
+	rep2 := <-ntchan.REP_in
+
+	log.Println("rep2 ", rep2)
+	if rep2 != "REP#BALANCE#10|" {
+	}
+}
+
 // func ReplyInProcessor(ntchan ntcl.Ntchan) {
 // 	for {
 // 		log.Println("ReplyInProcessor ")
@@ -490,6 +512,9 @@ func runSingleMode(option string, config Configuration) {
 	log.Println("init ", ntchan)
 
 	switch option {
+
+	case "testtx":
+		testPushtx(ntchan)
 
 	case "ping":
 		log.Println("ping")
@@ -621,8 +646,7 @@ func runOffline(option string, config Configuration) {
 
 //dns functions for later, as we can use txt records to get pubkey
 func dnslook() {
-	//domain := "test.polygonnode.com"
-	domain := "swix.io"
+	domain := "polygonnode.com"
 
 	txtrecords, _ := net.LookupTXT(domain)
 	// log.Println(txtrecords)
@@ -722,7 +746,7 @@ func main() {
 
 	switch option {
 
-	case "test", "ping", "heartbeat", "getbalance", "faucet", "txpool", "pushtx", "randomtx":
+	case "testtx", "test", "ping", "heartbeat", "getbalance", "faucet", "txpool", "pushtx", "randomtx":
 		runSingleMode(option, config)
 
 	case "createkeys", "sign", "createtx", "verify":

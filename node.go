@@ -298,6 +298,7 @@ func RequestHandlerTel(mgr *chain.ChainManager, ntchan ntcl.Ntchan) {
 		}
 
 		//ntchan.Writer_queue <- reply_msg
+		log.Println("reply_msg ", reply_msg)
 		ntchan.REP_out <- reply_msg
 	}
 }
