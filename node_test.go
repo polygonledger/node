@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/hex"
+	"encoding/json"
 	"log"
 	"testing"
 	"time"
@@ -128,7 +129,6 @@ func TestTx(t *testing.T) {
 	time.Sleep(100 * time.Millisecond)
 	req_msg = ntcl.EncodeMsgString(ntcl.REQ, ntcl.CMD_BALANCE, addr)
 	msg = ntcl.ParseMessage(req_msg)
-
 	reply_msg = HandleBalance(&mgr, msg)
 	if reply_msg != "REP#BALANCE#10|" {
 		t.Error(reply_msg)
@@ -163,15 +163,26 @@ func TestTx(t *testing.T) {
 		t.Error("not valid")
 	}
 
-	// txJson, _ := json.Marshal(tx)
-	// req_msg = ntcl.EncodeMessageTx(txJson)
-	// msg = ntcl.ParseMessage(req_msg)
+	txJson, _ := json.Marshal(tx)
+	req_msg = ntcl.EncodeMessageTx(txJson)
+	msg = ntcl.ParseMessage(req_msg)
 
-	// reply_msg = HandleTx(&mgr, msg)
+	reply_msg = HandleTx(&mgr, msg)
 	// //TODO!
-	// if reply_msg == "" {
-	// 	// 	t.Error(reply_msg)
-	// }
+	if reply_msg != "REP#TX#ok|" {
+		t.Error(reply_msg)
+	}
+
+	chain.MakeBlock(&mgr)
+	time.Sleep(100 * time.Millisecond)
+
+	req_msg = ntcl.EncodeMsgString(ntcl.REQ, ntcl.CMD_BALANCE, addr2)
+	msg = ntcl.ParseMessage(req_msg)
+	reply_msg = HandleBalance(&mgr, msg)
+	if reply_msg != "REP#BALANCE#5|" {
+		t.Error(reply_msg)
+	}
+
 }
 
 func TestRanaccount(t *testing.T) {

@@ -96,10 +96,7 @@ func TxValid(mgr *ChainManager, tx block.Tx) bool {
 	log.Println("sigvalid ", verified)
 	//TODO check sig
 	return bTxValid
-	//return true
 }
-
-//handlers
 
 func HandleTx(mgr *ChainManager, tx block.Tx) string {
 	//hash of timestamp is same, check lenght of bytes used??
@@ -195,7 +192,6 @@ func (mgr *ChainManager) RandomAccount() block.Account {
 func GenesisTx() block.Tx {
 	Genesis_Account := block.AccountFromString(Treasury_Address)
 
-	//log.Printf("%s", s)
 	rand.Seed(time.Now().UnixNano())
 	randNonce := rand.Intn(100)
 	//TODO fix
