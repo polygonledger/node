@@ -2,6 +2,7 @@ package ntcl
 
 type Peer struct {
 	Address  string `json:"Address"`
+	Name     string
 	NodePort int
 	NTchan   Ntchan
 
@@ -10,10 +11,10 @@ type Peer struct {
 	//Domain string
 }
 
-func CreatePeer(ipAddress string, nodeport int) Peer {
+func CreatePeer(name string, ipAddress string, nodeport int, ntchan Ntchan) Peer {
 	//addr := ip
 	//NodePort: NodePort,
-	p := Peer{Address: ipAddress, NodePort: nodeport}
+	p := Peer{Name: name, Address: ipAddress, NodePort: nodeport, NTchan: ntchan}
 	return p
 }
 

@@ -345,21 +345,6 @@ func Gettxpool(peer ntcl.Peer) error {
 	return nil
 }
 
-func setupAllPeers(config Configuration) {
-
-	for _, peerAddress := range config.PeerAddresses {
-		log.Println("setup  peer ", peerAddress)
-		//p := ntcl.CreatePeer(peerAddress, config.NodePort)
-
-		//err := setupPeerClient(p)
-		// if err != nil {
-		// 	log.Println("connect failed")
-		// 	continue
-		// }
-	}
-
-}
-
 //run client against multiple nodes
 func runPeermode(cmd string, config Configuration) {
 	log.Println("runPeermode")
@@ -372,8 +357,12 @@ func runPeermode(cmd string, config Configuration) {
 		//log.Println("add peer ", p)
 
 		ntchan := initClient(peerAddress, config.verbose)
-		//log.Println("init ", ntchan)
-		ping(ntchan)
+
+		//
+		p := ntcl.CreatePeer(peerAddress, peerAddress, config.NodePort, ntchan)
+
+		//log.Println("init  ", ntchan)
+		ping(p)
 
 		//err := setupPeerClient(p)
 		// if err != nil {
@@ -404,19 +393,19 @@ func runPeermode(cmd string, config Configuration) {
 }
 
 //TODO move
-func ping(ntchan ntcl.Ntchan) {
+func ping(peer ntcl.Peer) {
 
 	// req_msg := ntcl.EncodeMsgString(ntcl.REQ, ntcl.CMD_PING, "")
 
 	//subscribe example
 	//reqs := "REQ#PING#|"
 	req_msg := ntcl.EncodeMsgString(ntcl.REQ, ntcl.CMD_PING, "")
-	ntchan.REQ_out <- req_msg
+	peer.NTchan.REQ_out <- req_msg
 	//ntcl.NetWrite(ntchan, reqs)
 
 	time.Sleep(1000 * time.Millisecond)
 
-	reply := <-ntchan.REP_in
+	reply := <-peer.NTchan.REP_in
 	success := reply == "REP#PONG#|"
 	log.Println("success ", success)
 
@@ -452,6 +441,7 @@ func runSingleMode(cmd string, config Configuration) {
 
 	mainPeerAddress := config.PeerAddresses[0]
 	ntchan := initClient(mainPeerAddress, config.verbose)
+	p := ntcl.CreatePeer(mainPeerAddress, mainPeerAddress, config.NodePort, ntchan)
 	log.Println("init ", ntchan)
 
 	switch cmd {
@@ -459,7 +449,7 @@ func runSingleMode(cmd string, config Configuration) {
 	case "ping":
 		log.Println("ping")
 		//ntchan := initClient(config)
-		ping(ntchan)
+		ping(p)
 
 		time.Sleep(100 * time.Millisecond)
 

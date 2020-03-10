@@ -61,6 +61,7 @@ type TCPNode struct {
 	ConnectedChan chan net.Conn //channel of newly connected clients/peers
 	Peers         []ntcl.Peer
 	Mgr           *chain.ChainManager
+	Starttime     time.Time
 }
 
 func (t *TCPNode) GetPeers() []ntcl.Peer {
@@ -72,6 +73,7 @@ func (t *TCPNode) GetPeers() []ntcl.Peer {
 
 // start listening on tcp and handle connection through channels
 func (t *TCPNode) Run() (err error) {
+	t.Starttime = time.Now()
 
 	log.Println("node listen on ", t.addr)
 	t.server, err = net.Listen("tcp", t.addr)
@@ -362,7 +364,12 @@ func LoadContent(mgr *chain.ChainManager) string {
 	return content
 }
 
-func Runweb(mgr *chain.ChainManager, webport int) {
+type Status struct {
+	Blockheight int       `json:"Blockheight"`
+	Starttime   time.Time `json:"Starttime"`
+}
+
+func Runweb(t *TCPNode, mgr *chain.ChainManager, webport int) {
 	//webserver to access node state through browser
 	// HTTP
 	log.Printf("start webserver %d", webport)
@@ -372,6 +379,25 @@ func Runweb(mgr *chain.ChainManager, webport int) {
 		//nlog.Print(p)
 		fmt.Fprintf(w, "<h1>Polygon chain</h1><div>%s</div>", p)
 	})
+
+	http.HandleFunc("/status", func(w http.ResponseWriter, r *http.Request) {
+		status := Status{Blockheight: len(mgr.Blocks), Starttime: t.Starttime}
+		jData, _ := json.Marshal(status)
+
+		log.Println(jData)
+		w.Header().Set("Content-Type", "application/json")
+		w.Write(jData)
+
+		//w.WriteHeader(http.StatusCreated)
+		//json.NewEncoder(w).Encode(status)
+	})
+
+	// http.HandleFunc("/status", func(w http.ResponseWriter, r *http.Request) {
+	// 	//p := strconv.Itoa()
+	// 	//nlog.Print(p)
+	// 	s := fmt.Sprintf("blockheight %d uptime: %s", len(mgr.Blocks), "?")
+	// 	fmt.Fprintf(w, "%s", s)
+	// })
 
 	nlog.Fatal(http.ListenAndServe(":"+strconv.Itoa(webport), nil))
 
@@ -416,7 +442,7 @@ func setupLogfile() *log.Logger {
 
 }
 
-func run_node(mgr *chain.ChainManager, config Configuration) {
+func run_node(t *TCPNode, mgr *chain.ChainManager, config Configuration) {
 
 	setupLogfile()
 
@@ -431,22 +457,22 @@ func run_node(mgr *chain.ChainManager, config Configuration) {
 		go chain.MakeBlockLoop(mgr, 10000*time.Millisecond)
 	}
 
-	node, err := NewNode(":" + strconv.Itoa(node_port))
-	node.Mgr = mgr
+	//node, err := NewNode(":" + strconv.Itoa(node_port))
+	//node.Mgr = mgr
 
-	if err != nil {
-		log.Println("error creating TCP server")
-		return
-	}
+	// if err != nil {
+	// 	log.Println("error creating TCP server")
+	// 	return
+	// }
 
 	// if err2 != nil {
 	// 	log.Println("error starting TCP server ", err2)
 	// 	return
 	// }
 
-	go node.HandleConnect()
+	go t.HandleConnect()
 
-	node.Run()
+	t.Run()
 }
 
 func LoadConfiguration(file string) Configuration {
@@ -497,8 +523,16 @@ func main() {
 
 	config := LoadConfiguration("nodeconf.json")
 
-	go run_node(&mgr, config)
+	node, err := NewNode(":" + strconv.Itoa(node_port))
+	node.Mgr = &mgr
 
-	Runweb(&mgr, config.WebPort)
+	if err != nil {
+		log.Println("error creating TCP server")
+		return
+	}
+
+	go run_node(node, &mgr, config)
+
+	Runweb(node, &mgr, config.WebPort)
 
 }

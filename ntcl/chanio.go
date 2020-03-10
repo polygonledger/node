@@ -147,7 +147,7 @@ func ReadLoop(ntchan Ntchan) {
 func ReadProcessor(ntchan Ntchan) {
 
 	for {
-		logmsgdlogmsgd(ntchan, "ReadProcessor", "loop")
+		logmsgd(ntchan, "ReadProcessor", "loop")
 		msgString := <-ntchan.Reader_queue
 		logmsgd(ntchan, "ReadProcessor", msgString)
 
