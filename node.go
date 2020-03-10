@@ -35,7 +35,7 @@ import (
 	"github.com/polygonledger/node/ntcl"
 )
 
-var blockTime = 10000 * time.Millisecond
+var blocktime = 10000 * time.Millisecond
 
 var nlog *log.Logger
 var logfile_name = "node.log"
@@ -249,6 +249,20 @@ func RequestHandlerTel(t *TCPNode, ntchan ntcl.Ntchan) {
 		case ntcl.CMD_BLOCKHEIGHT:
 			reply_msg = HandleBlockheight(t, msg)
 
+		case ntcl.CMD_GETTXPOOL:
+			nlog.Println("get tx pool")
+
+			//TODO
+			data, _ := json.Marshal(t.Mgr.Tx_pool)
+			reply_msg = ntcl.EncodeMsgString(ntcl.REP, ntcl.CMD_GETTXPOOL, string(data))
+
+		case ntcl.CMD_GETBLOCKS:
+			nlog.Println("get tx pool")
+
+			//TODO
+			data, _ := json.Marshal(t.Mgr.Blocks)
+			reply_msg = ntcl.EncodeMsgString(ntcl.REP, ntcl.CMD_GETBLOCKS, string(data))
+
 			//Login would be challenge response protocol
 			// case ntcl.CMD_LOGIN:
 			// 	log.Println("> ", msg.Data)
@@ -281,16 +295,6 @@ func RequestHandlerTel(t *TCPNode, ntchan ntcl.Ntchan) {
 			}()
 
 			//TODO reply unsub ok
-
-			// case ntcl.CMD_GETTXPOOL:
-			// 	nlog.Println("get tx pool")
-
-			// 	//TODO
-			// 	data, _ := json.Marshal(chain.Tx_pool)
-			// 	msg := ntcl.EncodeMsg(ntcl.REP, ntcl.CMD_GETTXPOOL, string(data))
-			// 	rep_chan <- msg
-
-			//var Tx_pool []block.Tx
 
 		}
 
@@ -489,8 +493,8 @@ func run_node(t *TCPNode, mgr *chain.ChainManager, config Configuration) {
 	// create block every blocktime sec
 
 	if config.DelgateEnabled {
-		//go utils.DoEvery(blockTime, chain.MakeBlock(mgr, blockTime))
-		blocktime := 10000 * time.Millisecond
+		//go utils.DoEvery(, chain.MakeBlock(mgr, blockTime))
+
 		go chain.MakeBlockLoop(mgr, blocktime)
 	}
 

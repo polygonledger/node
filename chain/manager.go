@@ -21,15 +21,9 @@ type ChainManager struct {
 	Accounts     map[block.Account]int
 }
 
-// var Tx_pool []block.Tx
-// var Blocks []block.Block
-// var Latest_block block.Block
-// var Accounts map[block.Account]int
-
 const ChainStorageFile = "data/chain.json"
 const GenblockStorageFile = "data/genesis.json"
 
-//TODO fix circular import
 const (
 	//Treasury_Address string = "P0614579c42f2"
 	Treasury_Address string = "P2e2bfb58c9db"
@@ -122,8 +116,6 @@ func HandleTx(mgr *ChainManager, tx block.Tx) string {
 	//return "ok"
 
 }
-
-//#### blockchain functions
 
 //empty the tx pool
 func EmptyPool(mgr *ChainManager) {
@@ -310,7 +302,7 @@ func ReadGenBlock() block.Block {
 // currently assumes we can create blocks at will and we don't sync
 func MakeBlock(mgr *ChainManager) {
 
-	log.Printf("make block? ")
+	//log.Printf("make block? ")
 	//start := time.Now()
 	//elapsed := time.Since(start)
 	//log.Printf("%s", start)
