@@ -1,8 +1,9 @@
 package main
 
+//node.go is the main software which delegates run. it currently contains a webserver
+//this should probably be a gateway later
+
 //kill -9 $(lsof -t -i:8888)
-//node should run via DNS
-//nodexample.com
 
 //basic protocol
 //node receives tx messages
@@ -13,7 +14,6 @@ package main
 //registerPeer
 //pickRandomAccount
 //storeBalance
-
 //newWallet
 
 import (
@@ -34,12 +34,6 @@ import (
 	"github.com/polygonledger/node/ntcl"
 )
 
-//simple node that runs standalone without peers
-
-//var srv Server
-
-const node_port = 8888
-
 var blockTime = 10000 * time.Millisecond
 
 var nlog *log.Logger
@@ -52,8 +46,8 @@ type Configuration struct {
 	DelgateEnabled bool
 }
 
-//TODO! rename TCP Node
 type TCPNode struct {
+	NodePort      int
 	Name          string
 	addr          string
 	server        net.Listener
@@ -128,12 +122,10 @@ func (t *TCPNode) HandleConnect() {
 		verbose := true
 		ntchan := ntcl.ConnNtchan(newpeerConn, "server", strRemoteAddr, verbose)
 
-		p := ntcl.Peer{Address: strRemoteAddr, NodePort: node_port, NTchan: ntchan}
+		p := ntcl.Peer{Address: strRemoteAddr, NodePort: t.NodePort, NTchan: ntchan}
 		t.Peers = append(t.Peers, p)
 
 		go t.handleConnection(t.Mgr, ntchan)
-		//go ChannelPeerNetwork(conn, peer)
-		//setupPeer(strRemoteAddr, node_port, conn)
 
 		//conn.Close()
 
@@ -224,7 +216,6 @@ func HandleTx(mgr *chain.ChainManager, msg ntcl.Message) string {
 
 	resp := chain.HandleTx(mgr, tx)
 	reply := ntcl.EncodeMsgString(ntcl.REP, ntcl.CMD_TX, resp)
-	//reply_msg := ntcl.EncodeMsgString(ntcl.REP, "PONG", "")
 	return reply
 }
 
@@ -367,6 +358,7 @@ func LoadContent(mgr *chain.ChainManager) string {
 type Status struct {
 	Blockheight int       `json:"Blockheight"`
 	Starttime   time.Time `json:"Starttime"`
+	Uptime      int64     `json:"Uptime"`
 }
 
 func Runweb(t *TCPNode, mgr *chain.ChainManager, webport int) {
@@ -381,7 +373,9 @@ func Runweb(t *TCPNode, mgr *chain.ChainManager, webport int) {
 	})
 
 	http.HandleFunc("/status", func(w http.ResponseWriter, r *http.Request) {
-		status := Status{Blockheight: len(mgr.Blocks), Starttime: t.Starttime}
+		uptimedur := time.Now().Sub(t.Starttime)
+		uptime := int64(uptimedur / time.Second)
+		status := Status{Blockheight: len(mgr.Blocks), Starttime: t.Starttime, Uptime: uptime}
 		jData, _ := json.Marshal(status)
 
 		log.Println(jData)
@@ -391,13 +385,6 @@ func Runweb(t *TCPNode, mgr *chain.ChainManager, webport int) {
 		//w.WriteHeader(http.StatusCreated)
 		//json.NewEncoder(w).Encode(status)
 	})
-
-	// http.HandleFunc("/status", func(w http.ResponseWriter, r *http.Request) {
-	// 	//p := strconv.Itoa()
-	// 	//nlog.Print(p)
-	// 	s := fmt.Sprintf("blockheight %d uptime: %s", len(mgr.Blocks), "?")
-	// 	fmt.Fprintf(w, "%s", s)
-	// })
 
 	nlog.Fatal(http.ListenAndServe(":"+strconv.Itoa(webport), nil))
 
@@ -409,9 +396,7 @@ func NewNode(addr string) (*TCPNode, error) {
 		addr:          addr,
 		accepting:     false,
 		ConnectedChan: make(chan net.Conn),
-		//Peers: make([]ntcl.Peer)
 	}, nil
-
 }
 
 // Close shuts down the TCP Server
@@ -419,6 +404,7 @@ func (t *TCPNode) Close() (err error) {
 	return t.server.Close()
 }
 
+//TODO! fix nlog
 func setupLogfile() *log.Logger {
 	//setup log file
 
@@ -457,16 +443,8 @@ func run_node(t *TCPNode, mgr *chain.ChainManager, config Configuration) {
 		go chain.MakeBlockLoop(mgr, 10000*time.Millisecond)
 	}
 
-	//node, err := NewNode(":" + strconv.Itoa(node_port))
-	//node.Mgr = mgr
-
 	// if err != nil {
 	// 	log.Println("error creating TCP server")
-	// 	return
-	// }
-
-	// if err2 != nil {
-	// 	log.Println("error starting TCP server ", err2)
 	// 	return
 	// }
 
@@ -498,14 +476,12 @@ func pubexample() {
 
 func main() {
 
+	config := LoadConfiguration("nodeconf.json")
+	log.Println("PeerAddresses: ", config.PeerAddresses)
+
 	mgr := chain.CreateManager()
-	// 	//TODO signatures of genesis
+	//TODO signatures of genesis
 	mgr.InitAccounts()
-
-	//chain.ReadChain(&mgr)
-	//log.Println(mgr.BlockHeight())
-
-	// 	nlog.Println("PeerAddresses: ", config.PeerAddresses)
 
 	success := mgr.ReadChain()
 	log.Println("read chain success ", success)
@@ -521,9 +497,7 @@ func main() {
 		mgr.AppendBlock(genBlock)
 	}
 
-	config := LoadConfiguration("nodeconf.json")
-
-	node, err := NewNode(":" + strconv.Itoa(node_port))
+	node, err := NewNode(":" + strconv.Itoa(config.NodePort))
 	node.Mgr = &mgr
 
 	if err != nil {
