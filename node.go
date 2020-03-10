@@ -65,11 +65,15 @@ func (t *TCPNode) GetPeers() []ntcl.Peer {
 	return t.Peers
 }
 
+func (t *TCPNode) log(s string) {
+	nlog.Println(s)
+}
+
 // start listening on tcp and handle connection through channels
 func (t *TCPNode) Run() (err error) {
 	t.Starttime = time.Now()
 
-	log.Println("node listen on ", t.addr)
+	t.log("node listen on " + t.addr)
 	t.server, err = net.Listen("tcp", t.addr)
 	if err != nil {
 		//return errors.Wrapf(err, "Unable to listen on port %s\n", t.addr)
@@ -89,7 +93,7 @@ func (t *TCPNode) Run() (err error) {
 			break
 		}
 
-		log.Println("new conn accepted ", conn)
+		t.log(fmt.Sprintf("new conn accepted ", conn))
 		//we put the new connection on the chan and handle there
 		t.ConnectedChan <- conn
 
@@ -98,7 +102,7 @@ func (t *TCPNode) Run() (err error) {
 		// 	//https://gist.github.com/elico/3eecebd87d4bc714c94066a1783d4c9c
 
 	}
-	log.Println("end run")
+	t.log("end run")
 	return
 }
 
@@ -115,8 +119,8 @@ func (t *TCPNode) HandleConnect() {
 	for {
 		newpeerConn := <-t.ConnectedChan
 		strRemoteAddr := newpeerConn.RemoteAddr().String()
-		log.Println("accepted conn ", strRemoteAddr, t.accepting)
-		log.Println("new peer ", newpeerConn)
+		t.log(fmt.Sprintf("accepted conn ", strRemoteAddr, t.accepting))
+		t.log(fmt.Sprintf("new peer ", newpeerConn))
 		// log.Println("> ", t.Peers)
 		// log.Println("# peers ", len(t.Peers))
 		verbose := true
@@ -144,17 +148,17 @@ func HandlePing(msg ntcl.Message) string {
 	return reply_msg
 }
 
-func HandleBlockheight(mgr *chain.ChainManager, msg ntcl.Message) string {
-	bh := len(mgr.Blocks)
+func HandleBlockheight(t *TCPNode, msg ntcl.Message) string {
+	bh := len(t.Mgr.Blocks)
 	data := strconv.Itoa(bh)
 	reply_msg := ntcl.EncodeMsgString(ntcl.REP, ntcl.CMD_BLOCKHEIGHT, data)
-	//log.Println("BLOCKHEIGHT ", reply_msg)
+	//("BLOCKHEIGHT ", reply_msg)
 	return reply_msg
 }
 
-func HandleBalance(mgr *chain.ChainManager, msg ntcl.Message) string {
+func HandleBalance(t *TCPNode, msg ntcl.Message) string {
 	dataBytes := msg.Data
-	log.Println("HandleBalance data ", string(msg.Data), dataBytes)
+	t.log(fmt.Sprintf("HandleBalance data ", string(msg.Data), dataBytes))
 
 	a := block.Account{AccountKey: string(msg.Data)}
 
@@ -163,9 +167,8 @@ func HandleBalance(mgr *chain.ChainManager, msg ntcl.Message) string {
 	// if err := json.Unmarshal(dataBytes, &account); err != nil {
 	// 	panic(err)
 	// }
-	// nlog.Println("get balance for account ", account)
 
-	balance := mgr.Accounts[a]
+	balance := t.Mgr.Accounts[a]
 
 	//s := strconv.Itoa(balance)
 	// data, _ := json.Marshal(balance)
@@ -174,7 +177,7 @@ func HandleBalance(mgr *chain.ChainManager, msg ntcl.Message) string {
 	return reply_msg
 }
 
-func HandleFaucet(mgr *chain.ChainManager, msg ntcl.Message) string {
+func HandleFaucet(t *TCPNode, msg ntcl.Message) string {
 	// dataBytes := msg.Data
 	// var account block.Account
 	// if err := json.Unmarshal(dataBytes, &account); err != nil {
@@ -194,7 +197,7 @@ func HandleFaucet(mgr *chain.ChainManager, msg ntcl.Message) string {
 	tx := block.Tx{Nonce: randNonce, Amount: amount, Sender: Genesis_Account, Receiver: account}
 
 	tx = crypto.SignTxAdd(tx, keypair)
-	reply_string := chain.HandleTx(mgr, tx)
+	reply_string := chain.HandleTx(t.Mgr, tx)
 	log.Println("resp > ", reply_string)
 
 	reply := ntcl.EncodeMsgString(ntcl.REP, ntcl.CMD_FAUCET, reply_string)
@@ -204,7 +207,7 @@ func HandleFaucet(mgr *chain.ChainManager, msg ntcl.Message) string {
 //Standard Tx handler
 //InteractiveTx also possible
 //client requests tranaction <=> server response with challenge <=> client proves
-func HandleTx(mgr *chain.ChainManager, msg ntcl.Message) string {
+func HandleTx(t *TCPNode, msg ntcl.Message) string {
 	dataBytes := msg.Data
 
 	var tx block.Tx
@@ -212,23 +215,23 @@ func HandleTx(mgr *chain.ChainManager, msg ntcl.Message) string {
 	if err := json.Unmarshal(dataBytes, &tx); err != nil {
 		panic(err)
 	}
-	log.Println("tx >> ", tx)
+	t.log(fmt.Sprintf("tx >> ", tx))
 
-	resp := chain.HandleTx(mgr, tx)
+	resp := chain.HandleTx(t.Mgr, tx)
 	reply := ntcl.EncodeMsgString(ntcl.REP, ntcl.CMD_TX, resp)
 	return reply
 }
 
 //handle requests in telnet style i.e. string encoding
-func RequestHandlerTel(mgr *chain.ChainManager, ntchan ntcl.Ntchan) {
+func RequestHandlerTel(t *TCPNode, ntchan ntcl.Ntchan) {
 	for {
 		msg_string := <-ntchan.REQ_in
-		log.Println("handle ", msg_string)
+		t.log(fmt.Sprintf("handle ", msg_string))
 		msg := ntcl.ParseMessage(msg_string)
 
 		var reply_msg string
 
-		log.Println("Handle ", msg.Command)
+		t.log(fmt.Sprintf("Handle ", msg.Command))
 
 		switch msg.Command {
 
@@ -236,14 +239,14 @@ func RequestHandlerTel(mgr *chain.ChainManager, ntchan ntcl.Ntchan) {
 			reply_msg = HandlePing(msg)
 
 		case ntcl.CMD_BALANCE:
-			reply_msg = HandleBalance(mgr, msg)
+			reply_msg = HandleBalance(t, msg)
 
 		case ntcl.CMD_FAUCET:
 			//send money to specified address
-			reply_msg = HandleFaucet(mgr, msg)
+			reply_msg = HandleFaucet(t, msg)
 
 		case ntcl.CMD_BLOCKHEIGHT:
-			reply_msg = HandleBlockheight(mgr, msg)
+			reply_msg = HandleBlockheight(t, msg)
 
 			//Login would be challenge response protocol
 			// case ntcl.CMD_LOGIN:
@@ -251,17 +254,17 @@ func RequestHandlerTel(mgr *chain.ChainManager, ntchan ntcl.Ntchan) {
 
 		case ntcl.CMD_TX:
 			log.Println("Handle tx")
-			reply_msg = HandleTx(mgr, msg)
+			reply_msg = HandleTx(t, msg)
 
 		case ntcl.CMD_RANDOM_ACCOUNT:
-			log.Println("Handle random account")
+			t.log("Handle random account")
 
-			txJson, _ := json.Marshal(mgr.RandomAccount())
+			txJson, _ := json.Marshal(t.Mgr.RandomAccount())
 			reply_msg = ntcl.EncodeMsgString(ntcl.REP, ntcl.CMD_RANDOM_ACCOUNT, string(txJson))
 
 		//PUBSUB
 		case ntcl.CMD_SUB:
-			log.Println("subscribe to topic ", msg.Data)
+			t.log(fmt.Sprintf("subscribe to topic ", msg.Data))
 
 			//quitpub := make(chan int)
 			go ntcl.PublishTime(ntchan)
@@ -269,7 +272,7 @@ func RequestHandlerTel(mgr *chain.ChainManager, ntchan ntcl.Ntchan) {
 			//TODO reply sub ok
 
 		case ntcl.CMD_SUBUN:
-			log.Println("unsubscribe from topic ", msg.Data)
+			t.log(fmt.Sprintf("unsubscribe from topic ", msg.Data))
 
 			go func() {
 				//time.Sleep(5000 * time.Millisecond)
@@ -291,7 +294,7 @@ func RequestHandlerTel(mgr *chain.ChainManager, ntchan ntcl.Ntchan) {
 		}
 
 		//ntchan.Writer_queue <- reply_msg
-		log.Println("reply_msg ", reply_msg)
+		t.log(fmt.Sprintf("reply_msg ", reply_msg))
 		ntchan.REP_out <- reply_msg
 	}
 }
@@ -299,11 +302,11 @@ func RequestHandlerTel(mgr *chain.ChainManager, ntchan ntcl.Ntchan) {
 func (t *TCPNode) handleConnection(mgr *chain.ChainManager, ntchan ntcl.Ntchan) {
 	//tr := 100 * time.Millisecond
 	//defer ntchan.Conn.Close()
-	log.Println("handleConnection")
+	t.log(fmt.Sprintf("handleConnection"))
 
 	ntcl.NetConnectorSetup(ntchan)
 
-	go RequestHandlerTel(mgr, ntchan)
+	go RequestHandlerTel(t, ntchan)
 
 	//go ntcl.WriteLoop(ntchan, 100*time.Millisecond)
 
@@ -345,6 +348,18 @@ func AccountContent(mgr *chain.ChainManager) string {
 	return content
 }
 
+func Txpoolcontent(mgr *chain.ChainManager) string {
+	content := ""
+	content += fmt.Sprintf("<h2>TxPool</h2>%d<br>", len(mgr.Tx_pool))
+
+	for i := 0; i < len(mgr.Tx_pool); i++ {
+		//content += fmt.Sprintf("Nonce %d, Id %x<br>", chain.Tx_pool[i].Nonce, chain.Tx_pool[i].Id[:])
+		ctx := mgr.Tx_pool[i]
+		content += fmt.Sprintf("%d from %s to %s %x<br>", ctx.Amount, ctx.Sender, ctx.Receiver, ctx.Id)
+	}
+	return content
+}
+
 //HTTP
 func LoadContent(mgr *chain.ChainManager) string {
 	content := ""
@@ -354,14 +369,7 @@ func LoadContent(mgr *chain.ChainManager) string {
 	// 	content += fmt.Sprintf("peer ip address: %s<br>", peers[i].Address)
 	// }
 
-	content += fmt.Sprintf("<h2>TxPool</h2>%d<br>", len(mgr.Tx_pool))
-
-	for i := 0; i < len(mgr.Tx_pool); i++ {
-		//content += fmt.Sprintf("Nonce %d, Id %x<br>", chain.Tx_pool[i].Nonce, chain.Tx_pool[i].Id[:])
-		ctx := mgr.Tx_pool[i]
-		content += fmt.Sprintf("%d from %s to %s %x<br>", ctx.Amount, ctx.Sender, ctx.Receiver, ctx.Id)
-	}
-
+	content += Txpoolcontent(mgr)
 	content += "<br>"
 
 	content += "<a href=\"/blocks\">blocks</a><br>"
@@ -414,7 +422,6 @@ func Runweb(t *TCPNode, mgr *chain.ChainManager, webport int) {
 	http.HandleFunc("/status", func(w http.ResponseWriter, r *http.Request) {
 
 		statusdata := StatusContent(mgr, t)
-		log.Println(statusdata)
 		w.Header().Set("Content-Type", "application/json")
 		w.Write(statusdata)
 
@@ -466,17 +473,18 @@ func setupLogfile() *log.Logger {
 
 func run_node(t *TCPNode, mgr *chain.ChainManager, config Configuration) {
 
-	setupLogfile()
+	//setupLogfile()
 
-	nlog.Println("run node ", config.NodePort)
+	t.log(fmt.Sprintf("run node ", config.NodePort))
 
 	// 	//if file exists read the chain
 
-	// create block every 10sec
+	// create block every blocktime sec
 
 	if config.DelgateEnabled {
 		//go utils.DoEvery(blockTime, chain.MakeBlock(mgr, blockTime))
-		go chain.MakeBlockLoop(mgr, 10000*time.Millisecond)
+		blocktime := 10000 * time.Millisecond
+		go chain.MakeBlockLoop(mgr, blocktime)
 	}
 
 	// if err != nil {
@@ -513,15 +521,18 @@ func pubexample() {
 func main() {
 
 	config := LoadConfiguration("nodeconf.json")
-	log.Println("PeerAddresses: ", config.PeerAddresses)
+	node, err := NewNode(":" + strconv.Itoa(config.NodePort))
+	setupLogfile()
+
+	node.log(fmt.Sprintf("PeerAddresses: ", config.PeerAddresses))
 
 	mgr := chain.CreateManager()
 	//TODO signatures of genesis
 	mgr.InitAccounts()
 
 	success := mgr.ReadChain()
-	log.Println("read chain success ", success)
-	log.Printf("block height %d", len(mgr.Blocks))
+	node.log(fmt.Sprintf("read chain success ", success))
+	node.log(fmt.Sprintf("block height %d", len(mgr.Blocks)))
 	//chain.WriteGenBlock(chain.Blocks[0])
 
 	// 	//create new genesis block (demo)
@@ -533,11 +544,10 @@ func main() {
 		mgr.AppendBlock(genBlock)
 	}
 
-	node, err := NewNode(":" + strconv.Itoa(config.NodePort))
 	node.Mgr = &mgr
 
 	if err != nil {
-		log.Println("error creating TCP server")
+		node.log(fmt.Sprintf("error creating TCP server"))
 		return
 	}
 
