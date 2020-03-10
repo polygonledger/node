@@ -32,6 +32,7 @@ const keysfile = "keys.txt"
 
 func ReadKeys(keysfile string) crypto.Keypair {
 
+	log.Println("read keys from ", keysfile)
 	dat, _ := ioutil.ReadFile(keysfile)
 	s := strings.Split(string(dat), string("\n"))
 
@@ -341,21 +342,6 @@ func Gettxpool(peer ntcl.Peer) error {
 	return nil
 }
 
-// func GetFaucet(peer ntcl.Peer) error {
-// 	reader := bufio.NewReader(os.Stdin)
-// 	fmt.Print("Enter address: ")
-// 	addr, _ := reader.ReadString('\n')
-// 	addr = strings.Trim(addr, string('\n'))
-
-// 	accountJson, _ := json.Marshal(block.Account{AccountKey: addr})
-// 	req_msg := ntcl.EncodeMsgString(ntcl.REQ, ntcl.CMD_FAUCET, string(accountJson))
-// 	log.Println(req_msg)
-// 	// resp := ntcl.RequestReplyChan(req_msg, peer.Req_chan, peer.Rep_chan)
-// 	// log.Println("resp ", resp)
-
-// 	return nil
-// }
-
 func readdns() {
 	// domain := "example.com"
 	// ips, err1 := net.LookupIP(domain)
@@ -466,7 +452,7 @@ func ping(ntchan ntcl.Ntchan) {
 
 func MakeFaucet(ntchan ntcl.Ntchan) {
 	log.Println("read keys")
-	kp := ReadKeys("keysfile")
+	kp := ReadKeys(keysfile)
 	pubk := crypto.PubKeyToHex(kp.PubKey)
 
 	addr := crypto.Address(pubk)
@@ -546,12 +532,6 @@ func runSingleMode(cmd string, config Configuration) {
 
 		// 	Getblockheight(mainPeer)
 
-		// case "faucet":
-		// 	log.Println("faucet")
-		// 	//get coins
-		// 	//GetFaucet(rw)
-		// 	GetFaucet(mainPeer)
-
 		// case "txpool":
 		// 	_ = Gettxpool(mainPeer)
 		// 	return
@@ -598,7 +578,7 @@ func runOffline(cmd string, config Configuration) {
 		CreateKeys()
 
 	case "readkeys":
-		kp := ReadKeys("keysfile")
+		kp := ReadKeys(keysfile)
 		log.Println(kp)
 
 	case "sign":
@@ -607,7 +587,7 @@ func runOffline(cmd string, config Configuration) {
 		msg, _ := reader.ReadString('\n')
 		msg = strings.Trim(msg, string('\n'))
 		fmt.Println(msg)
-		kp := ReadKeys("keysfile")
+		kp := ReadKeys(keysfile)
 		signature := crypto.SignMsgHash(kp, msg)
 		log.Println("signature ", signature)
 
