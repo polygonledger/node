@@ -311,7 +311,7 @@ func ReadGenBlock() block.Block {
 func MakeBlock(mgr *ChainManager) {
 
 	log.Printf("make block? ")
-	start := time.Now()
+	//start := time.Now()
 	//elapsed := time.Since(start)
 	//log.Printf("%s", start)
 
