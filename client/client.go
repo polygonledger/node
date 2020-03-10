@@ -274,16 +274,17 @@ func Mybalance(ntchan ntcl.Ntchan) error {
 	myaddr := crypto.Address(pubk)
 
 	log.Println("request balance for my address ", myaddr)
-	json, _ := json.Marshal(block.Account{AccountKey: myaddr})
-	req_msg := ntcl.EncodeMsgString(ntcl.REQ, ntcl.CMD_BALANCE, string(json))
+	//json, _ := json.Marshal(block.Account{AccountKey: myaddr})
+	req_msg := ntcl.EncodeMsgString(ntcl.REQ, ntcl.CMD_BALANCE, string(myaddr))
 	log.Println(req_msg)
 
 	ntchan.REQ_out <- req_msg
 
 	rep := <-ntchan.REP_in
 	//log.Println("reply ", rep)
-	s := strings.Split(rep, string(ntcl.DELIM))
-	balance_int, _ := strconv.Atoi(string(s[1]))
+	rep = strings.Trim(rep, string(ntcl.DELIM))
+	s := strings.Split(rep, string(ntcl.DELIM_HEAD))
+	balance_int, _ := strconv.Atoi(string(s[2]))
 	fmt.Println("balance ", balance_int)
 
 	//log.Println("reply ", strconv.Atoi(int(msg.Data)))
