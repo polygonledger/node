@@ -20,6 +20,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"log"
 	"net"
 	"net/http"
@@ -427,6 +428,12 @@ func Runweb(t *TCPNode, mgr *chain.ChainManager, webport int) {
 
 		//w.WriteHeader(http.StatusCreated)
 		//json.NewEncoder(w).Encode(status)
+	})
+
+	http.HandleFunc("/log", func(w http.ResponseWriter, r *http.Request) {
+
+		dat, _ := ioutil.ReadFile("node.log")
+		fmt.Fprintf(w, "%s", dat)
 	})
 
 	nlog.Fatal(http.ListenAndServe(":"+strconv.Itoa(webport), nil))
