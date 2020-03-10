@@ -90,13 +90,13 @@ func OpenConn(addr string) net.Conn {
 	return conn
 }
 
-func OpenNtchanOut(src string, ip string, Port int) Ntchan {
+func OpenNtchanOut(src string, ip string, Port int, verbose bool) Ntchan {
 	fulladdr := ip + ":" + strconv.Itoa(Port)
-	return OpenNtchan(src, fulladdr)
+	return OpenNtchan(src, fulladdr, verbose)
 }
 
-func OpenNtchan(src string, dest string) Ntchan {
+func OpenNtchan(src string, dest string, verbose bool) Ntchan {
 	conn := OpenConn(dest)
 	//name := addr
-	return ConnNtchan(conn, src, dest)
+	return ConnNtchan(conn, src, dest, verbose)
 }

@@ -206,6 +206,7 @@ type Configuration struct {
 	PeerAddresses []string
 	NodePort      int
 	WebPort       int
+	verbose       bool
 }
 
 func addPeerOut(p ntcl.Peer) {
@@ -224,7 +225,7 @@ func initClient(config Configuration) ntcl.Ntchan {
 	}
 
 	log.Println("connected")
-	ntchan := ntcl.ConnNtchan(conn, "client", addr)
+	ntchan := ntcl.ConnNtchan(conn, "client", addr, config.verbose)
 
 	go ntcl.ReadLoop(ntchan)
 	go ntcl.ReadProcessor(ntchan)
@@ -251,7 +252,8 @@ func track(s string, startTime time.Time) {
 // func ReceiveAccount(rw *bufio.ReadWriter) error {
 // 	log.Println("RequestAccount ", CMD_RANDOM_ACCOUNT)
 
-func PushTx(peer ntcl.Peer) error {
+func PushTx(ntchan ntcl.Ntchan) error {
+	log.Println("PushTx")
 
 	dat, _ := ioutil.ReadFile("tx.json")
 	var tx block.Tx
@@ -265,8 +267,12 @@ func PushTx(peer ntcl.Peer) error {
 	log.Println("txJson ", string(txJson))
 
 	req_msg := ntcl.EncodeMessageTx(txJson)
-	// response := ntcl.RequestReplyChan(req_msg, peer.Req_chan, peer.Rep_chan)
 	log.Print(" ", req_msg)
+
+	ntchan.REQ_out <- req_msg
+
+	rep := <-ntchan.REP_in
+	log.Println("reply ", rep)
 
 	return nil
 }
@@ -322,20 +328,20 @@ func Gettxpool(peer ntcl.Peer) error {
 	return nil
 }
 
-func GetFaucet(peer ntcl.Peer) error {
-	reader := bufio.NewReader(os.Stdin)
-	fmt.Print("Enter address: ")
-	addr, _ := reader.ReadString('\n')
-	addr = strings.Trim(addr, string('\n'))
+// func GetFaucet(peer ntcl.Peer) error {
+// 	reader := bufio.NewReader(os.Stdin)
+// 	fmt.Print("Enter address: ")
+// 	addr, _ := reader.ReadString('\n')
+// 	addr = strings.Trim(addr, string('\n'))
 
-	accountJson, _ := json.Marshal(block.Account{AccountKey: addr})
-	req_msg := ntcl.EncodeMsgString(ntcl.REQ, ntcl.CMD_FAUCET, string(accountJson))
-	log.Println(req_msg)
-	// resp := ntcl.RequestReplyChan(req_msg, peer.Req_chan, peer.Rep_chan)
-	// log.Println("resp ", resp)
+// 	accountJson, _ := json.Marshal(block.Account{AccountKey: addr})
+// 	req_msg := ntcl.EncodeMsgString(ntcl.REQ, ntcl.CMD_FAUCET, string(accountJson))
+// 	log.Println(req_msg)
+// 	// resp := ntcl.RequestReplyChan(req_msg, peer.Req_chan, peer.Rep_chan)
+// 	// log.Println("resp ", resp)
 
-	return nil
-}
+// 	return nil
+// }
 
 func readdns() {
 	// domain := "example.com"
@@ -366,7 +372,7 @@ func setupAllPeers(config Configuration) {
 }
 
 //run client against multiple nodes
-func runPeermode(option string, config Configuration) {
+func runPeermode(cmd string, config Configuration) {
 	log.Println("runPeermode")
 
 	log.Println("setup peers")
@@ -385,7 +391,7 @@ func runPeermode(option string, config Configuration) {
 		// }
 	}
 
-	switch option {
+	switch cmd {
 
 	case "pingall":
 
@@ -426,32 +432,10 @@ func runPeermode(option string, config Configuration) {
 
 }
 
-func requestreply(ntchan ntcl.Ntchan, req_msg string) {
-
-	//TODO! use readloop and REQ/REP chans
-
-	log.Println("requestreply >> ", req_msg)
-	//REQUEST
-	ntchan.REQ_out <- req_msg
-	//REPLY
-
-	resp_string := <-ntchan.REP_in
-	log.Println("REP_in >> ", resp_string)
-
-	// msg := ntcl.ParseMessage(resp_string)
-	// log.Println("response ", msg.MessageType)
-	// if msg.MessageType == ntcl.REP {
-	// 	//need to match to know this is the same request ID?
-	// 	log.Println("REPLY ", msg)
-	// }
-}
-
-//TODO! move
+//TODO move
 func ping(ntchan ntcl.Ntchan) {
 
 	// req_msg := ntcl.EncodeMsgString(ntcl.REQ, ntcl.CMD_PING, "")
-
-	// requestreply(ntchan, req_msg)
 
 	//subscribe example
 	//reqs := "REQ#PING#|"
@@ -467,12 +451,14 @@ func ping(ntchan ntcl.Ntchan) {
 
 }
 
-func testFaucet(ntchan ntcl.Ntchan) {
-	kp := crypto.PairFromSecret("test")
+func MakeFaucet(ntchan ntcl.Ntchan) {
+	log.Println("read keys")
+	kp := ReadKeys("keys.txt")
 	pubk := crypto.PubKeyToHex(kp.PubKey)
+
 	addr := crypto.Address(pubk)
+	log.Println("request faucet to ", addr)
 	req_msg := ntcl.EncodeMsgString(ntcl.REQ, ntcl.CMD_FAUCET, addr)
-	//msg := ntcl.ParseMessage(req_msg)
 
 	ntchan.REQ_out <- req_msg
 
@@ -486,21 +472,13 @@ func testFaucet(ntchan ntcl.Ntchan) {
 
 	rep2 := <-ntchan.REP_in
 
-	log.Println("rep2 ", rep2)
-	if rep2 != "REP#BALANCE#10|" {
-	}
+	log.Println("reply ", rep2)
+	// if rep2 != "REP#BALANCE#10|" {
+	// }
 }
 
-// func ReplyInProcessor(ntchan ntcl.Ntchan) {
-// 	for {
-// 		log.Println("ReplyInProcessor ")
-// 		msg := <-ntchan.REP_in
-// 		log.Println("ReplyInProcessor >> ", msg)
-// 	}
-// }
-
 //run client against single node, just use first IP address in peers i.e. mainpeer
-func runSingleMode(option string, config Configuration) {
+func runSingleMode(cmd string, config Configuration) {
 
 	//mainPeerAddress := config.PeerAddresses[0]
 	//log.Println("setup main peer ", mainPeerAddress, config.NodePort)
@@ -513,10 +491,7 @@ func runSingleMode(option string, config Configuration) {
 	ntchan := initClient(config)
 	log.Println("init ", ntchan)
 
-	switch option {
-
-	case "testfaucet":
-		testFaucet(ntchan)
+	switch cmd {
 
 	case "ping":
 		log.Println("ping")
@@ -524,6 +499,12 @@ func runSingleMode(option string, config Configuration) {
 		ping(ntchan)
 
 		time.Sleep(100 * time.Millisecond)
+
+	case "faucet":
+		MakeFaucet(ntchan)
+
+	case "pushtx":
+		PushTx(ntchan)
 
 		// case "heartbeat":
 		// 	log.Println("heartbeat")
@@ -571,7 +552,7 @@ func runSingleMode(option string, config Configuration) {
 }
 
 //client that only listens to events
-func runListenMode(option string, config Configuration) {
+func runListenMode(cmd string, config Configuration) {
 	log.Println("listen")
 
 	//ntchan := initClient()
@@ -594,9 +575,9 @@ func runListenMode(option string, config Configuration) {
 }
 
 //run client without client or server
-func runOffline(option string, config Configuration) {
+func runOffline(cmd string, config Configuration) {
 
-	switch option {
+	switch cmd {
 	case "createkeys":
 		CreateKeys()
 
@@ -686,12 +667,12 @@ func getConfig() Configuration {
 	return config
 }
 
-func readOption() string {
-	optionPtr := flag.String("option", "", "the command to be performed")
+func readFlags() string {
+	cPtr := flag.String("cmd", "", "the command to be performed")
 	flag.Parse()
-	option := *optionPtr
-	log.Println("run client with option:", option)
-	return option
+	cmd := *cPtr
+	log.Println("run client with cmd:", cmd)
+	return cmd
 }
 
 func testclient_subscribe() {
@@ -705,7 +686,7 @@ func testclient_subscribe() {
 	}
 
 	log.Println("connected")
-	ntchan := ntcl.ConnNtchan(conn, "client", addr)
+	ntchan := ntcl.ConnNtchan(conn, "client", addr, true)
 
 	go ntcl.ReadLoop(ntchan)
 
@@ -737,31 +718,31 @@ func testclient_subscribe() {
 
 }
 
-//run client based on options
+//run client based on cmds
 func main() {
 
 	config := getConfig()
 
-	option := readOption()
+	cmd := readFlags()
 
 	//dnslook()
 
-	switch option {
+	switch cmd {
 
-	case "testfaucet", "test", "ping", "heartbeat", "getbalance", "faucet", "txpool", "pushtx", "randomtx":
-		runSingleMode(option, config)
+	case "test", "ping", "heartbeat", "getbalance", "faucet", "txpool", "pushtx", "randomtx":
+		runSingleMode(cmd, config)
 
 	case "createkeys", "sign", "createtx", "verify":
-		runOffline(option, config)
+		runOffline(cmd, config)
 
 	case "pingall", "blockheight":
-		runPeermode(option, config)
+		runPeermode(cmd, config)
 
 	case "listen":
-		runListenMode(option, config)
+		runListenMode(cmd, config)
 
 	default:
-		log.Println("unknown option")
+		log.Println("unknown cmd")
 	}
 
 }

@@ -4,5 +4,7 @@
     
     "Nodeport": 8888,
 
-    "Webport": 8080
+    "Webport": 8080,
+
+    "verbose": true
 }

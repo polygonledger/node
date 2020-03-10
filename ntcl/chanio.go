@@ -59,7 +59,7 @@ func logmsgc(ntchan Ntchan, name string, src string, msg string) {
 	vlog(ntchan, s)
 }
 
-func ConnNtchan(conn net.Conn, SrcName string, DestName string) Ntchan {
+func ConnNtchan(conn net.Conn, SrcName string, DestName string, verbose bool) Ntchan {
 	var ntchan Ntchan
 	ntchan.Reader_queue = make(chan string)
 	ntchan.Writer_queue = make(chan string)
@@ -74,7 +74,6 @@ func ConnNtchan(conn net.Conn, SrcName string, DestName string) Ntchan {
 	ntchan.Conn = conn
 	ntchan.SrcName = SrcName
 	ntchan.DestName = DestName
-	ntchan.verbose = true
 
 	return ntchan
 }

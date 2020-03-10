@@ -123,8 +123,8 @@ func (t *TCPNode) HandleConnect() {
 		log.Println("new peer ", newpeerConn)
 		// log.Println("> ", t.Peers)
 		// log.Println("# peers ", len(t.Peers))
-
-		ntchan := ntcl.ConnNtchan(newpeerConn, "server", strRemoteAddr)
+		verbose := true
+		ntchan := ntcl.ConnNtchan(newpeerConn, "server", strRemoteAddr, verbose)
 
 		p := ntcl.Peer{Address: strRemoteAddr, NodePort: node_port, NTchan: ntchan}
 		t.Peers = append(t.Peers, p)
@@ -462,8 +462,6 @@ func LoadConfiguration(file string) Configuration {
 }
 
 func pubexample() {
-
-	// ntchan := ntcl.ConnNtchanStub("test")
 
 	// go ntcl.PublishTime(ntchan)
 	// go PubWriterLoop(ntchan)

@@ -39,7 +39,7 @@ func testclientpub() ntcl.Ntchan {
 	}
 	//t.Error("...")
 	log.Println("connected")
-	ntchan := ntcl.ConnNtchan(conn, "client", addr)
+	ntchan := ntcl.ConnNtchan(conn, "client", addr, true)
 	//defer conn.Close()
 	return ntchan
 
