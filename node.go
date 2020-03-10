@@ -343,6 +343,7 @@ func LoadContent(mgr *chain.ChainManager) string {
 
 	for i := 0; i < len(mgr.Blocks); i++ {
 		current_block := mgr.Blocks[i]
+
 		t := current_block.Timestamp
 		tsf := fmt.Sprintf("%d-%02d-%02dT%02d:%02d:%02d",
 			t.Year(), t.Month(), t.Day(),

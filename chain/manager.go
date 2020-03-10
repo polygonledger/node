@@ -321,10 +321,10 @@ func MakeBlock(mgr *ChainManager) {
 		timestamp := time.Now() //.Unix()
 		new_block := block.Block{Height: len(mgr.Blocks), Txs: mgr.Tx_pool, Prev_Block_Hash: mgr.Latest_block.Hash, Timestamp: timestamp}
 		new_block = blockHash(new_block)
-		//TODO! fix
+
 		mgr.ApplyBlock(new_block)
 		//TODO! fix
-		//AppendBlock(new_block)
+		mgr.AppendBlock(new_block)
 
 		log.Printf("new block %v", new_block)
 		EmptyPool(mgr)

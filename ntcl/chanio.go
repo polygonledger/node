@@ -74,7 +74,7 @@ func ConnNtchan(conn net.Conn, SrcName string, DestName string) Ntchan {
 	ntchan.Conn = conn
 	ntchan.SrcName = SrcName
 	ntchan.DestName = DestName
-	ntchan.verbose = false
+	ntchan.verbose = true
 
 	return ntchan
 }
@@ -133,7 +133,7 @@ func ReadLoop(ntchan Ntchan) {
 		if len(msg) > 0 { //&& msg != EMPTY_MSG {
 			vlog(ntchan, "ntwk read => "+msg)
 			logmsgc(ntchan, ntchan.SrcName, "ReadLoop", msg)
-			vlog(ntchan, "put "+msg)
+			vlog(ntchan, "put on Reader queue "+msg)
 			//put in the queue to process
 			ntchan.Reader_queue <- msg
 		}
@@ -148,6 +148,7 @@ func ReadLoop(ntchan Ntchan) {
 func ReadProcessor(ntchan Ntchan) {
 
 	for {
+		log.Println("ReadProcessor loop")
 		msgString := <-ntchan.Reader_queue
 		logmsgd(ntchan, "ReadProcessor", msgString)
 
@@ -175,8 +176,8 @@ func ReadProcessor(ntchan Ntchan) {
 				logmsgd(ntchan, "ReadProcessor", "REP_in")
 				ntchan.REP_in <- msg_string
 
-				x := <-ntchan.REP_in
-				vlog(ntchan, "x "+x)
+				// x := <-ntchan.REP_in
+				// vlog(ntchan, "x "+x)
 			}
 
 			//ntchan.Reader_processed++

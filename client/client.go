@@ -467,7 +467,7 @@ func ping(ntchan ntcl.Ntchan) {
 
 }
 
-func testPushtx(ntchan ntcl.Ntchan) {
+func testFaucet(ntchan ntcl.Ntchan) {
 	kp := crypto.PairFromSecret("test")
 	pubk := crypto.PubKeyToHex(kp.PubKey)
 	addr := crypto.Address(pubk)
@@ -478,6 +478,8 @@ func testPushtx(ntchan ntcl.Ntchan) {
 
 	rep := <-ntchan.REP_in
 	log.Println("reply ", rep)
+	log.Println("wait for block....")
+	time.Sleep(10000 * time.Millisecond)
 
 	req_msg2 := ntcl.EncodeMsgString(ntcl.REQ, ntcl.CMD_BALANCE, addr)
 	ntchan.REQ_out <- req_msg2
@@ -513,8 +515,8 @@ func runSingleMode(option string, config Configuration) {
 
 	switch option {
 
-	case "testtx":
-		testPushtx(ntchan)
+	case "testfaucet":
+		testFaucet(ntchan)
 
 	case "ping":
 		log.Println("ping")
@@ -746,7 +748,7 @@ func main() {
 
 	switch option {
 
-	case "testtx", "test", "ping", "heartbeat", "getbalance", "faucet", "txpool", "pushtx", "randomtx":
+	case "testfaucet", "test", "ping", "heartbeat", "getbalance", "faucet", "txpool", "pushtx", "randomtx":
 		runSingleMode(option, config)
 
 	case "createkeys", "sign", "createtx", "verify":
