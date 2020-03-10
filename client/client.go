@@ -267,15 +267,8 @@ func PushTx(ntchan ntcl.Ntchan) error {
 	return nil
 }
 
-func Mybalance(ntchan ntcl.Ntchan) error {
-
-	kp := ReadKeys(keysfile)
-	pubk := crypto.PubKeyToHex(kp.PubKey)
-	myaddr := crypto.Address(pubk)
-
-	log.Println("request balance for my address ", myaddr)
-	//json, _ := json.Marshal(block.Account{AccountKey: myaddr})
-	req_msg := ntcl.EncodeMsgString(ntcl.REQ, ntcl.CMD_BALANCE, string(myaddr))
+func fetchbalance(ntchan ntcl.Ntchan, addr string) {
+	req_msg := ntcl.EncodeMsgString(ntcl.REQ, ntcl.CMD_BALANCE, string(addr))
 	log.Println(req_msg)
 
 	ntchan.REQ_out <- req_msg
@@ -285,22 +278,31 @@ func Mybalance(ntchan ntcl.Ntchan) error {
 	rep = strings.Trim(rep, string(ntcl.DELIM))
 	s := strings.Split(rep, string(ntcl.DELIM_HEAD))
 	balance_int, _ := strconv.Atoi(string(s[2]))
-	fmt.Println("balance ", balance_int)
+	log.Println(fmt.Sprintf("balance of %s %d", addr, balance_int))
+}
+
+func Mybalance(ntchan ntcl.Ntchan) error {
+
+	kp := ReadKeys(keysfile)
+	pubk := crypto.PubKeyToHex(kp.PubKey)
+	myaddr := crypto.Address(pubk)
+
+	log.Println("request balance for my address ", myaddr)
+	//json, _ := json.Marshal(block.Account{AccountKey: myaddr})
+	fetchbalance(ntchan, myaddr)
 
 	//log.Println("reply ", strconv.Atoi(int(msg.Data)))
 
 	return nil
 }
 
-func Getbalance(peer ntcl.Peer) error {
+func Getbalance(ntchan ntcl.Ntchan) error {
 	reader := bufio.NewReader(os.Stdin)
 	fmt.Print("Enter address: ")
 	addr, _ := reader.ReadString('\n')
 	addr = strings.Trim(addr, string('\n'))
 
-	txJson, _ := json.Marshal(block.Account{AccountKey: addr})
-	req_msg := ntcl.EncodeMsgString(ntcl.REQ, ntcl.CMD_BALANCE, string(txJson))
-	log.Println(req_msg)
+	fetchbalance(ntchan, addr)
 	// response := ntcl.RequestReplyChan(req_msg, peer.Req_chan, peer.Rep_chan)
 	// log.Println("response ", response)
 	// var balance int
@@ -465,7 +467,7 @@ func MakeFaucet(ntchan ntcl.Ntchan) {
 	rep := <-ntchan.REP_in
 	log.Println("reply ", rep)
 	log.Println("wait for block....")
-	time.Sleep(10000 * time.Millisecond)
+	time.Sleep(5000 * time.Millisecond)
 
 	req_msg2 := ntcl.EncodeMsgString(ntcl.REQ, ntcl.CMD_BALANCE, addr)
 	ntchan.REQ_out <- req_msg2
@@ -509,24 +511,23 @@ func runSingleMode(cmd string, config Configuration) {
 	case "mybalance":
 		Mybalance(ntchan)
 
-		// case "heartbeat":
-		// 	log.Println("heartbeat")
+	// case "heartbeat":
+	// 	log.Println("heartbeat")
 
-		// 	for {
-		// 		go ping(ntchan)
-		// 		time.Sleep(1 * time.Second)
-		// 	}
+	// 	for {
+	// 		go ping(ntchan)
+	// 		time.Sleep(1 * time.Second)
+	// 	}
 
-		// 	// success := ntcl.MakeHandshake(mainPeer)
-		// 	// if success {
-		// 	// 	log.Println("start heartbeat")
-		// 	// 	ntcl.Hearbeat(mainPeer)
-		// 	// }
+	// 	// success := ntcl.MakeHandshake(mainPeer)
+	// 	// if success {
+	// 	// 	log.Println("start heartbeat")
+	// 	// 	ntcl.Hearbeat(mainPeer)
+	// 	// }
 
-		// case "getbalance":
-		// 	log.Println("getbalance")
-
-		// 	Getbalance(mainPeer)
+	case "getbalance":
+		log.Println("getbalance")
+		Getbalance(ntchan)
 
 		// case "blockheight":
 		// 	log.Println("blockheight")
