@@ -26,6 +26,8 @@ var Peers []ntcl.Peer
 
 const node_port = 8888
 
+const keysfile = "keys.txt"
+
 // --- utils ---
 
 func ReadKeys(keysfile string) crypto.Keypair {
@@ -68,18 +70,18 @@ func CreateKeys() {
 	fmt.Println(pw)
 
 	//check if exists
-	//dat, _ := ioutil.ReadFile("keys.txt")
+	//dat, _ := ioutil.ReadFile(keysfile)
 	//check(err)
 
 	kp := crypto.PairFromSecret(pw)
 	log.Println("keypair ", kp)
 
-	WriteKeys(kp, "keys.txt")
+	WriteKeys(kp, keysfile)
 
 }
 
 func Createtx() {
-	kp := ReadKeys("keys.txt")
+	kp := ReadKeys(keysfile)
 
 	// reader := bufio.NewReader(os.Stdin)
 	// fmt.Print("Enter password: ")
@@ -168,7 +170,7 @@ func RandomTx(account_s block.Account) block.Tx {
 	rand.Seed(time.Now().UnixNano())
 	randNonce := rand.Intn(100)
 
-	kp := crypto.PairFromSecret("test111??")
+	kp := crypto.PairFromSecret("test111")
 	log.Println("PUBKEY ", kp.PubKey)
 
 	r := crypto.RandomPublicKey()
@@ -188,19 +190,6 @@ func RandomTx(account_s block.Account) block.Tx {
 	log.Println(">> ran tx", testTx.Signature)
 	return testTx
 }
-
-// func CreateTx(peer ntcl.Peer) {
-// 	// keypair := crypto.PairFromSecret("test")
-// 	// var tx block.Tx
-// 	// s := block.AccountFromString("Pa033f6528cc1")
-// 	// r := s //TODO
-// 	// tx = block.Tx{Nonce: 0, Amount: 0, Sender: s, Receiver: r}
-// 	// signature := crypto.SignTx(tx, keypair)
-// 	// sighex := hex.EncodeToString(signature.Serialize())
-// 	// tx.Signature = sighex
-// 	// tx.SenderPubkey = crypto.PubKeyToHex(keypair.PubKey)
-
-// }
 
 type Configuration struct {
 	PeerAddresses []string
@@ -273,6 +262,30 @@ func PushTx(ntchan ntcl.Ntchan) error {
 
 	rep := <-ntchan.REP_in
 	log.Println("reply ", rep)
+
+	return nil
+}
+
+func Mybalance(ntchan ntcl.Ntchan) error {
+
+	kp := ReadKeys(keysfile)
+	pubk := crypto.PubKeyToHex(kp.PubKey)
+	myaddr := crypto.Address(pubk)
+
+	log.Println("request balance for my address ", myaddr)
+	json, _ := json.Marshal(block.Account{AccountKey: myaddr})
+	req_msg := ntcl.EncodeMsgString(ntcl.REQ, ntcl.CMD_BALANCE, string(json))
+	log.Println(req_msg)
+
+	ntchan.REQ_out <- req_msg
+
+	rep := <-ntchan.REP_in
+	//log.Println("reply ", rep)
+	s := strings.Split(rep, string(ntcl.DELIM))
+	balance_int, _ := strconv.Atoi(string(s[1]))
+	fmt.Println("balance ", balance_int)
+
+	//log.Println("reply ", strconv.Atoi(int(msg.Data)))
 
 	return nil
 }
@@ -453,7 +466,7 @@ func ping(ntchan ntcl.Ntchan) {
 
 func MakeFaucet(ntchan ntcl.Ntchan) {
 	log.Println("read keys")
-	kp := ReadKeys("keys.txt")
+	kp := ReadKeys("keysfile")
 	pubk := crypto.PubKeyToHex(kp.PubKey)
 
 	addr := crypto.Address(pubk)
@@ -505,6 +518,9 @@ func runSingleMode(cmd string, config Configuration) {
 
 	case "pushtx":
 		PushTx(ntchan)
+
+	case "mybalance":
+		Mybalance(ntchan)
 
 		// case "heartbeat":
 		// 	log.Println("heartbeat")
@@ -582,7 +598,7 @@ func runOffline(cmd string, config Configuration) {
 		CreateKeys()
 
 	case "readkeys":
-		kp := ReadKeys("keys.txt")
+		kp := ReadKeys("keysfile")
 		log.Println(kp)
 
 	case "sign":
@@ -591,7 +607,7 @@ func runOffline(cmd string, config Configuration) {
 		msg, _ := reader.ReadString('\n')
 		msg = strings.Trim(msg, string('\n'))
 		fmt.Println(msg)
-		kp := ReadKeys("keys.txt")
+		kp := ReadKeys("keysfile")
 		signature := crypto.SignMsgHash(kp, msg)
 		log.Println("signature ", signature)
 
@@ -729,7 +745,7 @@ func main() {
 
 	switch cmd {
 
-	case "test", "ping", "heartbeat", "getbalance", "faucet", "txpool", "pushtx", "randomtx":
+	case "test", "ping", "heartbeat", "getbalance", "faucet", "txpool", "pushtx", "randomtx", "mybalance":
 		runSingleMode(cmd, config)
 
 	case "createkeys", "sign", "createtx", "verify":
