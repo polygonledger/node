@@ -313,7 +313,7 @@ func MakeBlock(mgr *ChainManager) {
 	log.Printf("make block? ")
 	start := time.Now()
 	//elapsed := time.Since(start)
-	log.Printf("%s", start)
+	//log.Printf("%s", start)
 
 	//create new block if there is tx in the pool
 	if len(mgr.Tx_pool) > 0 {
@@ -335,7 +335,7 @@ func MakeBlock(mgr *ChainManager) {
 		//WriteChain()
 
 	} else {
-		log.Printf("no block to make")
+		//log.Printf("no block to make")
 		//handle special case of no tx
 		//now we don't add blocks, which means there are empty periods and blocks are not evenly spaced in time
 	}
