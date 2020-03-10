@@ -1,0 +1,22 @@
+;;; example script of quering data in a joker script
+;;; run with `joker --exit-to-repl --file chain.joke`
+;;; (showblockheight)
+
+(ns chainexample
+  (:require
+   [joker.http :as h]
+   [joker.time :as time]))
+
+(defn getblockheight []
+  (let [v (h/send {:url "http://polygonnode.com:8080/status"})
+        bv (:body v)
+        j (joker.json/read-string bv)]
+    (println j)
+    (println (keys j))
+    (println "blockheight " (get j "Blockheight"))))
+
+(defn showblockheight []
+  (getblockheight)
+  (joker.time/sleep (* 1 joker.time/second))
+  (recur))
+
