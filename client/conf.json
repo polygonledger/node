@@ -1,10 +1,10 @@
 {
     
-    "PeerAddresses": ["polygonnode.com", "swix.io", "54.162.206.72"],
+    "PeerAddresses": ["polygonnode.com", "polygon.cc"],
     
     "Nodeport": 8888,
 
     "Webport": 8080,
 
-    "verbose": true
+    "verbose": false
 }

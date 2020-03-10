@@ -204,8 +204,8 @@ func addPeerOut(p ntcl.Peer) {
 	log.Println("peers now", Peers)
 }
 
-func initClient(config Configuration) ntcl.Ntchan {
-	mainPeerAddress := config.PeerAddresses[0]
+func initClient(mainPeerAddress string, verbose bool) ntcl.Ntchan {
+
 	addr := mainPeerAddress + ":" + strconv.Itoa(node_port)
 	log.Println("dial ", addr)
 	conn, err := net.Dial("tcp", addr)
@@ -215,7 +215,7 @@ func initClient(config Configuration) ntcl.Ntchan {
 	}
 
 	log.Println("connected")
-	ntchan := ntcl.ConnNtchan(conn, "client", addr, config.verbose)
+	ntchan := ntcl.ConnNtchan(conn, "client", addr, verbose)
 
 	go ntcl.ReadLoop(ntchan)
 	go ntcl.ReadProcessor(ntchan)
@@ -345,19 +345,6 @@ func Gettxpool(peer ntcl.Peer) error {
 	return nil
 }
 
-func readdns() {
-	// domain := "example.com"
-	// ips, err1 := net.LookupIP(domain)
-	// if err1 != nil {
-	// 	fmt.Fprintf(os.Stderr, "Could not get IPs: %v\n", err1)
-	// 	os.Exit(1)
-	// }
-	// for _, ip := range ips {
-	// 	fmt.Printf(domain+". IN A %s\n", ip.String())
-	// }
-
-}
-
 func setupAllPeers(config Configuration) {
 
 	for _, peerAddress := range config.PeerAddresses {
@@ -381,8 +368,12 @@ func runPeermode(cmd string, config Configuration) {
 
 	for _, peerAddress := range config.PeerAddresses {
 
-		p := ntcl.CreatePeer(peerAddress, config.NodePort)
-		log.Println("add peer ", p)
+		//p := ntcl.CreatePeer(peerAddress, config.NodePort)
+		//log.Println("add peer ", p)
+
+		ntchan := initClient(peerAddress, config.verbose)
+		//log.Println("init ", ntchan)
+		ping(ntchan)
 
 		//err := setupPeerClient(p)
 		// if err != nil {
@@ -393,44 +384,22 @@ func runPeermode(cmd string, config Configuration) {
 		// }
 	}
 
-	switch cmd {
+	// switch cmd {
 
-	case "pingall":
+	// case "pingall":
 
-		defer track(runningtime("execute ping"))
-		successCount := 0
-		for _, peerAddress := range config.PeerAddresses {
-			log.Println("setup  peer ", peerAddress, config.NodePort)
-			//p := ntcl.CreatePeer(peerAddress, config.NodePort)
+	// 	defer track(runningtime("execute ping"))
+	// 	successCount := 0
 
-			//err := setupPeerClient(p)
-			// if err != nil {
-			// 	log.Println("connect failed")
-			// 	continue
-			// } else {
-			// 	// success := ntcl.MakePingOld(p)
-			// 	// if success {
-			// 	// 	successCount++
-			// 	// }
-			// }
-		}
+	// 	log.Println("pinged peers ", len(config.PeerAddresses), " successCount:", successCount)
 
-		log.Println("pinged peers ", len(config.PeerAddresses), " successCount:", successCount)
+	// 	// case "blockheight":
 
-	case "blockheight":
+	// 	// 	for _, peerAddress := range config.PeerAddresses {
+	// 	// 		log.Println("setup  peer ", peerAddress)
+	// 	// 	}
 
-		for _, peerAddress := range config.PeerAddresses {
-			log.Println("setup  peer ", peerAddress)
-			//p := ntcl.CreatePeer(peerAddress, config.NodePort)
-
-			// err := setupPeerClient(p)
-			// if err == nil {
-			// 	log.Println("block height ", p)
-			// 	Getblockheight(p)
-			// }
-		}
-
-	}
+	// }
 
 }
 
@@ -475,22 +444,14 @@ func MakeFaucet(ntchan ntcl.Ntchan) {
 	rep2 := <-ntchan.REP_in
 
 	log.Println("reply ", rep2)
-	// if rep2 != "REP#BALANCE#10|" {
-	// }
+
 }
 
 //run client against single node, just use first IP address in peers i.e. mainpeer
 func runSingleMode(cmd string, config Configuration) {
 
-	//mainPeerAddress := config.PeerAddresses[0]
-	//log.Println("setup main peer ", mainPeerAddress, config.NodePort)
-	//mainPeer := ntcl.CreatePeer(mainPeerAddress, config.NodePort)
-	//log.Println("client with mainPeer ", mainPeer)
-	//setupPeerClient(mainPeer)
-	//conn := ntcl.OpenConn(mainPeerAddress + ":" + strconv.Itoa(config.NodePort))
-	//ntcl.ChannelPeerNetwork(conn, mainPeer)
-	//ntchan := ntcl.ConnNtchan(conn, mainPeerAddress)
-	ntchan := initClient(config)
+	mainPeerAddress := config.PeerAddresses[0]
+	ntchan := initClient(mainPeerAddress, config.verbose)
 	log.Println("init ", ntchan)
 
 	switch cmd {
@@ -528,6 +489,9 @@ func runSingleMode(cmd string, config Configuration) {
 	case "getbalance":
 		log.Println("getbalance")
 		Getbalance(ntchan)
+
+	case "dnslook":
+		dnslook()
 
 		// case "blockheight":
 		// 	log.Println("blockheight")
@@ -627,10 +591,16 @@ func runOffline(cmd string, config Configuration) {
 
 //dns functions for later, as we can use txt records to get pubkey
 func dnslook() {
-	domain := "polygonnode.com"
+	reader := bufio.NewReader(os.Stdin)
+	log.Print("Enter Domain to check ")
+
+	domain, _ := reader.ReadString('\n')
+	domain = strings.Trim(domain, string('\n'))
+	log.Println(domain)
+	//domain = "polygonnode.com"
 
 	txtrecords, _ := net.LookupTXT(domain)
-	// log.Println(txtrecords)
+	log.Println("txtrecords ", txtrecords)
 
 	// for _, txt := range txtrecords {
 	// 	fmt.Println(txt)
@@ -727,7 +697,7 @@ func main() {
 
 	switch cmd {
 
-	case "test", "ping", "heartbeat", "getbalance", "faucet", "txpool", "pushtx", "randomtx", "mybalance":
+	case "test", "ping", "heartbeat", "getbalance", "faucet", "txpool", "pushtx", "randomtx", "mybalance", "dnslook":
 		runSingleMode(cmd, config)
 
 	case "createkeys", "sign", "createtx", "verify":
