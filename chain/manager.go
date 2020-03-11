@@ -230,7 +230,7 @@ func (mgr *ChainManager) ResetBlocks() {
 
 //apply block to the state
 func (mgr *ChainManager) ApplyBlock(block block.Block) {
-	log.Println("ApplyBlock")
+	log.Println("ApplyBlock ", block)
 	//apply
 	for j := 0; j < len(block.Txs); j++ {
 		mgr.applyTx(block.Txs[j])
@@ -238,6 +238,12 @@ func (mgr *ChainManager) ApplyBlock(block block.Block) {
 		//assign id
 		//block.Txs[j].Id = txHash(block.Txs[j])
 		//og.Println("hash ", block.Txs[j].Id)
+	}
+}
+
+func (mgr *ChainManager) ApplyBlocks(blocks []block.Block) {
+	for _, block := range blocks {
+		mgr.ApplyBlock(block)
 	}
 }
 
@@ -258,9 +264,14 @@ func (mgr *ChainManager) ReadChain() bool {
 
 	dat, _ := ioutil.ReadFile(ChainStorageFile)
 
-	if err := json.Unmarshal(dat, &mgr.Blocks); err != nil {
+	var newblocks []block.Block
+	if err := json.Unmarshal(dat, &newblocks); err != nil {
 		panic(err)
 	}
+
+	//apply blocks
+	mgr.Blocks = newblocks
+	mgr.ApplyBlocks(newblocks)
 
 	log.Printf("read chain success from %s. block height %d", ChainStorageFile, len(mgr.Blocks))
 	return true
@@ -329,8 +340,7 @@ func MakeBlock(mgr *ChainManager) {
 
 		mgr.Latest_block = new_block
 
-		//TODO! mgr
-		//WriteChain()
+		mgr.WriteChain()
 
 	} else {
 		//log.Printf("no block to make")

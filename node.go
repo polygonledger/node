@@ -4,12 +4,6 @@ package main
 //which should be a gateway later
 
 //kill -9 $(lsof -t -i:8888)
-//registerDelegate
-//rounds
-//slotTime = getSlotNumber(currentBlockData.time))
-//if slotTime generate block
-//publish peer list
-//onChangeDelegates
 
 import (
 	"encoding/json"
@@ -17,6 +11,7 @@ import (
 	"io"
 	"io/ioutil"
 	"log"
+	"math/rand"
 	"net"
 	"net/http"
 	"os"
@@ -207,6 +202,7 @@ func FetchBlocks(config Configuration, t *TCPNode) {
 	blocks := FetchBlocksPeer(config, peer)
 	log.Println("got blocks ", len(blocks))
 	t.Mgr.Blocks = blocks
+	t.Mgr.ApplyBlocks(blocks)
 	log.Println("set blocks ", len(t.Mgr.Blocks))
 	for _, block := range t.Mgr.Blocks {
 		log.Println(block)
@@ -266,7 +262,7 @@ func HandleFaucet(t *TCPNode, msg ntcl.Message) string {
 	log.Println("faucet for ... ", account.AccountKey)
 
 	randNonce := 0
-	amount := 10
+	amount := rand.Intn(10)
 
 	keypair := chain.GenesisKeys()
 	addr := crypto.Address(crypto.PubKeyToHex(keypair.PubKey))
@@ -641,6 +637,7 @@ func runAll(config Configuration) {
 
 	} else {
 
+		//TODO! apply blocks
 		success := node.Mgr.ReadChain()
 		node.log(fmt.Sprintf("read chain success %v", success))
 		loaded_height := len(mgr.Blocks)
