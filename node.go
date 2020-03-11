@@ -634,12 +634,17 @@ func runAll(config Configuration) {
 		mgr.AppendBlock(genBlock)
 	}
 
+	//currently in testnet there is a single initiator which is the delegate expected to create first block
+	//TODO! replace with quering for blockheight?
+	areInitiator := config.DelegateName == "polygonnode.com"
+
 	success := node.Mgr.ReadChain()
 	node.log(fmt.Sprintf("read chain success %v", success))
 	loaded_height := len(mgr.Blocks)
 	node.log(fmt.Sprintf("block height %d", loaded_height))
 
-	if loaded_height < 2 {
+	//dont fetch if we are initiator
+	if loaded_height < 2 && !areInitiator {
 		node.Mgr.ResetBlocks()
 		log.Println("blocks after reset ", len(node.Mgr.Blocks))
 		FetchBlocks(config, node)
