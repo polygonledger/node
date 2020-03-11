@@ -632,6 +632,8 @@ func runAll(config Configuration) {
 	//TODO! replace with quering for blockheight?
 	//areInitiator := config.DelegateName == "polygonnode.com"
 
+	log.Println(config.createGenesis)
+
 	if config.createGenesis {
 
 		genBlock := chain.MakeGenesisBlock()
