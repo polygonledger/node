@@ -60,6 +60,7 @@ type TCPNode struct {
 	Starttime     time.Time
 	Logger        *log.Logger
 	Loglevel      int
+	Config        Configuration
 }
 
 func (t *TCPNode) GetPeers() []ntcl.Peer {
@@ -405,33 +406,33 @@ type Status struct {
 	Uptime      int64     `json:"Uptime"`
 }
 
-func Runweb(t *TCPNode, mgr *chain.ChainManager, webport int) {
+func Runweb(t *TCPNode) {
 	//webserver to access node state through browser
 	// HTTP
-	log.Printf("start webserver %d", webport)
+	log.Printf("start webserver %d", t.Config.WebPort)
 
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		p := LoadContent(mgr)
-		statusdata := StatusContent(mgr, t)
+		p := LoadContent(t.Mgr)
+		statusdata := StatusContent(t.Mgr, t)
 		//nlog.Print(p)
 		fmt.Fprintf(w, "<h1>Polygon chain</h1>Status%s<br><div>%s </div>", statusdata, p)
 	})
 
 	http.HandleFunc("/blocks", func(w http.ResponseWriter, r *http.Request) {
-		p := BlockContent(mgr)
+		p := BlockContent(t.Mgr)
 		//nlog.Print(p)
 		fmt.Fprintf(w, "<div>%s</div>", p)
 	})
 
 	http.HandleFunc("/accounts", func(w http.ResponseWriter, r *http.Request) {
-		p := AccountContent(mgr)
+		p := AccountContent(t.Mgr)
 		//nlog.Print(p)
 		fmt.Fprintf(w, "<div>%s</div>", p)
 	})
 
 	http.HandleFunc("/status", func(w http.ResponseWriter, r *http.Request) {
 
-		statusdata := StatusContent(mgr, t)
+		statusdata := StatusContent(t.Mgr, t)
 		w.Header().Set("Content-Type", "application/json")
 		w.Write(statusdata)
 
@@ -446,14 +447,14 @@ func Runweb(t *TCPNode, mgr *chain.ChainManager, webport int) {
 	})
 
 	//log.Fatal(http.ListenAndServe(":"+strconv.Itoa(webport), nil))
-	http.ListenAndServe(":"+strconv.Itoa(webport), nil)
+	http.ListenAndServe(":"+strconv.Itoa(t.Config.WebPort), nil)
 
 }
 
 // create a new node
-func NewNode(addr string) (*TCPNode, error) {
+func NewNode() (*TCPNode, error) {
 	return &TCPNode{
-		addr:          addr,
+		//addr:          addr,
 		accepting:     false,
 		ConnectedChan: make(chan net.Conn),
 	}, nil
@@ -489,20 +490,20 @@ func (t *TCPNode) setupLogfile() {
 
 }
 
-func run_node(t *TCPNode, mgr *chain.ChainManager, config Configuration) {
+func runNode(t *TCPNode) {
 
 	//setupLogfile()
 
-	t.log(fmt.Sprintf("run node %d", config.NodePort))
+	t.log(fmt.Sprintf("run node %d", t.Config.NodePort))
 
 	// 	//if file exists read the chain
 
 	// create block every blocktime sec
 
-	if config.DelgateEnabled {
+	if t.Config.DelgateEnabled {
 		//go utils.DoEvery(, chain.MakeBlock(mgr, blockTime))
 
-		go chain.MakeBlockLoop(mgr, blocktime)
+		go chain.MakeBlockLoop(t.Mgr, blocktime)
 	}
 
 	// if err != nil {
@@ -538,11 +539,12 @@ func pubexample() {
 
 func main() {
 
-	config := LoadConfiguration("nodeconf.json")
-	node, err := NewNode(":" + strconv.Itoa(config.NodePort))
+	node, err := NewNode()
+	node.Config = LoadConfiguration("nodeconf.json")
+	node.addr = ":" + strconv.Itoa(node.Config.NodePort)
 	node.setupLogfile()
 
-	node.log(fmt.Sprintf("PeerAddresses: %v", config.PeerAddresses))
+	node.log(fmt.Sprintf("PeerAddresses: %v", node.Config.PeerAddresses))
 
 	mgr := chain.CreateManager()
 	//TODO signatures of genesis
@@ -569,8 +571,8 @@ func main() {
 		return
 	}
 
-	go run_node(node, &mgr, config)
+	go runNode(node)
 
-	Runweb(node, &mgr, config.WebPort)
+	Runweb(node)
 
 }

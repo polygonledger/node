@@ -15,7 +15,8 @@ const test_node_port_pub = 8888
 func initserverpub() *TCPNode {
 	// Start the new server
 
-	testsrv, err := NewNode(":" + strconv.Itoa(test_node_port_pub))
+	testsrv, err := NewNode()
+	testsrv.addr = ":" + strconv.Itoa(test_node_port_pub)
 
 	if err != nil {
 		log.Println("error starting TCP server")

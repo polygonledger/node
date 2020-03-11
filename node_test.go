@@ -20,7 +20,8 @@ func TestBasicCommand(t *testing.T) {
 
 	mgr := chain.CreateManager()
 	mgr.InitAccounts()
-	node, _ := NewNode(":" + strconv.Itoa(8888))
+	node, _ := NewNode()
+	node.addr = ":" + strconv.Itoa(8888)
 	node.Loglevel = LOGLEVEL_OFF
 	node.Mgr = &mgr
 
@@ -47,7 +48,8 @@ func TestBalance(t *testing.T) {
 
 	log.Println("TestBalance")
 
-	node, _ := NewNode(":" + strconv.Itoa(8888))
+	node, _ := NewNode()
+	node.addr = ":" + strconv.Itoa(8888)
 	node.Loglevel = LOGLEVEL_OFF
 	mgr := chain.CreateManager()
 	mgr.InitAccounts()
@@ -97,7 +99,8 @@ func TestFaucetTx(t *testing.T) {
 	req_msg := ntcl.EncodeMsgString(ntcl.REQ, ntcl.CMD_FAUCET, addr)
 	msg := ntcl.ParseMessage(req_msg)
 
-	node, _ := NewNode(":" + strconv.Itoa(8888))
+	node, _ := NewNode()
+	node.addr = ":" + strconv.Itoa(8888)
 	node.Loglevel = LOGLEVEL_OFF
 	mgr := chain.CreateManager()
 	mgr.InitAccounts()
@@ -123,7 +126,8 @@ func TestFaucetTx(t *testing.T) {
 
 func TestTx(t *testing.T) {
 
-	node, _ := NewNode(":" + strconv.Itoa(8888))
+	node, _ := NewNode()
+	node.addr = ":" + strconv.Itoa(8888)
 	mgr := chain.CreateManager()
 	mgr.InitAccounts()
 	node.Mgr = &mgr

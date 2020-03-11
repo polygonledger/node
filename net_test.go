@@ -16,7 +16,8 @@ func initserver() *TCPNode {
 	log.Println("initserver")
 	// Start the new server
 
-	testsrv, err := NewNode(":" + strconv.Itoa(test_node_port))
+	testsrv, err := NewNode()
+	testsrv.addr = ":" + strconv.Itoa(test_node_port)
 
 	if err != nil {
 		log.Println("error starting TCP server")
