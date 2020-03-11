@@ -392,7 +392,7 @@ func runPeermode(cmd string, config Configuration) {
 
 }
 
-//TODO move
+//TODO common
 func ping(peer ntcl.Peer) {
 
 	// req_msg := ntcl.EncodeMsgString(ntcl.REQ, ntcl.CMD_PING, "")

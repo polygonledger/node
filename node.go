@@ -1,20 +1,15 @@
 package main
 
 //node.go is the main software which delegates run. it currently contains a webserver
-//this should probably be a gateway later
+//which should be a gateway later
 
 //kill -9 $(lsof -t -i:8888)
-
-//basic protocol
-//node receives tx messages
-//adds tx messages to a pool
-//block gets created every 10 secs
-
-//getBlocks
-//registerPeer
-//pickRandomAccount
-//storeBalance
-//newWallet
+//registerDelegate
+//rounds
+//slotTime = getSlotNumber(currentBlockData.time))
+//if slotTime generate block
+//publish peer list
+//onChangeDelegates
 
 import (
 	"encoding/json"
@@ -47,6 +42,7 @@ type Configuration struct {
 	NodePort       int
 	WebPort        int
 	DelgateEnabled bool
+	createGenesis  bool
 }
 
 type TCPNode struct {
@@ -142,6 +138,78 @@ func (t *TCPNode) HandleConnect() {
 		//conn.Close()
 
 	}
+}
+
+//--- request out ---
+
+//init an output connection
+//TODO check if connected inbound already
+func initOutbound(mainPeerAddress string, node_port int, verbose bool) ntcl.Ntchan {
+
+	addr := mainPeerAddress + ":" + strconv.Itoa(node_port)
+	log.Println("dial ", addr)
+	conn, err := net.Dial("tcp", addr)
+	if err != nil {
+		log.Println("cant run")
+		//return
+	}
+
+	log.Println("connected")
+	ntchan := ntcl.ConnNtchan(conn, "client", addr, verbose)
+
+	go ntcl.ReadLoop(ntchan)
+	go ntcl.ReadProcessor(ntchan)
+	go ntcl.WriteProcessor(ntchan)
+	go ntcl.WriteLoop(ntchan, 300*time.Millisecond)
+	return ntchan
+
+}
+
+func ping(peer ntcl.Peer) bool {
+	req_msg := ntcl.EncodeMsgString(ntcl.REQ, ntcl.CMD_PING, "")
+	peer.NTchan.REQ_out <- req_msg
+	time.Sleep(1000 * time.Millisecond)
+	reply := <-peer.NTchan.REP_in
+	success := reply == "REP#PONG#|"
+	log.Println("success ", success)
+	return success
+}
+
+func FetchBlocksPeer(config Configuration, peer ntcl.Peer) []block.Block {
+
+	log.Println("FetchBlocksPeer ", peer)
+	ping(peer)
+	req_msg := ntcl.EncodeMsgString(ntcl.REQ, ntcl.CMD_GETBLOCKS, "")
+	log.Println(req_msg)
+
+	peer.NTchan.REQ_out <- req_msg
+	time.Sleep(1000 * time.Millisecond)
+	reply := <-peer.NTchan.REP_in
+	log.Println("reply ", reply)
+	reply_msg := ntcl.ParseMessage(reply)
+	var blocks []block.Block
+	if err := json.Unmarshal(reply_msg.Data, &blocks); err != nil {
+		panic(err)
+	}
+
+	return blocks
+
+}
+
+func FetchBlocks(config Configuration, t *TCPNode) {
+
+	mainPeerAddress := config.PeerAddresses[0]
+	verbose := true
+	ntchan := initOutbound(mainPeerAddress, config.NodePort, verbose)
+	peer := ntcl.CreatePeer(mainPeerAddress, mainPeerAddress, config.NodePort, ntchan)
+	blocks := FetchBlocksPeer(config, peer)
+	log.Println("got blocks ", len(blocks))
+	t.Mgr.Blocks = blocks
+	log.Println("set blocks ", len(t.Mgr.Blocks))
+	for _, block := range t.Mgr.Blocks {
+		log.Println(block)
+	}
+
 }
 
 //--- request handlers ---
@@ -407,7 +475,7 @@ type Status struct {
 	Uptime      int64     `json:"Uptime"`
 }
 
-func Runweb(t *TCPNode) {
+func runWeb(t *TCPNode) {
 	//webserver to access node state through browser
 	// HTTP
 	log.Printf("start webserver %d", t.Config.WebPort)
@@ -538,7 +606,7 @@ func pubexample() {
 	// time.Sleep(2000 * time.Millisecond)
 }
 
-func RunAll(config Configuration) {
+func runAll(config Configuration) {
 
 	node, err := NewNode()
 	node.Config = config
@@ -548,24 +616,32 @@ func RunAll(config Configuration) {
 	node.log(fmt.Sprintf("PeerAddresses: %v", node.Config.PeerAddresses))
 
 	mgr := chain.CreateManager()
+	node.Mgr = &mgr
+
 	//TODO signatures of genesis
-	mgr.InitAccounts()
+	node.Mgr.InitAccounts()
 
-	success := mgr.ReadChain()
-	node.log(fmt.Sprintf("read chain success %v", success))
-	node.log(fmt.Sprintf("block height %d", len(mgr.Blocks)))
-	//chain.WriteGenBlock(chain.Blocks[0])
+	//if we have only genesis then load from mainpeer
+	//TODO check if we are mainpeer
 
-	// 	//create new genesis block (demo)
-	createDemo := true //!success
-	if createDemo {
+	//Set genesis will only be run at true genesis, after this we assume there is a longer chain out there
+	if config.createGenesis {
 		genBlock := chain.MakeGenesisBlock()
 		mgr.ApplyBlock(genBlock)
 		//TODO!
 		mgr.AppendBlock(genBlock)
 	}
 
-	node.Mgr = &mgr
+	success := node.Mgr.ReadChain()
+	node.log(fmt.Sprintf("read chain success %v", success))
+	loaded_height := len(mgr.Blocks)
+	node.log(fmt.Sprintf("block height %d", loaded_height))
+
+	if loaded_height < 2 {
+		node.Mgr.ResetBlocks()
+		log.Println("blocks after reset ", len(node.Mgr.Blocks))
+		FetchBlocks(config, node)
+	}
 
 	if err != nil {
 		node.log(fmt.Sprintf("error creating TCP server"))
@@ -574,22 +650,25 @@ func RunAll(config Configuration) {
 
 	go runNode(node)
 
-	Runweb(node)
+	go runWeb(node)
 
 }
 
 func main() {
 
+	config := LoadConfiguration("nodeconf.json")
+
 	quit := make(chan os.Signal)
 	signal.Notify(quit, os.Interrupt)
 
-	config := LoadConfiguration("nodeconf.json")
-	go RunAll(config)
+	go runAll(config)
 
 	<-quit
-	log.Println("Got quit signal: shutdown server ...")
+	log.Println("Got quit signal: shutdown node ...")
 	signal.Reset(os.Interrupt)
 
-	log.Println("Server exiting")
+	log.Println("node exiting")
+
+	//handle shutdown should never happen, need restart on OS level and error handling
 
 }

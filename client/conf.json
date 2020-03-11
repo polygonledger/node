@@ -1,10 +1,12 @@
 {
     
-    "PeerAddresses": ["localhost", "polygonnode.com", "polygon.cc"],
+    "PeerAddresses": ["polygonnode.com", "polygon.cc", "localhost"],
     
     "Nodeport": 8888,
 
     "Webport": 8080,
 
-    "verbose": false
+    "verbose": false,
+
+    "createGenesis": false
 }

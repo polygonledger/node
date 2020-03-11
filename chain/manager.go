@@ -222,6 +222,12 @@ func (mgr *ChainManager) AppendBlock(new_block block.Block) {
 	mgr.Blocks = append(mgr.Blocks, new_block)
 }
 
+//reset blocks to 0
+func (mgr *ChainManager) ResetBlocks() {
+	//mgr.Latest_block = nil
+	mgr.Blocks = make([]block.Block, 0)
+}
+
 //apply block to the state
 func (mgr *ChainManager) ApplyBlock(block block.Block) {
 	log.Println("ApplyBlock")
