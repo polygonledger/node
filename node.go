@@ -627,27 +627,33 @@ func runAll(config Configuration) {
 	//TODO check if we are mainpeer
 
 	//Set genesis will only be run at true genesis, after this we assume there is a longer chain out there
+
+	//WIP currently in testnet there is a single initiator which is the delegate expected to create first block
+	//TODO! replace with quering for blockheight?
+	//areInitiator := config.DelegateName == "polygonnode.com"
+
 	if config.createGenesis {
+
 		genBlock := chain.MakeGenesisBlock()
 		mgr.ApplyBlock(genBlock)
 		//TODO!
 		mgr.AppendBlock(genBlock)
-	}
 
-	//currently in testnet there is a single initiator which is the delegate expected to create first block
-	//TODO! replace with quering for blockheight?
-	areInitiator := config.DelegateName == "polygonnode.com"
+	} else {
 
-	success := node.Mgr.ReadChain()
-	node.log(fmt.Sprintf("read chain success %v", success))
-	loaded_height := len(mgr.Blocks)
-	node.log(fmt.Sprintf("block height %d", loaded_height))
+		success := node.Mgr.ReadChain()
+		node.log(fmt.Sprintf("read chain success %v", success))
+		loaded_height := len(mgr.Blocks)
+		node.log(fmt.Sprintf("block height %d", loaded_height))
 
-	//dont fetch if we are initiator
-	if loaded_height < 2 && !areInitiator {
-		node.Mgr.ResetBlocks()
-		log.Println("blocks after reset ", len(node.Mgr.Blocks))
-		FetchBlocks(config, node)
+		//TODO! age of latest block compared to local time
+		are_behind := loaded_height < 2
+		if are_behind {
+			node.Mgr.ResetBlocks()
+			log.Println("blocks after reset ", len(node.Mgr.Blocks))
+			FetchBlocks(config, node)
+		}
+
 	}
 
 	if err != nil {
