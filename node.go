@@ -32,17 +32,19 @@ import (
 )
 
 var blocktime = 10000 * time.Millisecond
-
 var logfile_name = "node.log"
 
 const LOGLEVEL_OFF = 0
 
 type Configuration struct {
+	DelegateName   string
 	PeerAddresses  []string
 	NodePort       int
 	WebPort        int
 	DelgateEnabled bool
 	createGenesis  bool
+	//TODO
+	verbose bool
 }
 
 type TCPNode struct {
@@ -656,7 +658,15 @@ func runAll(config Configuration) {
 
 func main() {
 
-	config := LoadConfiguration("nodeconf.json")
+	conffile := "nodeconf.json"
+
+	if _, err := os.Stat(conffile); os.IsNotExist(err) {
+		log.Println("config file does not exist. create a file named ", conffile)
+		return
+	}
+
+	config := LoadConfiguration(conffile)
+	log.Println(config.DelegateName)
 
 	quit := make(chan os.Signal)
 	signal.Notify(quit, os.Interrupt)

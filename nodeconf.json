@@ -1,10 +1,15 @@
 {    
+    "DelegateName": "polygonnode.com",
+
     "PeerAddresses": ["polygonnode.com", "polygon.cc", "swix.io"],
     
     "NodePort": 8888,
 
     "WebPort": 8080,
 
-    "DelgateEnabled": true
+    "DelgateEnabled": true,
     
+    "createGenesis": false,
+
+    "verbose": true
 }

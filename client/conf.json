@@ -6,7 +6,6 @@
 
     "Webport": 8080,
 
-    "verbose": false,
-
-    "createGenesis": false
+    "verbose": true
+    
 }
