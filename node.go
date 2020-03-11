@@ -42,9 +42,9 @@ type Configuration struct {
 	NodePort       int
 	WebPort        int
 	DelgateEnabled bool
-	createGenesis  bool
+	CreateGenesis  bool
 	//TODO
-	verbose bool
+	Verbose bool
 }
 
 type TCPNode struct {
@@ -129,8 +129,8 @@ func (t *TCPNode) HandleConnect() {
 		t.log(fmt.Sprintf("new peer %v ", newpeerConn))
 		// log.Println("> ", t.Peers)
 		// log.Println("# peers ", len(t.Peers))
-		verbose := true
-		ntchan := ntcl.ConnNtchan(newpeerConn, "server", strRemoteAddr, verbose)
+		Verbose := true
+		ntchan := ntcl.ConnNtchan(newpeerConn, "server", strRemoteAddr, Verbose)
 
 		p := ntcl.Peer{Address: strRemoteAddr, NodePort: t.NodePort, NTchan: ntchan}
 		t.Peers = append(t.Peers, p)
@@ -632,9 +632,7 @@ func runAll(config Configuration) {
 	//TODO! replace with quering for blockheight?
 	//areInitiator := config.DelegateName == "polygonnode.com"
 
-	log.Println(config.createGenesis)
-
-	if config.createGenesis {
+	if config.CreateGenesis {
 
 		genBlock := chain.MakeGenesisBlock()
 		mgr.ApplyBlock(genBlock)
@@ -679,7 +677,8 @@ func main() {
 	}
 
 	config := LoadConfiguration(conffile)
-	log.Println(config.DelegateName)
+	log.Println("DelegateName ", config.DelegateName)
+	log.Println("CreateGenesis ", config.CreateGenesis)
 
 	quit := make(chan os.Signal)
 	signal.Notify(quit, os.Interrupt)
