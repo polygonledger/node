@@ -4,6 +4,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"log"
+	"strconv"
 	"testing"
 	"time"
 
@@ -19,6 +20,9 @@ func TestBasicCommand(t *testing.T) {
 
 	mgr := chain.CreateManager()
 	mgr.InitAccounts()
+	node, _ := NewNode(":" + strconv.Itoa(8888))
+	node.Loglevel = LOGLEVEL_OFF
+	node.Mgr = &mgr
 
 	req_msg := ntcl.EncodeMsgString(ntcl.REQ, ntcl.CMD_PING, ntcl.EMPTY_DATA)
 	msg := ntcl.ParseMessage(req_msg)
@@ -29,7 +33,7 @@ func TestBasicCommand(t *testing.T) {
 	}
 
 	ntchan := ntcl.ConnNtchanStub("")
-	go RequestHandlerTel(&mgr, ntchan)
+	go RequestHandlerTel(node, ntchan)
 	ntchan.REQ_in <- req_msg
 	reply := <-ntchan.REP_out
 
@@ -43,13 +47,16 @@ func TestBalance(t *testing.T) {
 
 	log.Println("TestBalance")
 
+	node, _ := NewNode(":" + strconv.Itoa(8888))
+	node.Loglevel = LOGLEVEL_OFF
 	mgr := chain.CreateManager()
 	mgr.InitAccounts()
+	node.Mgr = &mgr
 
 	req_msg := ntcl.EncodeMsgString(ntcl.REQ, ntcl.CMD_BALANCE, "abc")
 	msg := ntcl.ParseMessage(req_msg)
 
-	reply_msg := HandleBalance(&mgr, msg)
+	reply_msg := HandleBalance(node, msg)
 	if reply_msg != "REP#BALANCE#0|" {
 		t.Error(reply_msg)
 	}
@@ -64,7 +71,7 @@ func TestBalance(t *testing.T) {
 	req_msg = ntcl.EncodeMsgString(ntcl.REQ, ntcl.CMD_BALANCE, ra.AccountKey)
 	msg = ntcl.ParseMessage(req_msg)
 
-	reply_msg = HandleBalance(&mgr, msg)
+	reply_msg = HandleBalance(node, msg)
 	if reply_msg != "REP#BALANCE#10|" {
 		t.Error(reply_msg)
 	}
@@ -90,10 +97,13 @@ func TestFaucetTx(t *testing.T) {
 	req_msg := ntcl.EncodeMsgString(ntcl.REQ, ntcl.CMD_FAUCET, addr)
 	msg := ntcl.ParseMessage(req_msg)
 
+	node, _ := NewNode(":" + strconv.Itoa(8888))
+	node.Loglevel = LOGLEVEL_OFF
 	mgr := chain.CreateManager()
 	mgr.InitAccounts()
+	node.Mgr = &mgr
 
-	reply_msg := HandleFaucet(&mgr, msg)
+	reply_msg := HandleFaucet(node, msg)
 	if reply_msg != "REP#FAUCET#ok|" {
 		t.Error(reply_msg)
 	}
@@ -104,7 +114,7 @@ func TestFaucetTx(t *testing.T) {
 	req_msg = ntcl.EncodeMsgString(ntcl.REQ, ntcl.CMD_BALANCE, addr)
 	msg = ntcl.ParseMessage(req_msg)
 
-	reply_msg = HandleBalance(&mgr, msg)
+	reply_msg = HandleBalance(node, msg)
 	if reply_msg != "REP#BALANCE#10|" {
 		t.Error(reply_msg)
 	}
@@ -113,15 +123,18 @@ func TestFaucetTx(t *testing.T) {
 
 func TestTx(t *testing.T) {
 
+	node, _ := NewNode(":" + strconv.Itoa(8888))
 	mgr := chain.CreateManager()
 	mgr.InitAccounts()
+	node.Mgr = &mgr
+	node.Loglevel = LOGLEVEL_OFF
 	kp := crypto.PairFromSecret("test")
 	pubk := crypto.PubKeyToHex(kp.PubKey)
 	addr := crypto.Address(pubk)
 	req_msg := ntcl.EncodeMsgString(ntcl.REQ, ntcl.CMD_FAUCET, addr)
 	msg := ntcl.ParseMessage(req_msg)
 
-	reply_msg := HandleFaucet(&mgr, msg)
+	reply_msg := HandleFaucet(node, msg)
 	if reply_msg != "REP#FAUCET#ok|" {
 		t.Error(reply_msg)
 	}
@@ -129,7 +142,7 @@ func TestTx(t *testing.T) {
 	time.Sleep(100 * time.Millisecond)
 	req_msg = ntcl.EncodeMsgString(ntcl.REQ, ntcl.CMD_BALANCE, addr)
 	msg = ntcl.ParseMessage(req_msg)
-	reply_msg = HandleBalance(&mgr, msg)
+	reply_msg = HandleBalance(node, msg)
 	if reply_msg != "REP#BALANCE#10|" {
 		t.Error(reply_msg)
 	}
@@ -167,7 +180,7 @@ func TestTx(t *testing.T) {
 	req_msg = ntcl.EncodeMessageTx(txJson)
 	msg = ntcl.ParseMessage(req_msg)
 
-	reply_msg = HandleTx(&mgr, msg)
+	reply_msg = HandleTx(node, msg)
 	// //TODO!
 	if reply_msg != "REP#TX#ok|" {
 		t.Error(reply_msg)
@@ -178,7 +191,7 @@ func TestTx(t *testing.T) {
 
 	req_msg = ntcl.EncodeMsgString(ntcl.REQ, ntcl.CMD_BALANCE, addr2)
 	msg = ntcl.ParseMessage(req_msg)
-	reply_msg = HandleBalance(&mgr, msg)
+	reply_msg = HandleBalance(node, msg)
 	if reply_msg != "REP#BALANCE#5|" {
 		t.Error(reply_msg)
 	}

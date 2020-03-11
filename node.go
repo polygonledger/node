@@ -37,8 +37,9 @@ import (
 
 var blocktime = 10000 * time.Millisecond
 
-var nlog *log.Logger
 var logfile_name = "node.log"
+
+const LOGLEVEL_OFF = 0
 
 type Configuration struct {
 	PeerAddresses  []string
@@ -57,6 +58,8 @@ type TCPNode struct {
 	Peers         []ntcl.Peer
 	Mgr           *chain.ChainManager
 	Starttime     time.Time
+	Logger        *log.Logger
+	Loglevel      int
 }
 
 func (t *TCPNode) GetPeers() []ntcl.Peer {
@@ -67,7 +70,9 @@ func (t *TCPNode) GetPeers() []ntcl.Peer {
 }
 
 func (t *TCPNode) log(s string) {
-	nlog.Println(s)
+	if t.Loglevel != LOGLEVEL_OFF {
+		t.Logger.Println(s)
+	}
 }
 
 // start listening on tcp and handle connection through channels
@@ -94,7 +99,7 @@ func (t *TCPNode) Run() (err error) {
 			break
 		}
 
-		t.log(fmt.Sprintf("new conn accepted ", conn))
+		t.log(fmt.Sprintf("new conn accepted %v", conn))
 		//we put the new connection on the chan and handle there
 		t.ConnectedChan <- conn
 
@@ -120,8 +125,8 @@ func (t *TCPNode) HandleConnect() {
 	for {
 		newpeerConn := <-t.ConnectedChan
 		strRemoteAddr := newpeerConn.RemoteAddr().String()
-		t.log(fmt.Sprintf("accepted conn ", strRemoteAddr, t.accepting))
-		t.log(fmt.Sprintf("new peer ", newpeerConn))
+		t.log(fmt.Sprintf("accepted conn %v %v", strRemoteAddr, t.accepting))
+		t.log(fmt.Sprintf("new peer %v ", newpeerConn))
 		// log.Println("> ", t.Peers)
 		// log.Println("# peers ", len(t.Peers))
 		verbose := true
@@ -159,7 +164,7 @@ func HandleBlockheight(t *TCPNode, msg ntcl.Message) string {
 
 func HandleBalance(t *TCPNode, msg ntcl.Message) string {
 	dataBytes := msg.Data
-	t.log(fmt.Sprintf("HandleBalance data ", string(msg.Data), dataBytes))
+	t.log(fmt.Sprintf("HandleBalance data %v %v", string(msg.Data), dataBytes))
 
 	a := block.Account{AccountKey: string(msg.Data)}
 
@@ -216,7 +221,7 @@ func HandleTx(t *TCPNode, msg ntcl.Message) string {
 	if err := json.Unmarshal(dataBytes, &tx); err != nil {
 		panic(err)
 	}
-	t.log(fmt.Sprintf("tx >> ", tx))
+	t.log(fmt.Sprintf("tx %v ", tx))
 
 	resp := chain.HandleTx(t.Mgr, tx)
 	reply := ntcl.EncodeMsgString(ntcl.REP, ntcl.CMD_TX, resp)
@@ -227,12 +232,12 @@ func HandleTx(t *TCPNode, msg ntcl.Message) string {
 func RequestHandlerTel(t *TCPNode, ntchan ntcl.Ntchan) {
 	for {
 		msg_string := <-ntchan.REQ_in
-		t.log(fmt.Sprintf("handle ", msg_string))
+		t.log(fmt.Sprintf("handle %s ", msg_string))
 		msg := ntcl.ParseMessage(msg_string)
 
 		var reply_msg string
 
-		t.log(fmt.Sprintf("Handle ", msg.Command))
+		t.log(fmt.Sprintf("Handle %v", msg.Command))
 
 		switch msg.Command {
 
@@ -250,14 +255,14 @@ func RequestHandlerTel(t *TCPNode, ntchan ntcl.Ntchan) {
 			reply_msg = HandleBlockheight(t, msg)
 
 		case ntcl.CMD_GETTXPOOL:
-			nlog.Println("get tx pool")
+			t.log("get tx pool")
 
 			//TODO
 			data, _ := json.Marshal(t.Mgr.Tx_pool)
 			reply_msg = ntcl.EncodeMsgString(ntcl.REP, ntcl.CMD_GETTXPOOL, string(data))
 
 		case ntcl.CMD_GETBLOCKS:
-			nlog.Println("get tx pool")
+			t.log("get tx pool")
 
 			//TODO
 			data, _ := json.Marshal(t.Mgr.Blocks)
@@ -268,7 +273,7 @@ func RequestHandlerTel(t *TCPNode, ntchan ntcl.Ntchan) {
 			// 	log.Println("> ", msg.Data)
 
 		case ntcl.CMD_TX:
-			log.Println("Handle tx")
+			t.log("Handle tx")
 			reply_msg = HandleTx(t, msg)
 
 		case ntcl.CMD_RANDOM_ACCOUNT:
@@ -279,7 +284,7 @@ func RequestHandlerTel(t *TCPNode, ntchan ntcl.Ntchan) {
 
 		//PUBSUB
 		case ntcl.CMD_SUB:
-			t.log(fmt.Sprintf("subscribe to topic ", msg.Data))
+			t.log(fmt.Sprintf("subscribe to topic %v", msg.Data))
 
 			//quitpub := make(chan int)
 			go ntcl.PublishTime(ntchan)
@@ -287,7 +292,7 @@ func RequestHandlerTel(t *TCPNode, ntchan ntcl.Ntchan) {
 			//TODO reply sub ok
 
 		case ntcl.CMD_SUBUN:
-			t.log(fmt.Sprintf("unsubscribe from topic ", msg.Data))
+			t.log(fmt.Sprintf("unsubscribe from topic %v", msg.Data))
 
 			go func() {
 				//time.Sleep(5000 * time.Millisecond)
@@ -299,7 +304,7 @@ func RequestHandlerTel(t *TCPNode, ntchan ntcl.Ntchan) {
 		}
 
 		//ntchan.Writer_queue <- reply_msg
-		t.log(fmt.Sprintf("reply_msg ", reply_msg))
+		t.log(fmt.Sprintf("reply_msg %s", reply_msg))
 		ntchan.REP_out <- reply_msg
 	}
 }
@@ -440,7 +445,8 @@ func Runweb(t *TCPNode, mgr *chain.ChainManager, webport int) {
 		fmt.Fprintf(w, "%s", dat)
 	})
 
-	nlog.Fatal(http.ListenAndServe(":"+strconv.Itoa(webport), nil))
+	//log.Fatal(http.ListenAndServe(":"+strconv.Itoa(webport), nil))
+	http.ListenAndServe(":"+strconv.Itoa(webport), nil)
 
 }
 
@@ -459,12 +465,12 @@ func (t *TCPNode) Close() (err error) {
 }
 
 //TODO! fix nlog
-func setupLogfile() *log.Logger {
+func (t *TCPNode) setupLogfile() {
 	//setup log file
 
 	logFile, err := os.OpenFile(logfile_name, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0644)
 	if err != nil {
-		nlog.Fatal(err)
+		//nlog.Fatal(err)
 	}
 
 	//defer logfile.Close()
@@ -477,8 +483,9 @@ func setupLogfile() *log.Logger {
 
 	//log.SetOutput(file)
 
-	nlog = logger
-	return logger
+	//nlog = logger
+	//return logger
+	t.Logger = logger
 
 }
 
@@ -486,7 +493,7 @@ func run_node(t *TCPNode, mgr *chain.ChainManager, config Configuration) {
 
 	//setupLogfile()
 
-	t.log(fmt.Sprintf("run node ", config.NodePort))
+	t.log(fmt.Sprintf("run node %d", config.NodePort))
 
 	// 	//if file exists read the chain
 
@@ -533,16 +540,16 @@ func main() {
 
 	config := LoadConfiguration("nodeconf.json")
 	node, err := NewNode(":" + strconv.Itoa(config.NodePort))
-	setupLogfile()
+	node.setupLogfile()
 
-	node.log(fmt.Sprintf("PeerAddresses: ", config.PeerAddresses))
+	node.log(fmt.Sprintf("PeerAddresses: %v", config.PeerAddresses))
 
 	mgr := chain.CreateManager()
 	//TODO signatures of genesis
 	mgr.InitAccounts()
 
 	success := mgr.ReadChain()
-	node.log(fmt.Sprintf("read chain success ", success))
+	node.log(fmt.Sprintf("read chain success %v", success))
 	node.log(fmt.Sprintf("block height %d", len(mgr.Blocks)))
 	//chain.WriteGenBlock(chain.Blocks[0])
 

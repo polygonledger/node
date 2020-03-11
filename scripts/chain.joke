@@ -7,16 +7,16 @@
    [joker.http :as h]
    [joker.time :as time]))
 
-(defn getblockheight []
-  (let [v (h/send {:url "http://polygonnode.com:8080/status"})
+(defn getblockheight [node]
+  (let [v (h/send {:url (str "http://" node ":8080/status")})
         bv (:body v)
         j (joker.json/read-string bv)]
     (println j)
     (println (keys j))
     (println "blockheight " (get j "Blockheight"))))
 
-(defn showblockheight []
-  (getblockheight)
+(defn showblockheight [node]
+  (getblockheight node)
   (joker.time/sleep (* 1 joker.time/second))
-  (recur))
+  (recur node))
 
