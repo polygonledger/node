@@ -456,6 +456,12 @@ func runSingleMode(cmd string, config Configuration) {
 	case "faucet":
 		MakeFaucet(ntchan)
 
+	case "faucetloop":
+		for {
+			MakeFaucet(ntchan)
+			time.Sleep(10 * time.Second)
+		}
+
 	case "pushtx":
 		PushTx(ntchan)
 
@@ -687,7 +693,7 @@ func main() {
 
 	switch cmd {
 
-	case "test", "ping", "heartbeat", "getbalance", "faucet", "txpool", "pushtx", "randomtx", "mybalance", "dnslook":
+	case "test", "ping", "heartbeat", "getbalance", "faucet", "faucetloop", "txpool", "pushtx", "randomtx", "mybalance", "dnslook":
 		runSingleMode(cmd, config)
 
 	case "createkeys", "sign", "createtx", "verify":

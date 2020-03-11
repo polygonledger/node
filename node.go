@@ -193,7 +193,7 @@ func FetchBlocksPeer(config Configuration, peer ntcl.Peer) []block.Block {
 
 }
 
-func FetchBlocks(config Configuration, t *TCPNode) {
+func FetchAllBlocks(config Configuration, t *TCPNode) {
 
 	mainPeerAddress := config.PeerAddresses[0]
 	verbose := true
@@ -604,6 +604,40 @@ func pubexample() {
 	// time.Sleep(2000 * time.Millisecond)
 }
 
+//init sync or load of blocks
+//if we have only genesis then load from mainpeer
+//TODO check if we are mainpeer
+//Set genesis will only be run at true genesis, after this we assume there is a longer chain out there
+
+//WIP currently in testnet there is a single initiator which is the delegate expected to create first block
+//TODO! replace with quering for blockheight?
+func (t *TCPNode) initSyncChain(config Configuration) {
+	if config.CreateGenesis {
+
+		genBlock := chain.MakeGenesisBlock()
+		t.Mgr.ApplyBlock(genBlock)
+		//TODO!
+		t.Mgr.AppendBlock(genBlock)
+
+	} else {
+
+		//TODO! apply blocks
+		success := t.Mgr.ReadChain()
+		t.log(fmt.Sprintf("read chain success %v", success))
+		loaded_height := len(t.Mgr.Blocks)
+		t.log(fmt.Sprintf("block height %d", loaded_height))
+
+		//TODO! age of latest block compared to local time
+		are_behind := loaded_height < 2
+		if are_behind {
+			t.Mgr.ResetBlocks()
+			log.Println("blocks after reset ", len(t.Mgr.Blocks))
+			FetchAllBlocks(config, t)
+		}
+
+	}
+}
+
 func runAll(config Configuration) {
 
 	node, err := NewNode()
@@ -619,44 +653,21 @@ func runAll(config Configuration) {
 	//TODO signatures of genesis
 	node.Mgr.InitAccounts()
 
-	//if we have only genesis then load from mainpeer
-	//TODO check if we are mainpeer
-
-	//Set genesis will only be run at true genesis, after this we assume there is a longer chain out there
-
-	//WIP currently in testnet there is a single initiator which is the delegate expected to create first block
-	//TODO! replace with quering for blockheight?
-	//areInitiator := config.DelegateName == "polygonnode.com"
-
-	if config.CreateGenesis {
-
-		genBlock := chain.MakeGenesisBlock()
-		mgr.ApplyBlock(genBlock)
-		//TODO!
-		mgr.AppendBlock(genBlock)
-
-	} else {
-
-		//TODO! apply blocks
-		success := node.Mgr.ReadChain()
-		node.log(fmt.Sprintf("read chain success %v", success))
-		loaded_height := len(mgr.Blocks)
-		node.log(fmt.Sprintf("block height %d", loaded_height))
-
-		//TODO! age of latest block compared to local time
-		are_behind := loaded_height < 2
-		if are_behind {
-			node.Mgr.ResetBlocks()
-			log.Println("blocks after reset ", len(node.Mgr.Blocks))
-			FetchBlocks(config, node)
-		}
-
-	}
+	node.initSyncChain(config)
 
 	if err != nil {
 		node.log(fmt.Sprintf("error creating TCP server"))
 		return
 	}
+
+	//TODO! this will be intrement sync, not get full chain after the init sync
+	go func() {
+		for {
+			log.Println("fetch blocks loop")
+			FetchAllBlocks(config, node)
+			time.Sleep(10000 * time.Millisecond)
+		}
+	}()
 
 	go runNode(node)
 
