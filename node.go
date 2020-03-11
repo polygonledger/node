@@ -25,6 +25,7 @@ import (
 	"net"
 	"net/http"
 	"os"
+	"os/signal"
 	"strconv"
 	"time"
 
@@ -537,10 +538,10 @@ func pubexample() {
 	// time.Sleep(2000 * time.Millisecond)
 }
 
-func main() {
+func RunAll(config Configuration) {
 
 	node, err := NewNode()
-	node.Config = LoadConfiguration("nodeconf.json")
+	node.Config = config
 	node.addr = ":" + strconv.Itoa(node.Config.NodePort)
 	node.setupLogfile()
 
@@ -574,5 +575,21 @@ func main() {
 	go runNode(node)
 
 	Runweb(node)
+
+}
+
+func main() {
+
+	quit := make(chan os.Signal)
+	signal.Notify(quit, os.Interrupt)
+
+	config := LoadConfiguration("nodeconf.json")
+	go RunAll(config)
+
+	<-quit
+	log.Println("Got quit signal: shutdown server ...")
+	signal.Reset(os.Interrupt)
+
+	log.Println("Server exiting")
 
 }
