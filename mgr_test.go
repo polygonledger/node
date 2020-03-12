@@ -1,7 +1,6 @@
 package main
 
 import (
-	"log"
 	"testing"
 
 	"github.com/polygonledger/node/block"
@@ -11,7 +10,6 @@ import (
 func TestLoad(t *testing.T) {
 
 	mgr := chain.CreateManager()
-	log.Println(mgr)
 
 	if mgr.BlockHeight() != 0 {
 		t.Error("BlockHeight")

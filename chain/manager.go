@@ -16,10 +16,9 @@ import (
 )
 
 type ChainManager struct {
-	Tx_pool      []block.Tx
-	Blocks       []block.Block
-	Latest_block block.Block
-	Accounts     map[block.Account]int
+	Tx_pool  []block.Tx
+	Blocks   []block.Block
+	Accounts map[block.Account]int
 }
 
 const ChainStorageFile = "data/chain.json"
@@ -43,7 +42,7 @@ func GenesisKeys() crypto.Keypair {
 }
 
 func CreateManager() ChainManager {
-	mgr := ChainManager{Tx_pool: []block.Tx{}, Blocks: []block.Block{}, Latest_block: block.Block{}, Accounts: make(map[block.Account]int)}
+	mgr := ChainManager{Tx_pool: []block.Tx{}, Blocks: []block.Block{}, Accounts: make(map[block.Account]int)}
 	return mgr
 }
 
@@ -223,13 +222,11 @@ func MakeGenesisBlock() block.Block {
 
 //append block to chain of blocks
 func (mgr *ChainManager) AppendBlock(new_block block.Block) {
-	mgr.Latest_block = new_block
 	mgr.Blocks = append(mgr.Blocks, new_block)
 }
 
 //reset blocks to 0
 func (mgr *ChainManager) ResetBlocks() {
-	//mgr.Latest_block = nil
 	mgr.Blocks = make([]block.Block, 0)
 }
 
@@ -320,6 +317,10 @@ func ReadGenBlock() block.Block {
 	return newgenblock
 }
 
+func (mgr *ChainManager) LastBlock() block.Block {
+	return mgr.Blocks[len(mgr.Blocks)-1]
+}
+
 // function to create blocks, called periodically
 // currently assumes we can create blocks at will and we don't sync
 func MakeBlock(mgr *ChainManager) {
@@ -333,7 +334,8 @@ func MakeBlock(mgr *ChainManager) {
 	if len(mgr.Tx_pool) > 0 {
 
 		timestamp := time.Now() //.Unix()
-		new_block := block.Block{Height: len(mgr.Blocks), Txs: mgr.Tx_pool, Prev_Block_Hash: mgr.Latest_block.Hash, Timestamp: timestamp}
+		Latest_block := mgr.LastBlock()
+		new_block := block.Block{Height: len(mgr.Blocks), Txs: mgr.Tx_pool, Prev_Block_Hash: Latest_block.Hash, Timestamp: timestamp}
 		new_block = blockHash(new_block)
 
 		mgr.ApplyBlock(new_block)
@@ -342,8 +344,6 @@ func MakeBlock(mgr *ChainManager) {
 
 		vlog(fmt.Sprintf("new block %v", new_block))
 		EmptyPool(mgr)
-
-		mgr.Latest_block = new_block
 
 		mgr.WriteChain()
 

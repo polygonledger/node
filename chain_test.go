@@ -16,8 +16,8 @@ func TestChainsetup(t *testing.T) {
 	mgr := chain.CreateManager()
 	mgr.InitAccounts()
 	log.Println(mgr.Accounts)
-	ra := mgr.RandomAccount()
-	log.Println(ra)
+	//ra := mgr.RandomAccount()
+	//log.Println(ra)
 
 	Genesis_Account := block.AccountFromString(chain.Treasury_Address)
 	randNonce := rand.Intn(100)
@@ -27,7 +27,7 @@ func TestChainsetup(t *testing.T) {
 	amount := 10
 
 	someTx := block.Tx{Nonce: randNonce, Sender: Genesis_Account, Receiver: r_account, Amount: amount}
-	log.Println(someTx)
+	//log.Println(someTx)
 
 	b := block.Block{}
 	b.Txs = []block.Tx{}

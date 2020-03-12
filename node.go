@@ -144,14 +144,14 @@ func (t *TCPNode) HandleConnect() {
 func initOutbound(mainPeerAddress string, node_port int, verbose bool) ntcl.Ntchan {
 
 	addr := mainPeerAddress + ":" + strconv.Itoa(node_port)
-	log.Println("dial ", addr)
+	//log.Println("dial ", addr)
 	conn, err := net.Dial("tcp", addr)
 	if err != nil {
-		log.Println("cant run")
+		//log.Println("cant run")
 		//return
 	}
 
-	log.Println("connected")
+	//log.Println("connected")
 	ntchan := ntcl.ConnNtchan(conn, "client", addr, verbose)
 
 	go ntcl.ReadLoop(ntchan)
@@ -168,13 +168,13 @@ func ping(peer ntcl.Peer) bool {
 	time.Sleep(1000 * time.Millisecond)
 	reply := <-peer.NTchan.REP_in
 	success := reply == "REP#PONG#|"
-	log.Println("success ", success)
+	//log.Println("success ", success)
 	return success
 }
 
 func FetchBlocksPeer(config Configuration, peer ntcl.Peer) []block.Block {
 
-	log.Println("FetchBlocksPeer ", peer)
+	//log.Println("FetchBlocksPeer ", peer)
 	ping(peer)
 	req_msg := ntcl.EncodeMsgString(ntcl.REQ, ntcl.CMD_GETBLOCKS, "")
 	log.Println(req_msg)
@@ -182,7 +182,7 @@ func FetchBlocksPeer(config Configuration, peer ntcl.Peer) []block.Block {
 	peer.NTchan.REQ_out <- req_msg
 	time.Sleep(1000 * time.Millisecond)
 	reply := <-peer.NTchan.REP_in
-	log.Println("reply ", reply)
+	//log.Println("reply ", reply)
 	reply_msg := ntcl.ParseMessage(reply)
 	var blocks []block.Block
 	if err := json.Unmarshal(reply_msg.Data, &blocks); err != nil {
@@ -200,10 +200,10 @@ func FetchAllBlocks(config Configuration, t *TCPNode) {
 	ntchan := initOutbound(mainPeerAddress, config.NodePort, verbose)
 	peer := ntcl.CreatePeer(mainPeerAddress, mainPeerAddress, config.NodePort, ntchan)
 	blocks := FetchBlocksPeer(config, peer)
-	log.Println("got blocks ", len(blocks))
+	//log.Println("got blocks ", len(blocks))
 	t.Mgr.Blocks = blocks
 	t.Mgr.ApplyBlocks(blocks)
-	log.Println("set blocks ", len(t.Mgr.Blocks))
+	//log.Println("set blocks ", len(t.Mgr.Blocks))
 	for _, block := range t.Mgr.Blocks {
 		log.Println(block)
 	}
@@ -252,7 +252,7 @@ func HandleBalance(t *TCPNode, msg ntcl.Message) string {
 }
 
 func HandleFaucet(t *TCPNode, msg ntcl.Message) string {
-	log.Println("HandleFaucet")
+	t.log(fmt.Sprintf("HandleFaucet"))
 	// dataBytes := msg.Data
 	// var account block.Account
 	// if err := json.Unmarshal(dataBytes, &account); err != nil {
@@ -260,7 +260,7 @@ func HandleFaucet(t *TCPNode, msg ntcl.Message) string {
 	// }
 
 	account := block.Account{AccountKey: string(msg.Data)}
-	log.Println("faucet for ... ", account.AccountKey)
+	t.log(fmt.Sprintf("faucet for ... %v", account.AccountKey))
 
 	randNonce := 0
 	amount := rand.Intn(10)
@@ -273,7 +273,7 @@ func HandleFaucet(t *TCPNode, msg ntcl.Message) string {
 
 	tx = crypto.SignTxAdd(tx, keypair)
 	reply_string := chain.HandleTx(t.Mgr, tx)
-	log.Println("resp > ", reply_string)
+	t.log(fmt.Sprintf("resp > %s", reply_string))
 
 	reply := ntcl.EncodeMsgString(ntcl.REP, ntcl.CMD_FAUCET, reply_string)
 	return reply
@@ -461,17 +461,23 @@ func LoadContent(mgr *chain.ChainManager) string {
 
 func StatusContent(mgr *chain.ChainManager, t *TCPNode) []byte {
 
+	servertime := time.Now()
 	uptimedur := time.Now().Sub(t.Starttime)
 	uptime := int64(uptimedur / time.Second)
-	status := Status{Blockheight: len(mgr.Blocks), Starttime: t.Starttime, Uptime: uptime}
+	lastblocktime := t.Mgr.LastBlock().Timestamp
+	timebehind := int64(servertime.Sub(lastblocktime) / time.Second)
+	status := Status{Blockheight: len(mgr.Blocks), Starttime: t.Starttime, Uptime: uptime, Servertime: servertime, LastBlocktime: lastblocktime, Timebehind: timebehind}
 	jData, _ := json.Marshal(status)
 	return jData
 }
 
 type Status struct {
-	Blockheight int       `json:"Blockheight"`
-	Starttime   time.Time `json:"Starttime"`
-	Uptime      int64     `json:"Uptime"`
+	Blockheight   int       `json:"Blockheight"`
+	LastBlocktime time.Time `json:"LastBlocktime"`
+	Servertime    time.Time `json:"Servertime"`
+	Starttime     time.Time `json:"Starttime"`
+	Timebehind    int64     `json:"Timebehind"`
+	Uptime        int64     `json:"Uptime"`
 }
 
 func runWeb(t *TCPNode) {

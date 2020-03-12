@@ -21,6 +21,7 @@ func TestBasicCommand(t *testing.T) {
 	mgr := chain.CreateManager()
 	mgr.InitAccounts()
 	node, _ := NewNode()
+	//defer node.Close()
 	node.addr = ":" + strconv.Itoa(8888)
 	node.Loglevel = LOGLEVEL_OFF
 	node.Mgr = &mgr
@@ -49,6 +50,7 @@ func TestBalance(t *testing.T) {
 	log.Println("TestBalance")
 
 	node, _ := NewNode()
+	//defer node.Close()
 	node.addr = ":" + strconv.Itoa(8888)
 	node.Loglevel = LOGLEVEL_OFF
 	mgr := chain.CreateManager()
@@ -96,6 +98,7 @@ func TestFaucetTx(t *testing.T) {
 	msg := ntcl.ParseMessage(req_msg)
 
 	node, _ := NewNode()
+	//defer node.Close()
 	node.addr = ":" + strconv.Itoa(8888)
 	node.Loglevel = LOGLEVEL_OFF
 	mgr := chain.CreateManager()
@@ -132,6 +135,7 @@ func TestFaucetTx(t *testing.T) {
 func TestTx(t *testing.T) {
 
 	node, _ := NewNode()
+	//defer node.Close()
 	node.addr = ":" + strconv.Itoa(8888)
 	mgr := chain.CreateManager()
 	mgr.InitAccounts()
@@ -169,9 +173,6 @@ func TestTx(t *testing.T) {
 	tx := block.Tx{Nonce: 1, Amount: amount, Sender: sender, Receiver: recv}
 	signature := crypto.SignTx(tx, kp)
 	sighex := hex.EncodeToString(signature.Serialize())
-	// if sighex != "3045022100c360a962aeb6dcee880c45e5be84ee20df7169d6ab2ea5a94228e2fb16b955e5022048a411bc2a85e2aff76d8172abaced9780f03527ab8efbfc8cc380bdb40ccb7a" {
-	// 	t.Error(sighex)
-	// }
 	tx.Signature = sighex
 	tx.SenderPubkey = crypto.PubKeyToHex(kp.PubKey)
 
