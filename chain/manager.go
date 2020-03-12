@@ -3,6 +3,7 @@ package chain
 import (
 	"crypto/sha256"
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"log"
 	"math/rand"
@@ -30,6 +31,10 @@ const (
 	//Treasury_Address string = "PXXXXX"
 )
 
+func vlog(msg string) {
+	//log.Println(string)
+}
+
 //TODO
 func GenesisKeys() crypto.Keypair {
 	keypair := crypto.PairFromSecret("genesis")
@@ -54,13 +59,13 @@ func (mgr *ChainManager) IsTreasury(account block.Account) bool {
 func (mgr *ChainManager) InitAccounts() {
 	mgr.Accounts = make(map[block.Account]int)
 
-	log.Printf("init accounts %d", len(mgr.Accounts))
+	vlog(fmt.Sprintf("init accounts %d", len(mgr.Accounts)))
 	//Genesis_Account := block.AccountFromString(Treasury_Address)
 	//set genesiss account, this is the amount that the genesis address receives
 	genesisAmount := 400
 	tr := block.AccountFromString(Treasury_Address)
 	mgr.SetAccount(tr, genesisAmount)
-	log.Println("mgr.Accounts ", mgr.Accounts)
+	vlog(fmt.Sprintf("mgr.Accounts %v", mgr.Accounts))
 }
 
 //valid cash transaction
@@ -75,11 +80,11 @@ func TxValid(mgr *ChainManager, tx block.Tx) bool {
 
 	sufficientBalance := mgr.Accounts[tx.Sender] >= tx.Amount
 	if !sufficientBalance {
-		log.Println("insufficientBalance")
+		vlog("insufficientBalance")
 	} else {
-		log.Println("suffcientBalance")
+		vlog("suffcientBalance")
 	}
-	// log.Println("sufficientBalance ", sufficientBalance, tx.Sender, Accounts[tx.Sender], tx.Amount)
+	// vlog("sufficientBalance ", sufficientBalance, tx.Sender, Accounts[tx.Sender], tx.Amount)
 	//TODO and signature
 
 	//the transaction is signed by the sender
@@ -87,7 +92,7 @@ func TxValid(mgr *ChainManager, tx block.Tx) bool {
 
 	verified := crypto.VerifyTxSig(tx)
 	bTxValid := sufficientBalance && verified
-	log.Println("sigvalid ", verified)
+	vlog(fmt.Sprintf("sigvalid %v", verified))
 	//TODO check sig
 	return bTxValid
 }
@@ -97,16 +102,16 @@ func HandleTx(mgr *ChainManager, tx block.Tx) string {
 	//timestamp := time.Now().Unix()
 
 	//TODO check timestamp
-	//log.Println("hash %x time %s sign %x", tx.Id, timestamp, tx.Signature)
+	//vlog("hash %x time %s sign %x", tx.Id, timestamp, tx.Signature)
 
 	//TODO its own function
 	if TxValid(mgr, tx) {
 		tx.Id = crypto.TxHash(tx)
 		mgr.Tx_pool = append(mgr.Tx_pool, tx)
-		log.Println("append tx to pool", mgr.Tx_pool)
+		vlog(fmt.Sprintf("append tx to pool %v", mgr.Tx_pool))
 		return "ok"
 	} else {
-		log.Println("invalid tx")
+		vlog("invalid tx")
 		return "error"
 	}
 
@@ -162,22 +167,22 @@ func ShowAccount(mgr *ChainManager, account block.Account) {
 
 func (mgr *ChainManager) RandomAccount() block.Account {
 	lenk := len(mgr.Accounts)
-	log.Println("lenk ", lenk)
+	vlog(fmt.Sprintf("lenk %d", lenk))
 
 	//TODO
 	keys := make([]block.Account, 0, len(mgr.Accounts))
 	for k := range mgr.Accounts {
-		log.Println("k ", k)
+		vlog(fmt.Sprintf("%v ", k))
 		keys = append(keys, k)
 	}
 
 	rand.Seed(time.Now().UnixNano())
 
 	ran := rand.Intn(lenk)
-	log.Println(ran, keys)
+	vlog(fmt.Sprintf("%v %v", ran, keys))
 
 	randomAccount := keys[ran]
-	log.Println("random account ", randomAccount)
+	vlog(fmt.Sprintf("random account %v", randomAccount))
 	return randomAccount
 }
 
@@ -230,7 +235,7 @@ func (mgr *ChainManager) ResetBlocks() {
 
 //apply block to the state
 func (mgr *ChainManager) ApplyBlock(block block.Block) {
-	log.Println("ApplyBlock ", block)
+	vlog(fmt.Sprintf("ApplyBlock %v", block))
 	//apply
 	for j := 0; j < len(block.Txs); j++ {
 		mgr.applyTx(block.Txs[j])
@@ -258,7 +263,7 @@ func (mgr *ChainManager) ReadChain() bool {
 
 	if _, err := os.Stat(ChainStorageFile); os.IsNotExist(err) {
 		// path/to/whatever does not exist
-		log.Println("storage file does not exist")
+		vlog("storage file does not exist")
 		return false
 	}
 
@@ -298,7 +303,7 @@ func ReadGenBlock() block.Block {
 
 	if _, err := os.Stat(GenblockStorageFile); os.IsNotExist(err) {
 		// path/to/whatever does not exist
-		log.Println("storage file does not exist")
+		vlog("storage file does not exist")
 		//return nil
 	}
 
@@ -335,7 +340,7 @@ func MakeBlock(mgr *ChainManager) {
 		//TODO! fix
 		mgr.AppendBlock(new_block)
 
-		log.Printf("new block %v", new_block)
+		vlog(fmt.Sprintf("new block %v", new_block))
 		EmptyPool(mgr)
 
 		mgr.Latest_block = new_block

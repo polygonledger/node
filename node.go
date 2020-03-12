@@ -252,6 +252,7 @@ func HandleBalance(t *TCPNode, msg ntcl.Message) string {
 }
 
 func HandleFaucet(t *TCPNode, msg ntcl.Message) string {
+	log.Println("HandleFaucet")
 	// dataBytes := msg.Data
 	// var account block.Account
 	// if err := json.Unmarshal(dataBytes, &account); err != nil {
@@ -661,13 +662,15 @@ func runAll(config Configuration) {
 	}
 
 	//TODO! this will be intrement sync, not get full chain after the init sync
-	go func() {
-		for {
-			log.Println("fetch blocks loop")
-			FetchAllBlocks(config, node)
-			time.Sleep(10000 * time.Millisecond)
-		}
-	}()
+	if !config.CreateGenesis {
+		go func() {
+			for {
+				log.Println("fetch blocks loop")
+				FetchAllBlocks(config, node)
+				time.Sleep(10000 * time.Millisecond)
+			}
+		}()
+	}
 
 	go runNode(node)
 

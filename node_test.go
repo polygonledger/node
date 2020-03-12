@@ -39,7 +39,7 @@ func TestBasicCommand(t *testing.T) {
 	reply := <-ntchan.REP_out
 
 	if reply != "REP#PONG#|" {
-		t.Error(reply_msg)
+		t.Error("reply_msg ", reply_msg)
 	}
 
 }
@@ -60,7 +60,7 @@ func TestBalance(t *testing.T) {
 
 	reply_msg := HandleBalance(node, msg)
 	if reply_msg != "REP#BALANCE#0|" {
-		t.Error(reply_msg)
+		t.Error("reply_msg ", reply_msg)
 	}
 
 	//TODO with chain setup
@@ -75,7 +75,7 @@ func TestBalance(t *testing.T) {
 
 	reply_msg = HandleBalance(node, msg)
 	if reply_msg != "REP#BALANCE#10|" {
-		t.Error(reply_msg)
+		t.Error("reply_msg ", reply_msg)
 	}
 
 	log.Println(mgr.Accounts)
@@ -92,10 +92,6 @@ func TestFaucetTx(t *testing.T) {
 	kp := crypto.PairFromSecret("test")
 	pubk := crypto.PubKeyToHex(kp.PubKey)
 	addr := crypto.Address(pubk)
-	//faucet_to := block.AccountFromString(addr)
-
-	//accountJson, _ := json.Marshal(faucet_to)
-	//req_msg := ntcl.EncodeMsgString(ntcl.REQ, ntcl.CMD_FAUCET, string(accountJson))
 	req_msg := ntcl.EncodeMsgString(ntcl.REQ, ntcl.CMD_FAUCET, addr)
 	msg := ntcl.ParseMessage(req_msg)
 
@@ -108,18 +104,27 @@ func TestFaucetTx(t *testing.T) {
 
 	reply_msg := HandleFaucet(node, msg)
 	if reply_msg != "REP#FAUCET#ok|" {
-		t.Error(reply_msg)
+		t.Error("reply_msg ", reply_msg)
 	}
 	chain.MakeBlock(&mgr)
 
-	time.Sleep(1000 * time.Millisecond)
+	time.Sleep(2000 * time.Millisecond)
 
 	req_msg = ntcl.EncodeMsgString(ntcl.REQ, ntcl.CMD_BALANCE, addr)
 	msg = ntcl.ParseMessage(req_msg)
 
-	reply_msg = HandleBalance(node, msg)
-	if reply_msg != "REP#BALANCE#10|" {
-		t.Error(reply_msg)
+	log.Println(mgr.Accounts)
+
+	reply_msg_string := HandleBalance(node, msg)
+	log.Println(reply_msg_string)
+	msg = ntcl.ParseMessage(reply_msg_string)
+	// if reply_msg_string != "REP#BALANCE#1|" {
+	// 	t.Error(msg)
+	// }
+
+	// bal := ntcl.ParseMessageBalance(reply_msg)
+	if msg.MessageType != "REP" || msg.Command != ntcl.CMD_BALANCE {
+		t.Error("msg ", msg)
 	}
 
 }
@@ -140,15 +145,17 @@ func TestTx(t *testing.T) {
 
 	reply_msg := HandleFaucet(node, msg)
 	if reply_msg != "REP#FAUCET#ok|" {
-		t.Error(reply_msg)
+		t.Error("reply_msg ", reply_msg)
 	}
 	chain.MakeBlock(&mgr)
 	time.Sleep(100 * time.Millisecond)
 	req_msg = ntcl.EncodeMsgString(ntcl.REQ, ntcl.CMD_BALANCE, addr)
 	msg = ntcl.ParseMessage(req_msg)
 	reply_msg = HandleBalance(node, msg)
-	if reply_msg != "REP#BALANCE#10|" {
-		t.Error(reply_msg)
+	msg = ntcl.ParseMessage(reply_msg)
+
+	if msg.MessageType != "REP" || msg.Command != ntcl.CMD_BALANCE {
+		t.Error("msg ", msg)
 	}
 
 	sender := block.AccountFromString(addr)
@@ -158,7 +165,7 @@ func TestTx(t *testing.T) {
 	addr2 := crypto.Address(pubk2)
 	recv := block.AccountFromString(addr2)
 
-	amount := 5
+	amount := 1
 	tx := block.Tx{Nonce: 1, Amount: amount, Sender: sender, Receiver: recv}
 	signature := crypto.SignTx(tx, kp)
 	sighex := hex.EncodeToString(signature.Serialize())
@@ -187,7 +194,7 @@ func TestTx(t *testing.T) {
 	reply_msg = HandleTx(node, msg)
 	// //TODO!
 	if reply_msg != "REP#TX#ok|" {
-		t.Error(reply_msg)
+		t.Error("reply_msg ", reply_msg)
 	}
 
 	chain.MakeBlock(&mgr)
@@ -196,8 +203,12 @@ func TestTx(t *testing.T) {
 	req_msg = ntcl.EncodeMsgString(ntcl.REQ, ntcl.CMD_BALANCE, addr2)
 	msg = ntcl.ParseMessage(req_msg)
 	reply_msg = HandleBalance(node, msg)
-	if reply_msg != "REP#BALANCE#5|" {
-		t.Error(reply_msg)
+	msg = ntcl.ParseMessage(reply_msg)
+	//if reply_msg != "REP#BALANCE#5|" {
+	//bal := ntcl.ParseMessageBalance(reply_msg)
+
+	if msg.MessageType != "REP" || msg.Command != ntcl.CMD_BALANCE {
+		t.Error("reply_msg ", reply_msg)
 	}
 
 }

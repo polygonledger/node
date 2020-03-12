@@ -77,3 +77,11 @@ func ConstructMessage(cmd string) string {
 	msg := cmd + string(DELIM)
 	return msg
 }
+
+// func ParseMessageBalance(msgString string) int {
+// 	msgString = strings.Trim(msgString, string(DELIM))
+// 	s := strings.Split(msgString, string(DELIM_HEAD))
+// 	data := s[2]
+// 	b, _ := strconv.Atoi(data)
+// 	return b
+// }
