@@ -40,3 +40,13 @@ func TestChainsetup(t *testing.T) {
 
 	//chain.InitAccounts()
 }
+
+func TestGenesis(t *testing.T) {
+		
+		//create genesis block
+
+		//test LastBlock
+	
+	}
+	
+}

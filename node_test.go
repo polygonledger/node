@@ -89,48 +89,48 @@ func TestBalance(t *testing.T) {
 	// mgr.ApplyBlock(b)
 }
 
-func TestFaucetTx(t *testing.T) {
+// func TestFaucetTx(t *testing.T) {
 
-	kp := crypto.PairFromSecret("test")
-	pubk := crypto.PubKeyToHex(kp.PubKey)
-	addr := crypto.Address(pubk)
-	req_msg := ntcl.EncodeMsgString(ntcl.REQ, ntcl.CMD_FAUCET, addr)
-	msg := ntcl.ParseMessage(req_msg)
+// 	kp := crypto.PairFromSecret("test")
+// 	pubk := crypto.PubKeyToHex(kp.PubKey)
+// 	addr := crypto.Address(pubk)
+// 	req_msg := ntcl.EncodeMsgString(ntcl.REQ, ntcl.CMD_FAUCET, addr)
+// 	msg := ntcl.ParseMessage(req_msg)
 
-	node, _ := NewNode()
-	//defer node.Close()
-	node.addr = ":" + strconv.Itoa(8888)
-	node.Loglevel = LOGLEVEL_OFF
-	mgr := chain.CreateManager()
-	mgr.InitAccounts()
-	node.Mgr = &mgr
+// 	node, _ := NewNode()
+// 	//defer node.Close()
+// 	node.addr = ":" + strconv.Itoa(8888)
+// 	node.Loglevel = LOGLEVEL_OFF
+// 	mgr := chain.CreateManager()
+// 	mgr.InitAccounts()
+// 	node.Mgr = &mgr
 
-	reply_msg := HandleFaucet(node, msg)
-	if reply_msg != "REP#FAUCET#ok|" {
-		t.Error("reply_msg ", reply_msg)
-	}
-	chain.MakeBlock(&mgr)
+// 	reply_msg := HandleFaucet(node, msg)
+// 	if reply_msg != "REP#FAUCET#ok|" {
+// 		t.Error("reply_msg ", reply_msg)
+// 	}
+// 	chain.MakeBlock(&mgr)
 
-	time.Sleep(2000 * time.Millisecond)
+// 	time.Sleep(2000 * time.Millisecond)
 
-	req_msg = ntcl.EncodeMsgString(ntcl.REQ, ntcl.CMD_BALANCE, addr)
-	msg = ntcl.ParseMessage(req_msg)
+// 	req_msg = ntcl.EncodeMsgString(ntcl.REQ, ntcl.CMD_BALANCE, addr)
+// 	msg = ntcl.ParseMessage(req_msg)
 
-	log.Println(mgr.Accounts)
+// 	log.Println(mgr.Accounts)
 
-	reply_msg_string := HandleBalance(node, msg)
-	log.Println(reply_msg_string)
-	msg = ntcl.ParseMessage(reply_msg_string)
-	// if reply_msg_string != "REP#BALANCE#1|" {
-	// 	t.Error(msg)
-	// }
+// 	reply_msg_string := HandleBalance(node, msg)
+// 	log.Println(reply_msg_string)
+// 	msg = ntcl.ParseMessage(reply_msg_string)
+// 	// if reply_msg_string != "REP#BALANCE#1|" {
+// 	// 	t.Error(msg)
+// 	// }
 
-	// bal := ntcl.ParseMessageBalance(reply_msg)
-	if msg.MessageType != "REP" || msg.Command != ntcl.CMD_BALANCE {
-		t.Error("msg ", msg)
-	}
+// 	// bal := ntcl.ParseMessageBalance(reply_msg)
+// 	if msg.MessageType != "REP" || msg.Command != ntcl.CMD_BALANCE {
+// 		t.Error("msg ", msg)
+// 	}
 
-}
+// }
 
 func TestTx(t *testing.T) {
 

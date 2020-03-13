@@ -318,7 +318,8 @@ func ReadGenBlock() block.Block {
 }
 
 func (mgr *ChainManager) LastBlock() block.Block {
-	return mgr.Blocks[len(mgr.Blocks)-1]
+	n := len(mgr.Blocks)
+	return mgr.Blocks[n-1]
 }
 
 // function to create blocks, called periodically
