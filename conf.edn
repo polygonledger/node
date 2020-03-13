@@ -1,0 +1,7 @@
+{:DelegateName "localhost"
+ :PeerAddresses ["polygonnode.com", "polygon.cc", "swix.io"]
+ :NodePort 8888
+ :WebPort 8080
+ :DelgateEnabled true
+ :CreateGenesis false
+ :Verbose true}
