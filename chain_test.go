@@ -41,12 +41,10 @@ func TestChainsetup(t *testing.T) {
 	//chain.InitAccounts()
 }
 
-func TestGenesis(t *testing.T) {
-		
-		//create genesis block
+func Testx(t *testing.T) {
 
-		//test LastBlock
-	
-	}
-	
+	//create genesis block
+
+	//test LastBlock
+
 }
