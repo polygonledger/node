@@ -48,18 +48,18 @@ func TestSignTxBasic(t *testing.T) {
 
 	keypair := crypto.PairFromSecret("test")
 	pub := crypto.PubKeyToHex(keypair.PubKey)
-	account := block.Account{AccountKey: crypto.Address(pub)}
+	//account := block.Account{AccountKey: crypto.Address(pub)}
 
 	randNonce := 0
 	amount := 10
 
 	genkeypair := chain.GenesisKeys()
 	addr := crypto.Address(crypto.PubKeyToHex(genkeypair.PubKey))
-	Genesis_Account := block.AccountFromString(addr)
+	//Genesis_Account := block.AccountFromString(addr)
 
 	//{"Nonce":0,"Amount":0,"Sender":{"AccountKey":"Pa033f6528cc1"},"Receiver":{"AccountKey":"Pa033f6528cc1"},"SenderPubkey":"","Signature":"","id":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]}
-
-	tx := block.Tx{Nonce: randNonce, Amount: amount, Sender: Genesis_Account, Receiver: account, SenderPubkey: "", Signature: ""}
+	r := crypto.Address(pub)
+	tx := block.Tx{Nonce: randNonce, Amount: amount, Sender: addr, Receiver: r, SenderPubkey: "", Signature: ""}
 
 	tx = crypto.SignTxAdd(tx, keypair)
 
@@ -87,7 +87,7 @@ func TestTxFile(t *testing.T) {
 	keypair_recv := crypto.PairFromSecret("receive")
 	addr_recv := crypto.Address(crypto.PubKeyToHex(keypair_recv.PubKey))
 
-	tx := block.Tx{Nonce: 1, Amount: 10, Sender: block.Account{AccountKey: addr}, Receiver: block.Account{AccountKey: addr_recv}}
+	tx := block.Tx{Nonce: 1, Amount: 10, Sender: addr, Receiver: addr_recv}
 
 	signature := crypto.SignTx(tx, keypair)
 	sighex := hex.EncodeToString(signature.Serialize())

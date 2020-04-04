@@ -66,8 +66,8 @@ func TestBalance(t *testing.T) {
 	ra := mgr.RandomAccount()
 	mgr.SetAccount(ra, 10)
 
-	log.Println(ra.AccountKey)
-	req_msg = ntcl.EncodeMsgString(ntcl.REQ, ntcl.CMD_BALANCE, ra.AccountKey)
+	//log.Println(ra.AccountKey)
+	req_msg = ntcl.EncodeMsgString(ntcl.REQ, ntcl.CMD_BALANCE, ra)
 	msg = ntcl.ParseMessage(req_msg)
 
 	reply_msg = HandleBalance(node, msg)

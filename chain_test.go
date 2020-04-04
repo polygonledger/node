@@ -23,7 +23,7 @@ func TestChainsetup(t *testing.T) {
 	randNonce := rand.Intn(100)
 	r := crypto.RandomPublicKey()
 	address_r := crypto.Address(r)
-	r_account := block.AccountFromString(address_r)
+	//r_account := block.AccountFromString(address_r)
 	amount := 10
 
 	someTx := block.Tx{Nonce: randNonce, Sender: chain.Treasury_Address, Receiver: address_r, Amount: amount}

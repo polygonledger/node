@@ -21,7 +21,7 @@ func TestEDN(t *testing.T) {
 		t.Error("err ", err)
 	}
 
-	if tx.Nonce != 1 || string(tx.TxType) != "test" || tx.Sender.AccountKey != "abc" || tx.Receiver.AccountKey != "xyz" {
+	if tx.Nonce != 1 || string(tx.TxType) != "test" || tx.Sender != "abc" || tx.Receiver != "xyz" {
 		t.Error("tx edn parse")
 	}
 
