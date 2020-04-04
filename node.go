@@ -19,6 +19,8 @@ import (
 	"strconv"
 	"time"
 
+	"olympos.io/encoding/edn"
+
 	"github.com/pkg/errors"
 	"github.com/polygonledger/node/block"
 	"github.com/polygonledger/node/chain"
@@ -684,6 +686,30 @@ func runAll(config Configuration) {
 
 }
 
+func getConf() Configuration {
+	conffile := "conf.edn"
+	f, err := os.Open(conffile)
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
+	defer f.Close()
+
+	dec := edn.NewDecoder(f)
+
+	var c Configuration
+
+	err = dec.Decode(&c)
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
+
+	fmt.Println("Config (raw go):")
+	fmt.Printf("%+v\n", c.NodePort, c.WebPort, c.PeerAddresses)
+	return c
+}
+
 func main() {
 
 	conffile := "nodeconf.json"
@@ -693,7 +719,8 @@ func main() {
 		return
 	}
 
-	config := LoadConfiguration(conffile)
+	//config := LoadConfiguration(conffile)
+	config := getConf()
 	log.Println("DelegateName ", config.DelegateName)
 	log.Println("CreateGenesis ", config.CreateGenesis)
 
