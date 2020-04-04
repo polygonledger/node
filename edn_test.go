@@ -1,0 +1,28 @@
+package main
+
+import (
+	"testing"
+
+	"github.com/polygonledger/node/block"
+	"olympos.io/encoding/edn"
+)
+
+func TestEDN(t *testing.T) {
+
+	data := `{:TxType "test",
+			  :Sender "abc",
+			  :Receiver "xyz",
+		      :amount 42,
+              :nonce 1}`
+	var tx block.Tx
+	err := edn.Unmarshal([]byte(data), &tx)
+
+	if err != nil {
+		t.Error("err ", err)
+	}
+
+	if tx.Nonce != 1 || string(tx.TxType) != "test" || tx.Sender.AccountKey != "abc" || tx.Receiver.AccountKey != "xyz" {
+		t.Error("tx edn parse")
+	}
+
+}

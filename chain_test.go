@@ -19,14 +19,14 @@ func TestChainsetup(t *testing.T) {
 	//ra := mgr.RandomAccount()
 	//log.Println(ra)
 
-	Genesis_Account := block.AccountFromString(chain.Treasury_Address)
+	//Genesis_Account := block.AccountFromString(chain.Treasury_Address)
 	randNonce := rand.Intn(100)
 	r := crypto.RandomPublicKey()
 	address_r := crypto.Address(r)
 	r_account := block.AccountFromString(address_r)
 	amount := 10
 
-	someTx := block.Tx{Nonce: randNonce, Sender: Genesis_Account, Receiver: r_account, Amount: amount}
+	someTx := block.Tx{Nonce: randNonce, Sender: chain.Treasury_Address, Receiver: address_r, Amount: amount}
 	//log.Println(someTx)
 
 	b := block.Block{}
@@ -34,7 +34,7 @@ func TestChainsetup(t *testing.T) {
 	b.Txs = append(b.Txs, someTx)
 	mgr.ApplyBlock(b)
 
-	if mgr.Accounts[r_account] != 10 {
+	if mgr.Accounts[address_r] != 10 {
 		t.Error("wrong amount")
 	}
 

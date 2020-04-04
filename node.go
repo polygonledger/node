@@ -236,7 +236,7 @@ func HandleBalance(t *TCPNode, msg ntcl.Message) string {
 	dataBytes := msg.Data
 	t.log(fmt.Sprintf("HandleBalance data %v %v", string(msg.Data), dataBytes))
 
-	a := block.Account{AccountKey: string(msg.Data)}
+	//a := block.Account{AccountKey: string(msg.Data)}
 
 	// var account block.Account
 
@@ -244,6 +244,7 @@ func HandleBalance(t *TCPNode, msg ntcl.Message) string {
 	// 	panic(err)
 	// }
 
+	a := string(msg.Data)
 	balance := t.Mgr.Accounts[a]
 
 	//s := strconv.Itoa(balance)
@@ -261,17 +262,19 @@ func HandleFaucet(t *TCPNode, msg ntcl.Message) string {
 	// 	panic(err)
 	// }
 
-	account := block.Account{AccountKey: string(msg.Data)}
-	t.log(fmt.Sprintf("faucet for ... %v", account.AccountKey))
+	//account := block.Account{AccountKey: string(msg.Data)}
+	//t.log(fmt.Sprintf("faucet for ... %v", account.AccountKey))
 
 	randNonce := 0
 	amount := rand.Intn(10)
 
 	keypair := chain.GenesisKeys()
 	addr := crypto.Address(crypto.PubKeyToHex(keypair.PubKey))
-	Genesis_Account := block.AccountFromString(addr)
+	//Genesis_Account := block.AccountFromString(addr)
 
-	tx := block.Tx{Nonce: randNonce, Amount: amount, Sender: Genesis_Account, Receiver: account}
+	//tx := block.Tx{Nonce: randNonce, Amount: amount, Sender: Genesis_Account, Receiver: account}
+	a := string(msg.Data)
+	tx := block.Tx{Nonce: randNonce, Amount: amount, Sender: addr, Receiver: a}
 
 	tx = crypto.SignTxAdd(tx, keypair)
 	reply_string := chain.HandleTx(t.Mgr, tx)
@@ -705,8 +708,8 @@ func getConf() Configuration {
 		os.Exit(1)
 	}
 
-	fmt.Println("Config (raw go):")
-	fmt.Printf("%+v\n", c.NodePort, c.WebPort, c.PeerAddresses)
+	//fmt.Println("Config (raw go):")
+	//fmt.Printf("%v\n", c.NodePort, c.WebPort, c.PeerAddresses)
 	return c
 }
 

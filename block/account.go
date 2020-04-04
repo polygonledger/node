@@ -1,7 +1,7 @@
 package block
 
 type Account struct {
-	AccountKey string
+	AccountKey string `edn:"AccountKey"`
 	//Balance    int
 	//Name string //if introduce names for accounts should think about prefixes to enable hierarchies
 }

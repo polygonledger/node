@@ -18,7 +18,7 @@ import (
 type ChainManager struct {
 	Tx_pool  []block.Tx
 	Blocks   []block.Block
-	Accounts map[block.Account]int
+	Accounts map[string]int
 }
 
 const ChainStorageFile = "data/chain.json"
@@ -42,7 +42,7 @@ func GenesisKeys() crypto.Keypair {
 }
 
 func CreateManager() ChainManager {
-	mgr := ChainManager{Tx_pool: []block.Tx{}, Blocks: []block.Block{}, Accounts: make(map[block.Account]int)}
+	mgr := ChainManager{Tx_pool: []block.Tx{}, Blocks: []block.Block{}, Accounts: make(map[string]int)}
 	return mgr
 }
 
@@ -56,14 +56,14 @@ func (mgr *ChainManager) IsTreasury(account block.Account) bool {
 
 //init genesis account
 func (mgr *ChainManager) InitAccounts() {
-	mgr.Accounts = make(map[block.Account]int)
+	mgr.Accounts = make(map[string]int)
 
 	vlog(fmt.Sprintf("init accounts %d", len(mgr.Accounts)))
 	//Genesis_Account := block.AccountFromString(Treasury_Address)
 	//set genesiss account, this is the amount that the genesis address receives
 	genesisAmount := 400
-	tr := block.AccountFromString(Treasury_Address)
-	mgr.SetAccount(tr, genesisAmount)
+	//tr := block.AccountFromString(Treasury_Address)
+	mgr.SetAccount(Treasury_Address, genesisAmount)
 	vlog(fmt.Sprintf("mgr.Accounts %v", mgr.Accounts))
 }
 
@@ -138,7 +138,7 @@ func blockHash(block block.Block) block.Block {
 }
 
 //move cash in the chain, we should know tx is checked to be valid by now
-func (mgr *ChainManager) moveCash(SenderAccount block.Account, ReceiverAccount block.Account, amount int) {
+func (mgr *ChainManager) moveCash(SenderAccount string, ReceiverAccount string, amount int) {
 	log.Printf("move cash %v %v %v %v %d", SenderAccount, ReceiverAccount, mgr.Accounts[SenderAccount], mgr.Accounts[ReceiverAccount], amount)
 
 	mgr.Accounts[SenderAccount] -= amount
@@ -156,20 +156,20 @@ func (mgr *ChainManager) applyTx(tx block.Tx) {
 	}
 }
 
-func (mgr *ChainManager) SetAccount(account block.Account, balance int) {
+func (mgr *ChainManager) SetAccount(account string, balance int) {
 	mgr.Accounts[account] = balance
 }
 
-func ShowAccount(mgr *ChainManager, account block.Account) {
+func ShowAccount(mgr *ChainManager, account string) {
 	log.Printf("%s %d", account, mgr.Accounts[account])
 }
 
-func (mgr *ChainManager) RandomAccount() block.Account {
+func (mgr *ChainManager) RandomAccount() string {
 	lenk := len(mgr.Accounts)
 	vlog(fmt.Sprintf("lenk %d", lenk))
 
 	//TODO
-	keys := make([]block.Account, 0, len(mgr.Accounts))
+	keys := make([]string, 0, len(mgr.Accounts))
 	for k := range mgr.Accounts {
 		vlog(fmt.Sprintf("%v ", k))
 		keys = append(keys, k)
@@ -186,7 +186,7 @@ func (mgr *ChainManager) RandomAccount() block.Account {
 }
 
 func GenesisTx() block.Tx {
-	Genesis_Account := block.AccountFromString(Treasury_Address)
+	//Genesis_Account := block.AccountFromString(Treasury_Address)
 
 	rand.Seed(time.Now().UnixNano())
 	randNonce := rand.Intn(100)
@@ -194,10 +194,10 @@ func GenesisTx() block.Tx {
 	r := crypto.RandomPublicKey()
 	//kp := crypto.PairFromSecret("basic")
 	address_r := crypto.Address(r)
-	r_account := block.AccountFromString(address_r)
+	//r_account := block.AccountFromString(address_r)
 	genesisAmount := 20 //just a number for now
 
-	gTx := block.Tx{Nonce: randNonce, Sender: Genesis_Account, Receiver: r_account, Amount: genesisAmount}
+	gTx := block.Tx{Nonce: randNonce, Sender: Treasury_Address, Receiver: address_r, Amount: genesisAmount}
 	return gTx
 }
 

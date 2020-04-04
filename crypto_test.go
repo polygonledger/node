@@ -114,7 +114,8 @@ func TestSignTx(t *testing.T) {
 	//sign
 	keypair := crypto.PairFromSecret("test")
 	var tx block.Tx
-	s := block.AccountFromString("Pa033f6528cc1")
+	//s := block.AccountFromString("Pa033f6528cc1")
+	s := "Pa033f6528cc1"
 	r := s //TODO
 	tx = block.Tx{Nonce: 0, Amount: 0, Sender: s, Receiver: r}
 
