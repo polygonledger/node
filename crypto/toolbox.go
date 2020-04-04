@@ -83,6 +83,13 @@ func SignatureFromHex(hexString string) btcec.Signature {
 	return *signature
 }
 
+func SignatureToHex(sig btcec.Signature) string {
+	//TODO handle errors
+	x := sig.Serialize()
+	return string(hex.EncodeToString(x))
+
+}
+
 func VerifyMessageSignPub(signature btcec.Signature, pubkey btcec.PublicKey, message string) bool {
 
 	messageHash := MsgHash(message)

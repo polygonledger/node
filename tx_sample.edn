@@ -1,0 +1,5 @@
+{:TxType "test",
+:Sender "abc",
+:Receiver "xyz",
+:amount 42,
+:nonce 1}

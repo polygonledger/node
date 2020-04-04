@@ -1,0 +1,11 @@
+{
+	:txc
+	{
+	:TxType "test",
+	:Sender "abc",
+	:Receiver "xyz",
+	:amount 42,
+	:nonce 1
+	}
+	:lock [= checksign 3398359382532598]
+}

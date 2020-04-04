@@ -713,7 +713,7 @@ func getConf() Configuration {
 	return c
 }
 
-func main() {
+func runNodeAll() {
 
 	conffile := "nodeconf.json"
 
@@ -740,4 +740,36 @@ func main() {
 
 	//handle shutdown should never happen, need restart on OS level and error handling
 
+}
+
+func signExample() {
+
+	log.Println("transaction sign")
+	data := `{:TxType "test",
+			  :Sender "abc",
+			  :Receiver "xyz",
+		      :amount 42,
+			  :nonce 1}`
+
+	var tx block.Tx
+	edn.Unmarshal([]byte(data), &tx)
+	log.Println(tx)
+
+	keypair := crypto.PairFromSecret("test")
+	message := data
+
+	signature := crypto.SignMsgHash(keypair, message)
+	//verified := crypto.VerifyMessageSign(signature, keypair, message)
+	log.Println(crypto.SignatureToHex(signature))
+
+	resign := crypto.SignatureFromHex(crypto.SignatureToHex(signature))
+	log.Println(signature)
+	log.Println(resign)
+
+}
+
+func main() {
+
+	signExample()
+	//runNodeAll
 }

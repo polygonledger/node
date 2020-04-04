@@ -13,7 +13,8 @@ func TestEDN(t *testing.T) {
 			  :Sender "abc",
 			  :Receiver "xyz",
 		      :amount 42,
-              :nonce 1}`
+			  :nonce 1}`
+
 	var tx block.Tx
 	err := edn.Unmarshal([]byte(data), &tx)
 
