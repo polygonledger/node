@@ -9,6 +9,8 @@ current status: experimental
 
 ## runing a node
 
+install golang and git
+
 node:
 ```go run node.go```
 
