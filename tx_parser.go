@@ -12,6 +12,12 @@ import (
 	"olympos.io/encoding/edn"
 )
 
+// tx parser
+//
+// work in progress
+// transactions are typed
+// [:txtype {:content as map} {:signature data}]
+
 // ETH opcodes
 // 0x30	ADDRESS	Get address of currently executing account	-	2
 // 0x31	BALANCE	Get balance of the given account
@@ -188,16 +194,18 @@ func (s *Scanner) scanMap() (tok Token, lit string) {
 	// Non-ident characters and EOF will cause the loop to exit.
 	for {
 		ch := s.read()
-		fmt.Println(string(ch))
+		//fmt.Println(string(ch))
 		if isMapEnd(ch) {
-			fmt.Println("> break ", string(ch))
+			//fmt.Println("> map end ", string(ch))
+			buf.WriteRune(ch)
 			break
 		} else if isMapStart(ch) {
-
+			buf.WriteRune(ch)
 		} else {
-			fmt.Println("write ", ch)
-			_, _ = buf.WriteRune(ch)
+			//fmt.Println("write ", ch)
+			buf.WriteRune(ch)
 		}
+
 		//  else if !isLetter(ch) && !isDigit(ch) && ch != '_' {
 		// 	fmt.Println("> ", string(ch))
 		// 	s.unread()
@@ -297,6 +305,13 @@ func main() {
 	edn.Unmarshal([]byte(msg), &tx)
 	log.Println(tx)
 
+	//multiplexing
+
+	//{:simple ...}
+	//{:script [...]}
+	//{:contract [...]}
+	//....
+
 	//inputs := "{:stx {:body {:Sender abc :Receiver xyz :amount 42} :sig {:SenderPubkey sdfasa: Signature afwfswf}}"
 	inputs := "[:STX {:Sender abc :Receiver xyz :amount 42} {:SenderPubkey sdfasa: Signature afwfswf}]"
 	s := NewScanner(strings.NewReader(inputs))
@@ -304,12 +319,13 @@ func main() {
 	ftok, flit := s.scanFirstKey()
 	fmt.Println("first => ", ftok, flit)
 
+	//simple tx. first element contains tx, 2nd the signature data
 	if ftok == SIMPLETX {
 		_, firstmap := s.scanMap()
-		fmt.Println("? ", firstmap)
+		fmt.Println("tx content => ", firstmap)
 
-		rest := s.scanRest()
-		fmt.Println("rest ", rest)
+		_, sigmap := s.scanMap()
+		fmt.Println("sigmap => ", sigmap)
 
 		var tx block.Tx
 		edn.Unmarshal([]byte(msg), &tx)
