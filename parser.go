@@ -3,20 +3,24 @@ package main
 import (
 	"bufio"
 	"bytes"
+	"encoding/hex"
 	"fmt"
 	"io"
 	"log"
 	"strings"
 
 	"github.com/polygonledger/node/block"
+	"github.com/polygonledger/node/crypto"
 	"olympos.io/encoding/edn"
 )
 
-// tx parser
+// generic tx parser
+// mixture of edn and scripting
 //
 // work in progress
 // transactions are typed
 // [:txtype {:content as map} {:signature data}]
+// [:multisig <txcontent> <sig1 sig2>]
 
 // ETH opcodes
 // 0x30	ADDRESS	Get address of currently executing account	-	2
@@ -51,6 +55,8 @@ const (
 	//SELECT
 
 )
+
+const STX = "STX"
 
 var eof = rune(0)
 
@@ -185,33 +191,28 @@ func (s *Scanner) scanIdent() (tok Token, lit string) {
 	return IDENT, buf.String()
 }
 
+//scan for map
 func (s *Scanner) scanMap() (tok Token, lit string) {
-	fmt.Println("scanmap")
+
 	var buf bytes.Buffer
 	buf.WriteRune(s.read())
 
-	// Read every subsequent ident character into the buffer.
-	// Non-ident characters and EOF will cause the loop to exit.
+	firstch := s.read()
+	if !isMapStart(firstch) {
+		//error
+		return ILLEGAL, ""
+	}
+
+	//got open map
+	buf.WriteRune(firstch)
+
+	// Read every subsequent ident character into the buffer
 	for {
 		ch := s.read()
-		//fmt.Println(string(ch))
+		buf.WriteRune(ch)
 		if isMapEnd(ch) {
-			//fmt.Println("> map end ", string(ch))
-			buf.WriteRune(ch)
 			break
-		} else if isMapStart(ch) {
-			buf.WriteRune(ch)
-		} else {
-			//fmt.Println("write ", ch)
-			buf.WriteRune(ch)
 		}
-
-		//  else if !isLetter(ch) && !isDigit(ch) && ch != '_' {
-		// 	fmt.Println("> ", string(ch))
-		// 	s.unread()
-		// 	break
-		// }
-
 	}
 	return MAPCONTENT, buf.String()
 }
@@ -261,7 +262,7 @@ func (s *Scanner) scanSimpletx() (tok Token, lit string) {
 
 			idt, idtlit := s.scanIdent()
 			//fmt.Println(">>> ", idt)
-			if idtlit == "STX" {
+			if idtlit == STX {
 				//fmt.Println("simple transaction")
 				return SIMPLETX, idtlit
 			}
@@ -295,15 +296,15 @@ func (s *Scanner) scanRest() (rest string) {
 func main() {
 	//fmt.Println("test tx")
 
-	msg := `{:TxType :simple,
-			  :Sender "abc",
-			  :Receiver "xyz",
-		      :amount 42,
-			  :nonce 1}`
+	// msg := `{:TxType :simple,
+	// 		  :Sender "abc",
+	// 		  :Receiver "xyz",
+	// 	      :amount 42,
+	// 		  :nonce 1}`
 
-	var tx block.Tx
-	edn.Unmarshal([]byte(msg), &tx)
-	log.Println(tx)
+	// var tx block.Tx
+	// edn.Unmarshal([]byte(msg), &tx)
+	// log.Println(tx)
 
 	//multiplexing
 
@@ -312,24 +313,51 @@ func main() {
 	//{:contract [...]}
 	//....
 
-	//inputs := "{:stx {:body {:Sender abc :Receiver xyz :amount 42} :sig {:SenderPubkey sdfasa: Signature afwfswf}}"
-	inputs := "[:STX {:Sender abc :Receiver xyz :amount 42} {:SenderPubkey sdfasa: Signature afwfswf}]"
-	s := NewScanner(strings.NewReader(inputs))
+	keypair := crypto.PairFromSecret("test")
+	pub := crypto.PubKeyToHex(keypair.PubKey)
+	a := crypto.Address(pub)
+	fmt.Println("from ", a)
+
+	pubkey_string := crypto.PubKeyToHex(keypair.PubKey)
+	fmt.Println(pubkey_string)
+
+	inputstring := `[:STX {:Sender "Pa033f6528cc1" :Receiver "xyz" :amount 42} {:SenderPubkey "03dab2d148f103cd4761df382d993942808c1866a166f27cafba3289e228384a31" :Signature "3044022047d9411810cd5d4feaf7fc806071bc3eb66f2d62d551f1e8b18de0ff7dbbefe80220315c5cc342dd817ba79c3612e2ad9fb560cce8f16cb1ba6ab562a5a420cddf98"}]`
+
+	s := NewScanner(strings.NewReader(inputstring))
 
 	ftok, flit := s.scanFirstKey()
 	fmt.Println("first => ", ftok, flit)
 
 	//simple tx. first element contains tx, 2nd the signature data
 	if ftok == SIMPLETX {
-		_, firstmap := s.scanMap()
-		fmt.Println("tx content => ", firstmap)
+		_, txmap := s.scanMap()
+		fmt.Println("tx content => ", txmap)
+
+		signature := crypto.SignMsgHash(keypair, txmap)
+		sighex := hex.EncodeToString(signature.Serialize())
+		fmt.Println(sighex)
+
+		var tx block.Tx
+		edn.Unmarshal([]byte(txmap), &tx)
+		log.Println("sender ", tx.Sender)
 
 		_, sigmap := s.scanMap()
 		fmt.Println("sigmap => ", sigmap)
 
-		var tx block.Tx
-		edn.Unmarshal([]byte(msg), &tx)
-		log.Println(tx.Signature)
+		var txsig block.TxSig
+		edn.Unmarshal([]byte(sigmap), &txsig)
+		fmt.Println(txsig.SenderPubkey)
+
+		/////////////
+		s1 := crypto.SignatureFromHex(txsig.Signature)
+		p1 := crypto.PubKeyFromHex(txsig.SenderPubkey)
+		//verified := crypto.VerifyMessageSign(s1, keypair, message)
+		verified := crypto.VerifyMessageSignPub(s1, p1, txmap)
+		fmt.Println(verified)
+
+		// var tx block.Tx
+		// edn.Unmarshal([]byte(msg), &tx)
+		// log.Println(tx.Signature)
 	}
 
 	for tok, lit := s.Scan(); tok != EOF; tok, lit = s.Scan() {

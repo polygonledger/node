@@ -10,7 +10,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
-	"math/rand"
 	"net"
 	"os"
 	"strconv"
@@ -82,48 +81,41 @@ func CreateKeys() {
 }
 
 func Createtx() {
-	kp := ReadKeys(keysfile)
+	// kp := ReadKeys(keysfile)
+
+	// pubk := crypto.PubKeyToHex(kp.PubKey)
+	// addr := crypto.Address(pubk)
+	// s := block.AccountFromString(addr)
+	// log.Println("using account ", s)
 
 	// reader := bufio.NewReader(os.Stdin)
-	// fmt.Print("Enter password: ")
-	// pw, _ := reader.ReadString('\n')
-	// pw = strings.Trim(pw, string('\n'))
+	// fmt.Print("Enter amount: ")
+	// amount, _ := reader.ReadString('\n')
+	// amount = strings.Trim(amount, string('\n'))
+	// amount_int, _ := strconv.Atoi(amount)
 
-	// keypair := crypto.PairFromSecret(pw)
+	// reader = bufio.NewReader(os.Stdin)
+	// fmt.Print("Enter recipient: ")
+	// recv, _ := reader.ReadString('\n')
+	// recv = strings.Trim(recv, string('\n'))
 
-	pubk := crypto.PubKeyToHex(kp.PubKey)
-	addr := crypto.Address(pubk)
-	s := block.AccountFromString(addr)
-	log.Println("using account ", s)
+	// tx := block.Tx{Nonce: 1, Amount: amount_int, Sender: block.Account{AccountKey: addr}, Receiver: block.Account{AccountKey: recv}}
+	// log.Println("tx ", tx)
 
-	reader := bufio.NewReader(os.Stdin)
-	fmt.Print("Enter amount: ")
-	amount, _ := reader.ReadString('\n')
-	amount = strings.Trim(amount, string('\n'))
-	amount_int, _ := strconv.Atoi(amount)
+	// signature := crypto.SignTx(tx, kp)
+	// sighex := hex.EncodeToString(signature.Serialize())
 
-	reader = bufio.NewReader(os.Stdin)
-	fmt.Print("Enter recipient: ")
-	recv, _ := reader.ReadString('\n')
-	recv = strings.Trim(recv, string('\n'))
+	// tx.Signature = sighex
+	// tx.SenderPubkey = crypto.PubKeyToHex(kp.PubKey)
+	// log.Println("tx ", tx)
 
-	tx := block.Tx{Nonce: 1, Amount: amount_int, Sender: block.Account{AccountKey: addr}, Receiver: block.Account{AccountKey: recv}}
-	log.Println("tx ", tx)
+	// txJson, _ := json.Marshal(tx)
+	// // //write to file
+	// // log.Println(txJson)
+	// f := "tx.json"
+	// ioutil.WriteFile(f, []byte(txJson), 0644)
 
-	signature := crypto.SignTx(tx, kp)
-	sighex := hex.EncodeToString(signature.Serialize())
-
-	tx.Signature = sighex
-	tx.SenderPubkey = crypto.PubKeyToHex(kp.PubKey)
-	log.Println("tx ", tx)
-
-	txJson, _ := json.Marshal(tx)
-	// //write to file
-	// log.Println(txJson)
-	f := "tx.json"
-	ioutil.WriteFile(f, []byte(txJson), 0644)
-
-	log.Println("wrote to " + f)
+	// log.Println("wrote to " + f)
 }
 
 //
@@ -158,38 +150,30 @@ func MakeRandomTx(peer ntcl.Peer) {
 }
 
 //handlers TODO this is higher level and should be somewhere else
-func RandomTx(account_s block.Account) block.Tx {
-	// s := crypto.RandomPublicKey()
-	// address_s := crypto.Address(s)
-	// account_s := block.AccountFromString(address_s)
-	// log.Printf("%s", s)
+func RandomTx(account_s block.Account) {
 
-	//FIX
-	//doesn't work on client side
-	//account_r := chain.RandomAccount()
+	// rand.Seed(time.Now().UnixNano())
+	// randNonce := rand.Intn(100)
 
-	rand.Seed(time.Now().UnixNano())
-	randNonce := rand.Intn(100)
+	// kp := crypto.PairFromSecret("test111")
+	// log.Println("PUBKEY ", kp.PubKey)
 
-	kp := crypto.PairFromSecret("test111")
-	log.Println("PUBKEY ", kp.PubKey)
+	// r := crypto.RandomPublicKey()
+	// address_r := crypto.Address(r)
+	// account_r := block.AccountFromString(address_r)
 
-	r := crypto.RandomPublicKey()
-	address_r := crypto.Address(r)
-	account_r := block.AccountFromString(address_r)
+	// //TODO make sure the amount is covered by sender
+	// rand.Seed(time.Now().UnixNano())
+	// randomAmount := rand.Intn(20)
 
-	//TODO make sure the amount is covered by sender
-	rand.Seed(time.Now().UnixNano())
-	randomAmount := rand.Intn(20)
-
-	// log.Printf("randomAmount %s", randomAmount)
-	// log.Printf("randNonce %d", randNonce)
-	testTx := block.Tx{Nonce: randNonce, Sender: account_s, Receiver: account_r, Amount: randomAmount}
-	sig := crypto.SignTx(testTx, kp)
-	sighex := hex.EncodeToString(sig.Serialize())
-	testTx.Signature = sighex
-	log.Println(">> ran tx", testTx.Signature)
-	return testTx
+	// // log.Printf("randomAmount %s", randomAmount)
+	// // log.Printf("randNonce %d", randNonce)
+	// testTx := block.Tx{Nonce: randNonce, Sender: account_s, Receiver: account_r, Amount: randomAmount}
+	// sig := crypto.SignTx(testTx, kp)
+	// sighex := hex.EncodeToString(sig.Serialize())
+	// testTx.Signature = sighex
+	// log.Println(">> ran tx", testTx.Signature)
+	// return testTx
 }
 
 type Configuration struct {

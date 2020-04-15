@@ -27,3 +27,8 @@ type Tx struct {
 	//confirmations
 	//height
 }
+
+type TxSig struct {
+	SenderPubkey string `edn:"SenderPubkey"` //hex string
+	Signature    string `edn:"Signature"`    //hex string
+}
