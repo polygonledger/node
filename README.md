@@ -2,10 +2,12 @@
 
 Polygon is a new blockchain. It uses a delegated proof-of-asset algorithm and is written in golang.
 
-The basic architecture is the use of accounts, not UTXO. Transactions are typed. The scripting occurs through transaction multiplexing, which means there are several modes of transactions. Currently transactions exist as simple structures
-which can be imported/exported from JSON.
+Polygon uses accounts, not UTXO. Transactions are typed. The scripting occurs through transaction multiplexing, which means there are several modes of transactions. Currently transactions exist as simple structures encoding in extensible data notation (edn, see https://github.com/edn-format/edn).
 
-current status: experimental
+Polygon allows for arbitrary message encoding and signing, using new primitives for communication between
+nodes. This makes it more general as a transaction and communcation platform.
+
+current status: alpha
 
 ## runing a node
 

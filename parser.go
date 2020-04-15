@@ -14,13 +14,20 @@ import (
 	"olympos.io/encoding/edn"
 )
 
-// generic tx parser
-// mixture of edn and scripting
-//
-// work in progress
+// --- work in progress ---
+// generic tx and messages parser
+// inspired by Bitcoin and Clojure
+// mixture of edn and script
+
 // transactions are typed
 // [:txtype {:content as map} {:signature data}]
 // [:multisig <txcontent> <sig1 sig2>]
+//multiplexing
+
+//{:simple ...}
+//{:script [...]}
+//{:contract [...]}
+//....
 
 // ETH opcodes
 // 0x30	ADDRESS	Get address of currently executing account	-	2
@@ -56,9 +63,12 @@ const (
 
 )
 
-const STX = "STX"
-
+//end of file
 var eof = rune(0)
+
+//----
+//transaction types keyword
+const STX = "STX"
 
 // Scanner represents a lexical scanner.
 type Scanner struct {
@@ -130,6 +140,8 @@ func (s *Scanner) Scan() (tok Token, lit string) {
 		return OPENVECTOR, "["
 	}
 
+	//TODO
+
 	//else if isLetter(ch) {
 	// 	s.unread()
 	// 	return s.scanIdent()
@@ -141,8 +153,6 @@ func (s *Scanner) Scan() (tok Token, lit string) {
 	case eof:
 		return EOF, ""
 	}
-
-	//fmt.Println("letter ", string(ch))
 
 	return ILLEGAL, string(ch)
 }
@@ -169,7 +179,7 @@ func (s *Scanner) scanWhitespace() (tok Token, lit string) {
 	return WS, buf.String()
 }
 
-// scanIdent consumes the current rune and all contiguous ident runes.
+// scan identifier consumes the current rune and all contiguous ident runes.
 func (s *Scanner) scanIdent() (tok Token, lit string) {
 	// Create a buffer and read the current character into it.
 	var buf bytes.Buffer
@@ -296,23 +306,6 @@ func (s *Scanner) scanRest() (rest string) {
 func main() {
 	//fmt.Println("test tx")
 
-	// msg := `{:TxType :simple,
-	// 		  :Sender "abc",
-	// 		  :Receiver "xyz",
-	// 	      :amount 42,
-	// 		  :nonce 1}`
-
-	// var tx block.Tx
-	// edn.Unmarshal([]byte(msg), &tx)
-	// log.Println(tx)
-
-	//multiplexing
-
-	//{:simple ...}
-	//{:script [...]}
-	//{:contract [...]}
-	//....
-
 	keypair := crypto.PairFromSecret("test")
 	pub := crypto.PubKeyToHex(keypair.PubKey)
 	a := crypto.Address(pub)
@@ -321,7 +314,10 @@ func main() {
 	pubkey_string := crypto.PubKeyToHex(keypair.PubKey)
 	fmt.Println(pubkey_string)
 
-	inputstring := `[:STX {:Sender "Pa033f6528cc1" :Receiver "xyz" :amount 42} {:SenderPubkey "03dab2d148f103cd4761df382d993942808c1866a166f27cafba3289e228384a31" :Signature "3044022047d9411810cd5d4feaf7fc806071bc3eb66f2d62d551f1e8b18de0ff7dbbefe80220315c5cc342dd817ba79c3612e2ad9fb560cce8f16cb1ba6ab562a5a420cddf98"}]`
+	simpletx := `{:Sender "Pa033f6528cc1" :Receiver "P7ba453f23337" :amount 42}`
+	signature := crypto.SignMsgHash(keypair, txmap)
+
+	inputstring := `[:STX {:Sender "Pa033f6528cc1" :Receiver "P7ba453f23337" :amount 42} {:SenderPubkey "03dab2d148f103cd4761df382d993942808c1866a166f27cafba3289e228384a31" :Signature "3044022047d9411810cd5d4feaf7fc806071bc3eb66f2d62d551f1e8b18de0ff7dbbefe80220315c5cc342dd817ba79c3612e2ad9fb560cce8f16cb1ba6ab562a5a420cddf98"}]`
 
 	s := NewScanner(strings.NewReader(inputstring))
 
