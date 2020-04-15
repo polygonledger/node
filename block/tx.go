@@ -11,10 +11,11 @@ const (
 )
 
 type Tx struct {
-	TxType       string `edn:"TxType"`
-	Amount       int    `edn:"Amount"`
-	Sender       string `edn:"Sender"`       //[32]byte
-	Receiver     string `end:"Receiver"`     //[32]byte
+	TxType   string `edn:"TxType"`
+	Amount   int    `edn:"Amount"`
+	Sender   string `edn:"Sender"`   //[32]byte
+	Receiver string `end:"Receiver"` //[32]byte
+	//TODO delete
 	SenderPubkey string `edn:"SenderPubkey"` //hex string
 	Signature    string `edn:"Signature"`    //hex string
 	Nonce        int    `edn:"Nonce"`

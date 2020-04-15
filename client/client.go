@@ -516,6 +516,15 @@ func runListenMode(cmd string, config Configuration) {
 	// }
 }
 
+//TODO move
+func createsigmap(pubkey_string string, txsighex string) string {
+	return `{:SenderPubkey "` + pubkey_string + `" :Signature "` + txsighex + `"}`
+}
+
+func txVector(simpletx string, sigmap string) string {
+	return `[:STX ` + simpletx + ` ` + sigmap + ` ]`
+}
+
 //run client without client or server
 func runOffline(cmd string, config Configuration) {
 
@@ -526,6 +535,26 @@ func runOffline(cmd string, config Configuration) {
 	case "readkeys":
 		kp := ReadKeys(keysfile)
 		log.Println(kp)
+
+	case "signtx":
+		fmt.Println("signtx")
+
+		kp := ReadKeys(keysfile)
+		dat, _ := ioutil.ReadFile("example.txp")
+		msg := string(dat)
+		fmt.Println("sign >> ", msg)
+		signature := crypto.SignMsgHash(kp, msg)
+		log.Println("signature ", signature)
+
+		pubkey_string := crypto.PubKeyToHex(kp.PubKey)
+		sigmap := createsigmap(pubkey_string, msg)
+		fmt.Println("sigmap ", sigmap)
+
+		v := txVector(msg, sigmap)
+		ioutil.WriteFile("example.txo", []byte(v), 0644)
+
+		// sighex := hex.EncodeToString(signature.Serialize())
+		// log.Println("sighex ", sighex)
 
 	case "sign":
 		reader := bufio.NewReader(os.Stdin)
@@ -680,7 +709,7 @@ func main() {
 	case "test", "ping", "heartbeat", "getbalance", "faucet", "faucetloop", "txpool", "pushtx", "randomtx", "mybalance", "dnslook":
 		runSingleMode(cmd, config)
 
-	case "createkeys", "sign", "createtx", "verify":
+	case "createkeys", "sign", "signtx", "createtx", "verify":
 		runOffline(cmd, config)
 
 	case "pingall", "blockheight":

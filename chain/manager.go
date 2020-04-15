@@ -105,7 +105,7 @@ func HandleTx(mgr *ChainManager, tx block.Tx) string {
 
 	//TODO its own function
 	if TxValid(mgr, tx) {
-		tx.Id = crypto.TxHash(tx)
+		//tx.Id = crypto.TxHash(tx)
 		mgr.Tx_pool = append(mgr.Tx_pool, tx)
 		vlog(fmt.Sprintf("append tx to pool %v", mgr.Tx_pool))
 		return "ok"

@@ -1,0 +1,1 @@
+[:STX {:Sender "Pa033f6528cc1" :Receiver "P7ba453f23337" :amount 42} {:SenderPubkey "026d03e73187243da78c1c5617a7824a42fb225533082f0226ed28683cb3655e20" :Signature "{:Sender "Pa033f6528cc1" :Receiver "P7ba453f23337" :amount 42}"} ]

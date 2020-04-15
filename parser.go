@@ -6,8 +6,6 @@ import (
 	"encoding/hex"
 	"fmt"
 	"io"
-	"log"
-	"strings"
 
 	"github.com/polygonledger/node/block"
 	"github.com/polygonledger/node/crypto"
@@ -303,75 +301,85 @@ func (s *Scanner) scanRest() (rest string) {
 	return buf.String()
 }
 
+func verifyTx(txmap string, sighex string, pubhex string) {
+	s1 := crypto.SignatureFromHex(sighex)
+	p1 := crypto.PubKeyFromHex(pubhex)
+	//verified := crypto.VerifyMessageSign(s1, keypair, message)
+	verified := crypto.VerifyMessageSignPub(s1, p1, txmap)
+	fmt.Println(verified)
+}
+
+func createsigmap(pubkey_string string, txsighex string) string {
+	return `{:SenderPubkey "` + pubkey_string + `" :Signature "` + txsighex + `"}`
+}
+
+func verifySigmap(sigmap string, txmap string) {
+	var txsig block.TxSig
+	edn.Unmarshal([]byte(sigmap), &txsig)
+	//fmt.Println("txsig.Signature ", txsig.Signature)
+	s1 := crypto.SignatureFromHex(txsig.Signature)
+	p1 := crypto.PubKeyFromHex(txsig.SenderPubkey)
+	verified := crypto.VerifyMessageSignPub(s1, p1, txmap)
+	fmt.Println("verified => ", verified)
+}
+
+//create the vector from tx and sig data
+func txVector(simpletx string, sigmap string) string {
+	return `[:STX ` + simpletx + ` ` + sigmap + ` ]`
+}
+
 func main() {
-	//fmt.Println("test tx")
-
-	keypair := crypto.PairFromSecret("test")
-	pub := crypto.PubKeyToHex(keypair.PubKey)
-	a := crypto.Address(pub)
-	fmt.Println("from ", a)
-
-	pubkey_string := crypto.PubKeyToHex(keypair.PubKey)
-	fmt.Println(pubkey_string)
 
 	simpletx := `{:Sender "Pa033f6528cc1" :Receiver "P7ba453f23337" :amount 42}`
-	signature := crypto.SignMsgHash(keypair, txmap)
 
-	inputstring := `[:STX {:Sender "Pa033f6528cc1" :Receiver "P7ba453f23337" :amount 42} {:SenderPubkey "03dab2d148f103cd4761df382d993942808c1866a166f27cafba3289e228384a31" :Signature "3044022047d9411810cd5d4feaf7fc806071bc3eb66f2d62d551f1e8b18de0ff7dbbefe80220315c5cc342dd817ba79c3612e2ad9fb560cce8f16cb1ba6ab562a5a420cddf98"}]`
+	keypair := crypto.PairFromSecret("test")
+	txsig := crypto.SignMsgHash(keypair, simpletx)
+	txsighex := hex.EncodeToString(txsig.Serialize())
 
-	s := NewScanner(strings.NewReader(inputstring))
+	pubkey_string := crypto.PubKeyToHex(keypair.PubKey)
+	sigmap := createsigmap(pubkey_string, txsighex)
 
-	ftok, flit := s.scanFirstKey()
-	fmt.Println("first => ", ftok, flit)
+	fmt.Println("tx ", simpletx)
+	fmt.Println("sigmap ", sigmap)
+
+	v := txVector(simpletx, sigmap)
+	fmt.Println("tx vector ", v)
+
+	verifySigmap(sigmap, simpletx)
+
+	//verification parser
+
+	//inputstring := txVector(simpletx, sigmap)
+
+	// s := NewScanner(strings.NewReader(inputstring))
+	// ftok, _ := s.scanFirstKey()
 
 	//simple tx. first element contains tx, 2nd the signature data
-	if ftok == SIMPLETX {
-		_, txmap := s.scanMap()
-		fmt.Println("tx content => ", txmap)
+	// if ftok == SIMPLETX {
+	// 	_, txmap := s.scanMap()
+	// 	fmt.Println("tx content => ", txmap)
 
-		signature := crypto.SignMsgHash(keypair, txmap)
-		sighex := hex.EncodeToString(signature.Serialize())
-		fmt.Println(sighex)
+	// 	// signature := crypto.SignMsgHash(keypair, txmap)
+	// 	// sighex := hex.EncodeToString(signature.Serialize())
+	// 	// fmt.Println(sighex)
 
-		var tx block.Tx
-		edn.Unmarshal([]byte(txmap), &tx)
-		log.Println("sender ", tx.Sender)
+	// 	var tx block.Tx
+	// 	edn.Unmarshal([]byte(txmap), &tx)
+	// 	//log.Println("sender ", tx.Sender)
 
-		_, sigmap := s.scanMap()
-		fmt.Println("sigmap => ", sigmap)
+	// 	_, sigmap := s.scanMap()
+	// 	fmt.Println("sigmap => ", sigmap)
 
-		var txsig block.TxSig
-		edn.Unmarshal([]byte(sigmap), &txsig)
-		fmt.Println(txsig.SenderPubkey)
+	// 	var txsig block.TxSig
+	// 	edn.Unmarshal([]byte(sigmap), &txsig)
+	// 	fmt.Println(txsig.SenderPubkey)
 
-		/////////////
-		s1 := crypto.SignatureFromHex(txsig.Signature)
-		p1 := crypto.PubKeyFromHex(txsig.SenderPubkey)
-		//verified := crypto.VerifyMessageSign(s1, keypair, message)
-		verified := crypto.VerifyMessageSignPub(s1, p1, txmap)
-		fmt.Println(verified)
+	// 	/////////////
+	// 	//verifyTx(txmap, txsig.Signature, txsig.SenderPubkey)
 
-		// var tx block.Tx
-		// edn.Unmarshal([]byte(msg), &tx)
-		// log.Println(tx.Signature)
-	}
-
-	for tok, lit := s.Scan(); tok != EOF; tok, lit = s.Scan() {
-		//fmt.Println(tok, lit)
-		fmt.Println(lit, "   ", tok)
-		// if tok == SELECT {
-		// 	fmt.Println("S")
-		// }
-
-		tok = 0
-		// if lit == "" {
-		// 	fmt.Println("lit ", lit)
-		// }
-
-		//fmt.Println(tok == EOF)
-	}
-
-	// example := `{:TxType :script,
-	// 			  :lock [OP_DUP]}`
+	// 	// var tx block.Tx
+	// 	// edn.Unmarshal([]byte(msg), &tx)
+	// 	// log.Println(tx.Signature)
+	// }
 
 }
