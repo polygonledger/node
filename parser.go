@@ -3,9 +3,9 @@ package main
 import (
 	"bufio"
 	"bytes"
-	"encoding/hex"
 	"fmt"
 	"io"
+	"strings"
 
 	"github.com/polygonledger/node/block"
 	"github.com/polygonledger/node/crypto"
@@ -313,7 +313,7 @@ func createsigmap(pubkey_string string, txsighex string) string {
 	return `{:SenderPubkey "` + pubkey_string + `" :Signature "` + txsighex + `"}`
 }
 
-func verifySigmap(sigmap string, txmap string) {
+func verifySigmap(sigmap string, txmap string) bool {
 	var txsig block.TxSig
 	edn.Unmarshal([]byte(sigmap), &txsig)
 	//fmt.Println("txsig.Signature ", txsig.Signature)
@@ -321,23 +321,79 @@ func verifySigmap(sigmap string, txmap string) {
 	p1 := crypto.PubKeyFromHex(txsig.SenderPubkey)
 	verified := crypto.VerifyMessageSignPub(s1, p1, txmap)
 	fmt.Println("verified => ", verified)
+	return verified
 }
 
 //create the vector from tx and sig data
 func txVector(simpletx string, sigmap string) string {
-	return `[:STX ` + simpletx + ` ` + sigmap + ` ]`
+	return `[:STX ` + simpletx + ` ` + sigmap + `]`
 }
 
-func main() {
+//[:type {txs} {sig}]
+func ScanScript(inputstring string) (string, string) {
+
+	s := NewScanner(strings.NewReader(inputstring))
+	ftok, _ := s.scanFirstKey()
+
+	//simple tx. first element contains tx, 2nd the signature data
+	if ftok == SIMPLETX {
+		_, txmap := s.scanMap()
+		fmt.Println("tx content => ", txmap)
+
+		// signature := crypto.SignMsgHash(keypair, txmap)
+		// sighex := hex.EncodeToString(signature.Serialize())
+		// fmt.Println(sighex)
+
+		//s.scanWhitespace()
+
+		var tx block.Tx
+		edn.Unmarshal([]byte(txmap), &tx)
+		//log.Println("sender ", tx.Sender)
+
+		_, sigmap := s.scanMap()
+		fmt.Println("sigmap => ", sigmap)
+		//remove leading whitespace
+		sigmap = sigmap[1:]
+
+		// var txsig block.TxSig
+		// edn.Unmarshal([]byte(sigmap), &txsig)
+		// fmt.Println(txsig.SenderPubkey)
+
+		txmap = `{:Sender "Pa033f6528cc1" :Receiver "P7ba453f23337" :amount 42}`
+		fmt.Println(sigmap)
+
+		//verifySigmap(sigmap, txmap)
+		return sigmap, txmap
+
+		/////////////
+		//verifyTx(txmap, txsig.Signature, txsig.SenderPubkey)
+
+		// var tx block.Tx
+		// edn.Unmarshal([]byte(msg), &tx)
+		// log.Println(tx.Signature)
+	}
+	return "", ""
+}
+
+// func VerifyTxScript(inputstring string) bool {
+
+// }
+
+func main1() {
 
 	simpletx := `{:Sender "Pa033f6528cc1" :Receiver "P7ba453f23337" :amount 42}`
 
-	keypair := crypto.PairFromSecret("test")
-	txsig := crypto.SignMsgHash(keypair, simpletx)
-	txsighex := hex.EncodeToString(txsig.Serialize())
+	//keypair := crypto.PairFromSecret("test")
+	//txsig := crypto.SignMsgHash(keypair, simpletx)
+	// txsighex := hex.EncodeToString(txsig.Serialize())
+	// pubkey_string := crypto.PubKeyToHex(keypair.PubKey)
+	//sigmap := createsigmap(pubkey_string, txsighex)
+	//sigmap := `{:SenderPubkey "03dab2d148f103cd4761df382d993942808c1866a166f27cafba3289e228384a31" :Signature "304502210086d04e9613514174e75558ea4e7fd96e691e87b5deed39b4da3d6774e1ffe81b02202e63019ad59b7cd42dbeacfe9b1a7b05a421f72705d4659aea6b0450db638b96"}`
+	sigmap := `{:SenderPubkey "03dab2d148f103cd4761df382d993942808c1866a166f27cafba3289e228384a31" :Signature "304502210086d04e9613514174e75558ea4e7fd96e691e87b5deed39b4da3d6774e1ffe81b02202e63019ad59b7cd42dbeacfe9b1a7b05a421f72705d4659aea6b0450db638b96"}`
 
-	pubkey_string := crypto.PubKeyToHex(keypair.PubKey)
-	sigmap := createsigmap(pubkey_string, txsighex)
+	fmt.Println(">>>> ", sigmap)
+	fmt.Println(">>>> ", simpletx)
+	verifySigmap(sigmap, simpletx)
 
 	fmt.Println("tx ", simpletx)
 	fmt.Println("sigmap ", sigmap)
@@ -345,41 +401,10 @@ func main() {
 	v := txVector(simpletx, sigmap)
 	fmt.Println("tx vector ", v)
 
-	verifySigmap(sigmap, simpletx)
+	//VerifyTxScript(v)
 
 	//verification parser
 
 	//inputstring := txVector(simpletx, sigmap)
-
-	// s := NewScanner(strings.NewReader(inputstring))
-	// ftok, _ := s.scanFirstKey()
-
-	//simple tx. first element contains tx, 2nd the signature data
-	// if ftok == SIMPLETX {
-	// 	_, txmap := s.scanMap()
-	// 	fmt.Println("tx content => ", txmap)
-
-	// 	// signature := crypto.SignMsgHash(keypair, txmap)
-	// 	// sighex := hex.EncodeToString(signature.Serialize())
-	// 	// fmt.Println(sighex)
-
-	// 	var tx block.Tx
-	// 	edn.Unmarshal([]byte(txmap), &tx)
-	// 	//log.Println("sender ", tx.Sender)
-
-	// 	_, sigmap := s.scanMap()
-	// 	fmt.Println("sigmap => ", sigmap)
-
-	// 	var txsig block.TxSig
-	// 	edn.Unmarshal([]byte(sigmap), &txsig)
-	// 	fmt.Println(txsig.SenderPubkey)
-
-	// 	/////////////
-	// 	//verifyTx(txmap, txsig.Signature, txsig.SenderPubkey)
-
-	// 	// var tx block.Tx
-	// 	// edn.Unmarshal([]byte(msg), &tx)
-	// 	// log.Println(tx.Signature)
-	// }
 
 }

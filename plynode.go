@@ -415,7 +415,7 @@ func BlockContent(mgr *chain.ChainManager) string {
 		content += fmt.Sprintf("<h4>Number of Tx %d</h4>", len(current_block.Txs))
 		for j := 0; j < len(current_block.Txs); j++ {
 			ctx := current_block.Txs[j]
-			content += fmt.Sprintf("%d from %s to %s %x<br>", ctx.Amount, ctx.Sender, ctx.Receiver)
+			content += fmt.Sprintf("%d from %s to %s <br>", ctx.Amount, ctx.Sender, ctx.Receiver)
 		}
 	}
 	return content

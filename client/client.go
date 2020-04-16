@@ -595,6 +595,12 @@ func runOffline(cmd string, config Configuration) {
 		verified := crypto.VerifyMessageSignPub(sign, pubkey, msg)
 		log.Println("verified ", verified)
 
+	case "verifytx":
+
+		dat, _ := ioutil.ReadFile("example.txo")
+		msg := string(dat)
+		fmt.Println("to verify ", msg)
+
 	}
 }
 
@@ -709,7 +715,7 @@ func main() {
 	case "test", "ping", "heartbeat", "getbalance", "faucet", "faucetloop", "txpool", "pushtx", "randomtx", "mybalance", "dnslook":
 		runSingleMode(cmd, config)
 
-	case "createkeys", "sign", "signtx", "createtx", "verify":
+	case "createkeys", "sign", "signtx", "createtx", "verify", "verifytx":
 		runOffline(cmd, config)
 
 	case "pingall", "blockheight":
