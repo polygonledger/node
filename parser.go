@@ -3,8 +3,10 @@ package main
 import (
 	"bufio"
 	"bytes"
+	"encoding/hex"
 	"fmt"
 	"io"
+	"strconv"
 	"strings"
 
 	"github.com/polygonledger/node/block"
@@ -157,6 +159,7 @@ func (s *Scanner) Scan() (tok Token, lit string) {
 
 // scanWhitespace consumes the current rune and all contiguous whitespace.
 func (s *Scanner) scanWhitespace() (tok Token, lit string) {
+	fmt.Println("scan whitespace")
 	// Create a buffer and read the current character into it.
 	var buf bytes.Buffer
 	buf.WriteRune(s.read())
@@ -203,7 +206,6 @@ func (s *Scanner) scanIdent() (tok Token, lit string) {
 func (s *Scanner) scanMap() (tok Token, lit string) {
 
 	var buf bytes.Buffer
-	buf.WriteRune(s.read())
 
 	firstch := s.read()
 	if !isMapStart(firstch) {
@@ -329,70 +331,90 @@ func txVector(simpletx string, sigmap string) string {
 	return `[:STX ` + simpletx + ` ` + sigmap + `]`
 }
 
-//[:type {txs} {sig}]
-func ScanScript(inputstring string) (string, string) {
+//[:type {tx} {sig}]
+//extract the components
+func ScanScript(inputVector string) (string, string) {
 
-	s := NewScanner(strings.NewReader(inputstring))
+	s := NewScanner(strings.NewReader(inputVector))
 	ftok, _ := s.scanFirstKey()
+	//s.scanWhitespace()
+	s.Scan()
 
 	//simple tx. first element contains tx, 2nd the signature data
 	if ftok == SIMPLETX {
+		//s.scanWhitespace()
 		_, txmap := s.scanMap()
 		fmt.Println("tx content => ", txmap)
 
-		// signature := crypto.SignMsgHash(keypair, txmap)
-		// sighex := hex.EncodeToString(signature.Serialize())
-		// fmt.Println(sighex)
+		// var tx block.Tx
+		// edn.Unmarshal([]byte(txmap), &tx)
 
-		//s.scanWhitespace()
-
-		var tx block.Tx
-		edn.Unmarshal([]byte(txmap), &tx)
+		s.scanWhitespace()
 		//log.Println("sender ", tx.Sender)
 
 		_, sigmap := s.scanMap()
-		fmt.Println("sigmap => ", sigmap)
-		//remove leading whitespace
-		sigmap = sigmap[1:]
-
-		// var txsig block.TxSig
-		// edn.Unmarshal([]byte(sigmap), &txsig)
-		// fmt.Println(txsig.SenderPubkey)
-
-		txmap = `{:Sender "Pa033f6528cc1" :Receiver "P7ba453f23337" :amount 42}`
-		fmt.Println(sigmap)
+		//fmt.Println("sigmap => ", sigmap)
+		//remove leading whitespace between vector elements
+		//sigmap = sigmap[1:]
 
 		//verifySigmap(sigmap, txmap)
 		return sigmap, txmap
 
-		/////////////
-		//verifyTx(txmap, txsig.Signature, txsig.SenderPubkey)
-
-		// var tx block.Tx
-		// edn.Unmarshal([]byte(msg), &tx)
-		// log.Println(tx.Signature)
 	}
 	return "", ""
 }
 
-// func VerifyTxScript(inputstring string) bool {
+// func scanMapString() ([]string, []string) {
+// 	//scan for open map
+// 	//scan :keyword
+// 	//scan keyword id
+// 	//scan value
 
 // }
 
-func main1() {
+func VerifyTxScript(v string) bool {
 
-	simpletx := `{:Sender "Pa033f6528cc1" :Receiver "P7ba453f23337" :amount 42}`
+	sigmap, txmap := ScanScript(v)
+	valid := verifySigmap(sigmap, txmap)
+	return valid
+}
 
-	//keypair := crypto.PairFromSecret("test")
-	//txsig := crypto.SignMsgHash(keypair, simpletx)
-	// txsighex := hex.EncodeToString(txsig.Serialize())
-	// pubkey_string := crypto.PubKeyToHex(keypair.PubKey)
-	//sigmap := createsigmap(pubkey_string, txsighex)
-	//sigmap := `{:SenderPubkey "03dab2d148f103cd4761df382d993942808c1866a166f27cafba3289e228384a31" :Signature "304502210086d04e9613514174e75558ea4e7fd96e691e87b5deed39b4da3d6774e1ffe81b02202e63019ad59b7cd42dbeacfe9b1a7b05a421f72705d4659aea6b0450db638b96"}`
-	sigmap := `{:SenderPubkey "03dab2d148f103cd4761df382d993942808c1866a166f27cafba3289e228384a31" :Signature "304502210086d04e9613514174e75558ea4e7fd96e691e87b5deed39b4da3d6774e1ffe81b02202e63019ad59b7cd42dbeacfe9b1a7b05a421f72705d4659aea6b0450db638b96"}`
+func MakeSigmap(pubk string, sig string) string {
 
-	fmt.Println(">>>> ", sigmap)
-	fmt.Println(">>>> ", simpletx)
+	return `{:SenderPubkey "` + pubk + `" :Signature "` + sig + `"}`
+}
+
+func MakeSimpleTxContent(sender string, receiver string, amount int) string {
+	//TODO make map generic
+	return `{:Sender "` + sender + `" :Receiver "` + receiver + `" :amount ` + strconv.Itoa(amount) + `}`
+}
+
+func MakeSigMap(pubkey string, sig string) string {
+	//TODO make map generic
+	return `{:SenderPubkey "` + pubkey + ` :Signature "` + sig + `"}`
+}
+
+func SignMap(keypair crypto.Keypair, msg string) string {
+	txsig := crypto.SignMsgHash(keypair, msg)
+	txsighex := hex.EncodeToString(txsig.Serialize())
+	pubkey_string := crypto.PubKeyToHex(keypair.PubKey)
+	sigmap := MakeSigMap(pubkey_string, txsighex)
+	return sigmap
+}
+
+func parseexample() {
+
+	//`{:Sender "Pa033f6528cc1" :Receiver "P7ba453f23337" :amount 42}`
+	simpletx := MakeSimpleTxContent("Pa033f6528cc1", "P7ba453f23337", 42)
+
+	keypair := crypto.PairFromSecret("test")
+	sigmap := SignMap(keypair, simpletx)
+	fmt.Println(sigmap)
+
+	// p := "03dab2d148f103cd4761df382d993942808c1866a166f27cafba3289e228384a31"
+	// s := "304502210086d04e9613514174e75558ea4e7fd96e691e87b5deed39b4da3d6774e1ffe81b02202e63019ad59b7cd42dbeacfe9b1a7b05a421f72705d4659aea6b0450db638b96"
+	// sigmap := MakeSigMap(p, s)
+
 	verifySigmap(sigmap, simpletx)
 
 	fmt.Println("tx ", simpletx)
@@ -401,10 +423,11 @@ func main1() {
 	v := txVector(simpletx, sigmap)
 	fmt.Println("tx vector ", v)
 
-	//VerifyTxScript(v)
+	v = `[:STX {:Sender "Pa033f6528cc1" :Receiver "P7ba453f23337" :amount 42} {:SenderPubkey "03dab2d148f103cd4761df382d993942808c1866a166f27cafba3289e228384a31" :Signature "304502210086d04e9613514174e75558ea4e7fd96e691e87b5deed39b4da3d6774e1ffe81b02202e63019ad59b7cd42dbeacfe9b1a7b05a421f72705d4659aea6b0450db638b96"}]`
+
+	valid := VerifyTxScript(v)
+	fmt.Println(valid)
 
 	//verification parser
-
-	//inputstring := txVector(simpletx, sigmap)
 
 }
