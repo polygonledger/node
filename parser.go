@@ -243,7 +243,7 @@ func (s *Scanner) scanFirstKey() (tok Token, lit string) {
 
 			idt, idtlit := s.scanIdent()
 			//fmt.Println(">>> ", idt)
-			if idtlit == "STX" {
+			if idtlit == STX {
 				//fmt.Println("simple transaction")
 				return SIMPLETX, idtlit
 			}
@@ -312,7 +312,10 @@ func verifyTx(txmap string, sighex string, pubhex string) {
 }
 
 func createsigmap(pubkey_string string, txsighex string) string {
-	return `{:SenderPubkey "` + pubkey_string + `" :Signature "` + txsighex + `"}`
+	v := []string{pubkey_string, txsighex}
+	k := []string{"SenderPubkey", "Signature"}
+	m := makeMap(v, k)
+	return m
 }
 
 func verifySigmap(sigmap string, txmap string) bool {
@@ -328,7 +331,8 @@ func verifySigmap(sigmap string, txmap string) bool {
 
 //create the vector from tx and sig data
 func txVector(simpletx string, sigmap string) string {
-	return `[:STX ` + simpletx + ` ` + sigmap + `]`
+	vs := []string{":STX", simpletx, sigmap}
+	return makeVector(vs)
 }
 
 //[:type {tx} {sig}]
@@ -372,7 +376,9 @@ func ScanScript(inputVector string) (string, string) {
 
 // }
 
-func VerifyTxScript(v string) bool {
+//verify signature
+//independent of balance check
+func VerifyTxScriptSig(v string) bool {
 
 	sigmap, txmap := ScanScript(v)
 	valid := verifySigmap(sigmap, txmap)
@@ -425,7 +431,7 @@ func parseexample() {
 
 	v = `[:STX {:Sender "Pa033f6528cc1" :Receiver "P7ba453f23337" :amount 42} {:SenderPubkey "03dab2d148f103cd4761df382d993942808c1866a166f27cafba3289e228384a31" :Signature "304502210086d04e9613514174e75558ea4e7fd96e691e87b5deed39b4da3d6774e1ffe81b02202e63019ad59b7cd42dbeacfe9b1a7b05a421f72705d4659aea6b0450db638b96"}]`
 
-	valid := VerifyTxScript(v)
+	valid := VerifyTxScriptSig(v)
 	fmt.Println(valid)
 
 	//verification parser
