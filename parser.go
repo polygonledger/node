@@ -311,8 +311,12 @@ func verifyTx(txmap string, sighex string, pubhex string) {
 	fmt.Println(verified)
 }
 
+func stringWrap(s string) string {
+	return "\"" + s + "\""
+}
+
 func createsigmap(pubkey_string string, txsighex string) string {
-	v := []string{pubkey_string, txsighex}
+	v := []string{stringWrap(pubkey_string), stringWrap(txsighex)}
 	k := []string{"SenderPubkey", "Signature"}
 	m := makeMap(v, k)
 	return m
@@ -385,41 +389,32 @@ func VerifyTxScriptSig(v string) bool {
 	return valid
 }
 
-func MakeSigmap(pubk string, sig string) string {
-
-	return `{:SenderPubkey "` + pubk + `" :Signature "` + sig + `"}`
-}
-
-func MakeSimpleTxContent(sender string, receiver string, amount int) string {
-	//TODO make map generic
-	return `{:Sender "` + sender + `" :Receiver "` + receiver + `" :amount ` + strconv.Itoa(amount) + `}`
-}
-
-func MakeSigMap(pubkey string, sig string) string {
-	//TODO make map generic
-	return `{:SenderPubkey "` + pubkey + ` :Signature "` + sig + `"}`
+func CreateSimpleTxContent(sender string, receiver string, amount int) string {
+	v := []string{stringWrap(sender), stringWrap(receiver), strconv.Itoa(amount)}
+	k := []string{"Sender", "Receiver", "amount"}
+	txmap := makeMap(v, k)
+	return txmap
 }
 
 func SignMap(keypair crypto.Keypair, msg string) string {
 	txsig := crypto.SignMsgHash(keypair, msg)
 	txsighex := hex.EncodeToString(txsig.Serialize())
 	pubkey_string := crypto.PubKeyToHex(keypair.PubKey)
-	sigmap := MakeSigMap(pubkey_string, txsighex)
+
+	v := []string{pubkey_string, txsighex}
+	k := []string{"SenderPubkey", "Signature"}
+	sigmap := makeMap(v, k)
 	return sigmap
 }
 
 func parseexample() {
 
 	//`{:Sender "Pa033f6528cc1" :Receiver "P7ba453f23337" :amount 42}`
-	simpletx := MakeSimpleTxContent("Pa033f6528cc1", "P7ba453f23337", 42)
+	simpletx := CreateSimpleTxContent("Pa033f6528cc1", "P7ba453f23337", 42)
 
 	keypair := crypto.PairFromSecret("test")
 	sigmap := SignMap(keypair, simpletx)
 	fmt.Println(sigmap)
-
-	// p := "03dab2d148f103cd4761df382d993942808c1866a166f27cafba3289e228384a31"
-	// s := "304502210086d04e9613514174e75558ea4e7fd96e691e87b5deed39b4da3d6774e1ffe81b02202e63019ad59b7cd42dbeacfe9b1a7b05a421f72705d4659aea6b0450db638b96"
-	// sigmap := MakeSigMap(p, s)
 
 	verifySigmap(sigmap, simpletx)
 
