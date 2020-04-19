@@ -311,15 +311,19 @@ func verifyTx(txmap string, sighex string, pubhex string) {
 	fmt.Println(verified)
 }
 
-func stringWrap(s string) string {
-	return "\"" + s + "\""
-}
-
-func createsigmap(pubkey_string string, txsighex string) string {
+func CreateSigmap(pubkey_string string, txsighex string) string {
 	v := []string{stringWrap(pubkey_string), stringWrap(txsighex)}
 	k := []string{"SenderPubkey", "Signature"}
 	m := makeMap(v, k)
 	return m
+}
+
+func SignMap(keypair crypto.Keypair, msg string) string {
+	txsig := crypto.SignMsgHash(keypair, msg)
+	txsighex := hex.EncodeToString(txsig.Serialize())
+	pubkey_string := crypto.PubKeyToHex(keypair.PubKey)
+	sigmap := CreateSigmap(pubkey_string, txsighex)
+	return sigmap
 }
 
 func verifySigmap(sigmap string, txmap string) bool {
@@ -372,14 +376,6 @@ func ScanScript(inputVector string) (string, string) {
 	return "", ""
 }
 
-// func scanMapString() ([]string, []string) {
-// 	//scan for open map
-// 	//scan :keyword
-// 	//scan keyword id
-// 	//scan value
-
-// }
-
 //verify signature
 //independent of balance check
 func VerifyTxScriptSig(v string) bool {
@@ -396,30 +392,12 @@ func CreateSimpleTxContent(sender string, receiver string, amount int) string {
 	return txmap
 }
 
-func SignMap(keypair crypto.Keypair, msg string) string {
-	txsig := crypto.SignMsgHash(keypair, msg)
-	txsighex := hex.EncodeToString(txsig.Serialize())
-	pubkey_string := crypto.PubKeyToHex(keypair.PubKey)
-
-	v := []string{pubkey_string, txsighex}
-	k := []string{"SenderPubkey", "Signature"}
-	sigmap := makeMap(v, k)
-	return sigmap
-}
-
 func parseexample() {
 
-	//`{:Sender "Pa033f6528cc1" :Receiver "P7ba453f23337" :amount 42}`
 	simpletx := CreateSimpleTxContent("Pa033f6528cc1", "P7ba453f23337", 42)
 
 	keypair := crypto.PairFromSecret("test")
 	sigmap := SignMap(keypair, simpletx)
-	fmt.Println(sigmap)
-
-	verifySigmap(sigmap, simpletx)
-
-	fmt.Println("tx ", simpletx)
-	fmt.Println("sigmap ", sigmap)
 
 	v := txVector(simpletx, sigmap)
 	fmt.Println("tx vector ", v)

@@ -3,6 +3,10 @@ package main
 //basic edn create
 //create structs from strings, no nesting
 
+func stringWrap(s string) string {
+	return "\"" + s + "\""
+}
+
 func makeVector(vectorels []string) string {
 	vs := `[`
 	for i, s := range vectorels {
@@ -27,3 +31,11 @@ func makeMap(els []string, keys []string) string {
 	vs += `}`
 	return vs
 }
+
+// func scanMapString() ([]string, []string) {
+// 	//scan for open map
+// 	//scan :keyword
+// 	//scan keyword id
+// 	//scan value
+
+// }
