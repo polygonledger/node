@@ -43,3 +43,11 @@ func TestTxassemble(t *testing.T) {
 	}
 
 }
+
+func TestReadMap(t *testing.T) {
+
+	vs, ks := parser.ReadMap("{:mykey bla :second bar}")
+	t.Log(vs)
+	t.Log(ks)
+
+}

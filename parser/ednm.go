@@ -1,5 +1,10 @@
 package parser
 
+import (
+	"fmt"
+	"strings"
+)
+
 //see also
 //https://github.com/candid82/joker
 //https://github.com/go-edn/
@@ -40,10 +45,51 @@ func MakeMap(els []string, keys []string) string {
 	return vs
 }
 
-// func scanMapString() ([]string, []string) {
-// 	//scan for open map
-// 	//scan :keyword
-// 	//scan keyword id
-// 	//scan value
+//read map and return keys and values as strings
+func ReadMap(mapstr string) ([]string, []string) {
 
-// }
+	var vs []string
+	var ks []string
+
+	s := NewScanner(strings.NewReader(mapstr))
+
+	ldone := false
+
+	s.Scan() //open bracket
+
+	for !ldone {
+
+		fmt.Println(ldone)
+
+		//4 cases
+		//keyword => scanid
+		//whitespace => consume
+		//scanid => value
+		//close bracked => end
+
+		// _, kk := s.Scan() //":"
+		// switch kk {
+		// case ":":
+		// 	_, klit := s.scanIdent()
+		// 	ks = append(ks, klit)
+		// 	s.scanWhitespace()
+		// }
+
+		_, klit := s.scanIdent()
+		fmt.Println(klit)
+		ks = append(ks, klit)
+		s.scanWhitespace()
+
+		_, vlit := s.scanIdent()
+		fmt.Println(vlit)
+		vs = append(vs, vlit)
+
+		_, xlit := s.Scan() //close
+		if xlit == "}" {
+			//fmt.Println("Close map")
+			ldone = true
+		}
+
+	}
+	return vs, ks
+}

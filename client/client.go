@@ -19,13 +19,14 @@ import (
 	"github.com/polygonledger/node/block"
 	"github.com/polygonledger/node/crypto"
 	"github.com/polygonledger/node/ntcl"
+	"github.com/polygonledger/node/parser"
 )
 
 var Peers []ntcl.Peer
 
 const node_port = 8888
 
-const keysfile = "keys.txt"
+const keysfile = "keys.wfe"
 
 // --- utils ---
 
@@ -33,30 +34,33 @@ func ReadKeys(keysfile string) crypto.Keypair {
 
 	log.Println("read keys from ", keysfile)
 	dat, _ := ioutil.ReadFile(keysfile)
-	s := strings.Split(string(dat), string("\n"))
+	//s := strings.Split(string(dat), string("\n"))
 
-	pubkeyHex := s[0]
+	vs, _ := parser.ReadMap(string(dat))
+
+	privHex := vs[0]
+	pubkeyHex := vs[1]
 	//log.Println("pub ", pubkeyHex)
 
-	privHex := s[1]
 	//log.Println("privHex ", privHex)
 
 	return crypto.Keypair{PubKey: crypto.PubKeyFromHex(pubkeyHex), PrivKey: crypto.PrivKeyFromHex(privHex)}
 }
 
+func CreateKeypairFormat(privkey string, pubkey_string string, address string) string {
+	v := []string{parser.StringWrap(privkey), parser.StringWrap(pubkey_string), parser.StringWrap(address)}
+	k := []string{"privkey", "pubkey", "address"}
+	m := parser.MakeMap(v, k)
+	return m
+}
+
+//write keys to file with format
 func WriteKeys(kp crypto.Keypair, keysfile string) {
-
 	pubkeyHex := crypto.PubKeyToHex(kp.PubKey)
-	log.Println("pub ", pubkeyHex)
-
 	privHex := crypto.PrivKeyToHex(kp.PrivKey)
-	log.Println("privHex ", privHex)
-
 	address := crypto.Address(pubkeyHex)
-
-	t := pubkeyHex + "\n" + privHex + "\n" + address
-	//log.Println("address ", address)
-	ioutil.WriteFile(keysfile, []byte(t), 0644)
+	s := CreateKeypairFormat(privHex, pubkeyHex, address)
+	ioutil.WriteFile(keysfile, []byte(s), 0644)
 }
 
 func CreateKeys() {
@@ -67,14 +71,12 @@ func CreateKeys() {
 	fmt.Print("Enter password: ")
 	pw, _ := reader.ReadString('\n')
 	pw = strings.Trim(pw, string('\n'))
-	fmt.Println(pw)
 
 	//check if exists
 	//dat, _ := ioutil.ReadFile(keysfile)
 	//check(err)
 
 	kp := crypto.PairFromSecret(pw)
-	log.Println("keypair ", kp)
 
 	WriteKeys(kp, keysfile)
 
@@ -705,6 +707,9 @@ func testclient_subscribe() {
 
 //run client based on cmds
 func main() {
+
+	kp := ReadKeys(keysfile)
+	fmt.Println(kp)
 
 	config := getConfig()
 

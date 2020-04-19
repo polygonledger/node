@@ -14,7 +14,6 @@ import (
 	"olympos.io/encoding/edn"
 )
 
-// --- work in progress ---
 // generic tx and messages parser
 // inspired by Bitcoin and Clojure
 // mixture of edn and script
@@ -202,7 +201,7 @@ func (s *Scanner) scanIdent() (tok Token, lit string) {
 	return IDENT, buf.String()
 }
 
-//scan for map
+//scan for map contents as string
 func (s *Scanner) scanMap() (tok Token, lit string) {
 
 	var buf bytes.Buffer
