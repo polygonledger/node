@@ -1,4 +1,4 @@
-package main
+package parser
 
 import (
 	"bufio"
@@ -306,15 +306,14 @@ func (s *Scanner) scanRest() (rest string) {
 func verifyTx(txmap string, sighex string, pubhex string) {
 	s1 := crypto.SignatureFromHex(sighex)
 	p1 := crypto.PubKeyFromHex(pubhex)
-	//verified := crypto.VerifyMessageSign(s1, keypair, message)
 	verified := crypto.VerifyMessageSignPub(s1, p1, txmap)
 	fmt.Println(verified)
 }
 
 func CreateSigmap(pubkey_string string, txsighex string) string {
-	v := []string{stringWrap(pubkey_string), stringWrap(txsighex)}
+	v := []string{StringWrap(pubkey_string), StringWrap(txsighex)}
 	k := []string{"SenderPubkey", "Signature"}
-	m := makeMap(v, k)
+	m := MakeMap(v, k)
 	return m
 }
 
@@ -326,10 +325,9 @@ func SignMap(keypair crypto.Keypair, msg string) string {
 	return sigmap
 }
 
-func verifySigmap(sigmap string, txmap string) bool {
+func VerifySigmap(sigmap string, txmap string) bool {
 	var txsig block.TxSig
 	edn.Unmarshal([]byte(sigmap), &txsig)
-	//fmt.Println("txsig.Signature ", txsig.Signature)
 	s1 := crypto.SignatureFromHex(txsig.Signature)
 	p1 := crypto.PubKeyFromHex(txsig.SenderPubkey)
 	verified := crypto.VerifyMessageSignPub(s1, p1, txmap)
@@ -338,9 +336,9 @@ func verifySigmap(sigmap string, txmap string) bool {
 }
 
 //create the vector from tx and sig data
-func txVector(simpletx string, sigmap string) string {
-	vs := []string{":STX", simpletx, sigmap}
-	return makeVector(vs)
+func TxVector(simpletx string, sigmap string) string {
+	vs := []string{MakeKeyword(STX), simpletx, sigmap}
+	return MakeVector(vs)
 }
 
 //[:type {tx} {sig}]
@@ -381,32 +379,13 @@ func ScanScript(inputVector string) (string, string) {
 func VerifyTxScriptSig(v string) bool {
 
 	sigmap, txmap := ScanScript(v)
-	valid := verifySigmap(sigmap, txmap)
+	valid := VerifySigmap(sigmap, txmap)
 	return valid
 }
 
 func CreateSimpleTxContent(sender string, receiver string, amount int) string {
-	v := []string{stringWrap(sender), stringWrap(receiver), strconv.Itoa(amount)}
+	v := []string{StringWrap(sender), StringWrap(receiver), strconv.Itoa(amount)}
 	k := []string{"Sender", "Receiver", "amount"}
-	txmap := makeMap(v, k)
+	txmap := MakeMap(v, k)
 	return txmap
-}
-
-func parseexample() {
-
-	simpletx := CreateSimpleTxContent("Pa033f6528cc1", "P7ba453f23337", 42)
-
-	keypair := crypto.PairFromSecret("test")
-	sigmap := SignMap(keypair, simpletx)
-
-	v := txVector(simpletx, sigmap)
-	fmt.Println("tx vector ", v)
-
-	v = `[:STX {:Sender "Pa033f6528cc1" :Receiver "P7ba453f23337" :amount 42} {:SenderPubkey "03dab2d148f103cd4761df382d993942808c1866a166f27cafba3289e228384a31" :Signature "304502210086d04e9613514174e75558ea4e7fd96e691e87b5deed39b4da3d6774e1ffe81b02202e63019ad59b7cd42dbeacfe9b1a7b05a421f72705d4659aea6b0450db638b96"}]`
-
-	valid := VerifyTxScriptSig(v)
-	fmt.Println(valid)
-
-	//verification parser
-
 }

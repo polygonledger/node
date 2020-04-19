@@ -1,13 +1,21 @@
-package main
+package parser
 
-//basic edn create
+//see also
+//https://github.com/candid82/joker
+//https://github.com/go-edn/
+
+//basic edn utils
 //create structs from strings, no nesting
 
-func stringWrap(s string) string {
+func StringWrap(s string) string {
 	return "\"" + s + "\""
 }
 
-func makeVector(vectorels []string) string {
+func MakeKeyword(k string) string {
+	return ":" + k
+}
+
+func MakeVector(vectorels []string) string {
 	vs := `[`
 	for i, s := range vectorels {
 		vs += s
@@ -19,7 +27,7 @@ func makeVector(vectorels []string) string {
 	return vs
 }
 
-func makeMap(els []string, keys []string) string {
+func MakeMap(els []string, keys []string) string {
 	vs := `{`
 	for i, s := range els {
 		k := keys[i]

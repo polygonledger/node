@@ -36,10 +36,10 @@ func ReadKeys(keysfile string) crypto.Keypair {
 	s := strings.Split(string(dat), string("\n"))
 
 	pubkeyHex := s[0]
-	log.Println("pub ", pubkeyHex)
+	//log.Println("pub ", pubkeyHex)
 
 	privHex := s[1]
-	log.Println("privHex ", privHex)
+	//log.Println("privHex ", privHex)
 
 	return crypto.Keypair{PubKey: crypto.PubKeyFromHex(pubkeyHex), PrivKey: crypto.PrivKeyFromHex(privHex)}
 }
@@ -561,13 +561,15 @@ func runOffline(cmd string, config Configuration) {
 		fmt.Print("Enter message to sign: ")
 		msg, _ := reader.ReadString('\n')
 		msg = strings.Trim(msg, string('\n'))
-		fmt.Println(msg)
+		//fmt.Println(msg)
 		kp := ReadKeys(keysfile)
 		signature := crypto.SignMsgHash(kp, msg)
-		log.Println("signature ", signature)
+		//log.Println("signature ", signature)
 
 		sighex := hex.EncodeToString(signature.Serialize())
 		log.Println("sighex ", sighex)
+
+		//sigmap := CreateSigmap(pubk, sig)
 
 	case "createtx":
 		Createtx()
