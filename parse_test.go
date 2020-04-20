@@ -2,7 +2,6 @@ package main
 
 import (
 	"reflect"
-	"strings"
 	"testing"
 
 	"github.com/polygonledger/node/crypto"
@@ -49,10 +48,7 @@ func TestTxassemble(t *testing.T) {
 func TestReadMap(t *testing.T) {
 
 	ms := "{:mykey bla :second bar :third abc}"
-	s := parser.NewScanner(strings.NewReader(ms))
-	vs, ks := s.ReadMap()
-	t.Log(vs)
-	t.Log(ks)
+	vs, ks := parser.ReadMapP(ms)
 
 	h := []string{"bla bar abc"}
 	if reflect.DeepEqual(vs, h) {

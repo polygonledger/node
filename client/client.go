@@ -34,14 +34,13 @@ func ReadKeys(keysfile string) crypto.Keypair {
 
 	log.Println("read keys from ", keysfile)
 	dat, _ := ioutil.ReadFile(keysfile)
-	//s := strings.Split(string(dat), string("\n"))
+	s := string(dat)
+	//fmt.Println(s)
+	vs, _ := parser.ReadMapP(s)
 
-	vs, _ := parser.ReadMap(string(dat))
-
-	privHex := vs[0]
-	pubkeyHex := vs[1]
-	//log.Println("pub ", pubkeyHex)
-
+	privHex := parser.StringUnWrap(vs[0])
+	pubkeyHex := parser.StringUnWrap(vs[1])
+	log.Println("pub ", pubkeyHex)
 	//log.Println("privHex ", privHex)
 
 	return crypto.Keypair{PubKey: crypto.PubKeyFromHex(pubkeyHex), PrivKey: crypto.PrivKeyFromHex(privHex)}
@@ -54,12 +53,28 @@ func CreateKeypairFormat(privkey string, pubkey_string string, address string) s
 	return m
 }
 
+func CreatePubKeypairFormat(pubkey_string string, address string) string {
+	//pubkeys.wfe
+	//{:pubkey "024b02bea3af548db54d8db47e1607e39fe099c7804d89b6bff578d3eb609b6480" :address "P022879a34bd6"}%
+	v := []string{parser.StringWrap(pubkey_string), parser.StringWrap(address)}
+	k := []string{"pubkey", "address"}
+	m := parser.MakeMap(v, k)
+	return m
+}
+
 //write keys to file with format
 func WriteKeys(kp crypto.Keypair, keysfile string) {
 	pubkeyHex := crypto.PubKeyToHex(kp.PubKey)
 	privHex := crypto.PrivKeyToHex(kp.PrivKey)
 	address := crypto.Address(pubkeyHex)
 	s := CreateKeypairFormat(privHex, pubkeyHex, address)
+	ioutil.WriteFile(keysfile, []byte(s), 0644)
+}
+
+func WritePubKeys(kp crypto.Keypair, keysfile string) {
+	pubkeyHex := crypto.PubKeyToHex(kp.PubKey)
+	address := crypto.Address(pubkeyHex)
+	s := CreatePubKeypairFormat(pubkeyHex, address)
 	ioutil.WriteFile(keysfile, []byte(s), 0644)
 }
 
@@ -79,6 +94,8 @@ func CreateKeys() {
 	kp := crypto.PairFromSecret(pw)
 
 	WriteKeys(kp, keysfile)
+
+	WritePubKeys(kp, "pubkeys.wfe")
 
 }
 
@@ -569,7 +586,7 @@ func runOffline(cmd string, config Configuration) {
 		//log.Println("signature ", signature)
 
 		sighex := hex.EncodeToString(signature.Serialize())
-		log.Println("sighex ", sighex)
+		log.Println("signature as hex ", sighex)
 
 		//sigmap := CreateSigmap(pubk, sig)
 
@@ -708,8 +725,8 @@ func testclient_subscribe() {
 //run client based on cmds
 func main() {
 
-	kp := ReadKeys(keysfile)
-	fmt.Println(kp)
+	//kp := ReadKeys(keysfile)
+	//fmt.Println("=> ", kp)
 
 	config := getConfig()
 

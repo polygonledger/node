@@ -102,7 +102,7 @@ func isMapEnd(ch rune) bool {
 }
 
 func isIdent(ch rune) bool {
-	return isLetter(ch) || isDigit(ch) || ch == '_'
+	return isLetter(ch) || isDigit(ch) || ch == '_' || ch == '"'
 }
 
 func isVectorStart(ch rune) bool {
@@ -297,8 +297,6 @@ func (s *Scanner) ReadMap() ([]string, []string) {
 	var vs []string
 	var ks []string
 
-	// Read every character into the buffer
-	// Non-ident characters and EOF will cause the loop to exit
 	for {
 		ch := s.read()
 
@@ -308,20 +306,24 @@ func (s *Scanner) ReadMap() ([]string, []string) {
 
 		} else if isMapStart(ch) {
 
+		} else if isWhitespace(ch) {
+
 		} else if isKeyword(ch) {
-			//fmt.Println("keyword")
 			_, idtlit := s.scanIdent()
 			ks = append(ks, idtlit)
-		} else if isWhitespace(ch) {
-			//fmt.Println("ws ", string(ch))
 		} else {
 			_, vlit := s.scanIdent()
 			vlit = string(ch) + vlit
-			//fmt.Println("value ", vlit)
 			vs = append(vs, vlit)
 		}
 	}
 
+	return vs, ks
+}
+
+func ReadMapP(s string) ([]string, []string) {
+	sc := NewScanner(strings.NewReader(s))
+	vs, ks := sc.ReadMap()
 	return vs, ks
 }
 

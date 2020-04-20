@@ -15,6 +15,9 @@ import (
 func StringWrap(s string) string {
 	return "\"" + s + "\""
 }
+func StringUnWrap(s string) string {
+	return s[1 : len(s)-1]
+}
 
 func MakeKeyword(k string) string {
 	return ":" + k
