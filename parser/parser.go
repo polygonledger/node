@@ -339,10 +339,9 @@ func verifyTx(txmap string, sighex string, pubhex string) bool {
 }
 
 func CreateSigmap(pubkey_string string, txsighex string) string {
-	v := []string{StringWrap(pubkey_string), StringWrap(txsighex)}
-	k := []string{"senderPubkey", "signature"}
-	m := MakeMapArr(v, k)
-	return m
+	m := map[string]string{"senderPubkey": StringWrap(pubkey_string), "signature": StringWrap(txsighex)}
+	ms := MakeMap(m)
+	return ms
 }
 
 func SignMap(keypair crypto.Keypair, msg string) string {
@@ -392,7 +391,6 @@ func ScanScript(inputVector string) (string, string) {
 		//remove leading whitespace between vector elements
 		//sigmap = sigmap[1:]
 
-		//verifySigmap(sigmap, txmap)
 		return sigmap, txmap
 
 	}

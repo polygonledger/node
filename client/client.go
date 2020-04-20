@@ -35,30 +35,24 @@ func ReadKeys(keysfile string) crypto.Keypair {
 	log.Println("read keys from ", keysfile)
 	dat, _ := ioutil.ReadFile(keysfile)
 	s := string(dat)
-	//fmt.Println(s)
 	vs, _ := parser.ReadMapP(s)
 
 	privHex := parser.StringUnWrap(vs[0])
 	pubkeyHex := parser.StringUnWrap(vs[1])
 	log.Println("pub ", pubkeyHex)
-	//log.Println("privHex ", privHex)
 
 	return crypto.Keypair{PubKey: crypto.PubKeyFromHex(pubkeyHex), PrivKey: crypto.PrivKeyFromHex(privHex)}
 }
 
 func CreateKeypairFormat(privkey string, pubkey_string string, address string) string {
-	v := []string{parser.StringWrap(privkey), parser.StringWrap(pubkey_string), parser.StringWrap(address)}
-	k := []string{"privkey", "pubkey", "address"}
-	m := parser.MakeMap(v, k)
+	mp := map[string]string{"privkey": parser.StringWrap(privkey), "pubkey": parser.StringWrap(pubkey_string), "address": parser.StringWrap(address)}
+	m := parser.MakeMap(mp)
 	return m
 }
 
 func CreatePubKeypairFormat(pubkey_string string, address string) string {
-	//pubkeys.wfe
-	//{:pubkey "024b02bea3af548db54d8db47e1607e39fe099c7804d89b6bff578d3eb609b6480" :address "P022879a34bd6"}%
-	v := []string{parser.StringWrap(pubkey_string), parser.StringWrap(address)}
-	k := []string{"pubkey", "address"}
-	m := parser.MakeMap(v, k)
+	mp := map[string]string{"pubkey": parser.StringWrap(pubkey_string), "address": parser.StringWrap(address)}
+	m := parser.MakeMap(mp)
 	return m
 }
 

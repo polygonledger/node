@@ -36,19 +36,6 @@ func MakeVector(vectorels []string) string {
 	return vs
 }
 
-func MakeMapArr(els []string, keys []string) string {
-	vs := `{`
-	for i, s := range els {
-		k := keys[i]
-		vs += ":" + k + " " + s
-		if i < len(els)-1 {
-			vs += " "
-		}
-	}
-	vs += `}`
-	return vs
-}
-
 func MakeMap(m map[string]string) string {
 	vs := `{`
 	i := 0
