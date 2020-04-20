@@ -2,6 +2,7 @@ package parser
 
 import (
 	"fmt"
+	"sort"
 	"strings"
 )
 
@@ -35,7 +36,7 @@ func MakeVector(vectorels []string) string {
 	return vs
 }
 
-func MakeMap(els []string, keys []string) string {
+func MakeMapArr(els []string, keys []string) string {
 	vs := `{`
 	for i, s := range els {
 		k := keys[i]
@@ -43,6 +44,28 @@ func MakeMap(els []string, keys []string) string {
 		if i < len(els)-1 {
 			vs += " "
 		}
+	}
+	vs += `}`
+	return vs
+}
+
+func MakeMap(m map[string]string) string {
+	vs := `{`
+	i := 0
+
+	keys := make([]string, 0)
+	for k, _ := range m {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+
+	for _, k := range keys {
+		value := m[k]
+		vs += ":" + k + " " + value
+		if i < len(m)-1 {
+			vs += " "
+		}
+		i++
 	}
 	vs += `}`
 	return vs

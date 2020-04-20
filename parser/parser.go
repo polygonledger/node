@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"bytes"
 	"encoding/hex"
-	"fmt"
 	"io"
 	"strconv"
 	"strings"
@@ -134,7 +133,6 @@ func (s *Scanner) Scan() (tok Token, lit string) {
 
 	// If we see whitespace then consume all contiguous whitespace.
 	// If we see a letter then consume as an ident or reserved word.
-	//fmt.Println(">> ", ch)
 
 	if isWhitespace(ch) {
 		// 	s.unread()
@@ -154,7 +152,6 @@ func (s *Scanner) Scan() (tok Token, lit string) {
 	// }
 
 	// // Otherwise read the individual character.
-	// //fmt.Println("switch ", ch)
 	switch ch {
 	case eof:
 		return EOF, ""
@@ -165,7 +162,6 @@ func (s *Scanner) Scan() (tok Token, lit string) {
 
 // scanWhitespace consumes the current rune and all contiguous whitespace
 func (s *Scanner) scanWhitespace() (tok Token, lit string) {
-	fmt.Println("scan whitespace")
 	// Create a buffer and read the current character into it.
 	var buf bytes.Buffer
 	buf.WriteRune(s.read())
@@ -240,24 +236,19 @@ func (s *Scanner) scanFirstKey() (tok Token, lit string) {
 	firstKey := false
 
 	for tok, lit := s.Scan(); !firstKey; tok, lit = s.Scan() {
-		//fmt.Println("!! ", lit, "   ", tok)
 		if tok == OPENVECTOR {
-			fmt.Println("open vector")
 		}
 
 		if tok == KEYWORD {
 			firstKey = true
 
 			idt, idtlit := s.scanIdent()
-			//fmt.Println(">>> ", idt)
 			if idtlit == STX {
-				//fmt.Println("simple transaction")
 				return SIMPLETX, idtlit
 			}
 			idt += 0
 		}
 		lit += ""
-		//fmt.Println(lit)
 	}
 
 	return ILLEGAL, ""
@@ -269,24 +260,19 @@ func (s *Scanner) scanSimpletx() (tok Token, lit string) {
 	firstKey := false
 
 	for tok, lit := s.Scan(); !firstKey; tok, lit = s.Scan() {
-		//fmt.Println(">>> ", lit, "   ", tok)
 		if tok == OPENMAP {
-			fmt.Println("open map")
 		}
 
 		if tok == KEYWORD {
 			firstKey = true
 
 			idt, idtlit := s.scanIdent()
-			//fmt.Println(">>> ", idt)
 			if idtlit == STX {
-				//fmt.Println("simple transaction")
 				return SIMPLETX, idtlit
 			}
 			idt += 0
 		}
 		lit += ""
-		//fmt.Println(lit)
 	}
 
 	return ILLEGAL, ""
@@ -345,17 +331,17 @@ func (s *Scanner) scanRest() (rest string) {
 	return buf.String()
 }
 
-func verifyTx(txmap string, sighex string, pubhex string) {
+func verifyTx(txmap string, sighex string, pubhex string) bool {
 	s1 := crypto.SignatureFromHex(sighex)
 	p1 := crypto.PubKeyFromHex(pubhex)
 	verified := crypto.VerifyMessageSignPub(s1, p1, txmap)
-	fmt.Println(verified)
+	return verified
 }
 
 func CreateSigmap(pubkey_string string, txsighex string) string {
 	v := []string{StringWrap(pubkey_string), StringWrap(txsighex)}
-	k := []string{"SenderPubkey", "Signature"}
-	m := MakeMap(v, k)
+	k := []string{"senderPubkey", "signature"}
+	m := MakeMapArr(v, k)
 	return m
 }
 
@@ -373,7 +359,6 @@ func VerifySigmap(sigmap string, txmap string) bool {
 	s1 := crypto.SignatureFromHex(txsig.Signature)
 	p1 := crypto.PubKeyFromHex(txsig.SenderPubkey)
 	verified := crypto.VerifyMessageSignPub(s1, p1, txmap)
-	fmt.Println("verified => ", verified)
 	return verified
 }
 
@@ -396,7 +381,6 @@ func ScanScript(inputVector string) (string, string) {
 	if ftok == SIMPLETX {
 		//s.scanWhitespace()
 		_, txmap := s.scanMap()
-		fmt.Println("tx content => ", txmap)
 
 		// var tx block.Tx
 		// edn.Unmarshal([]byte(txmap), &tx)
@@ -405,7 +389,6 @@ func ScanScript(inputVector string) (string, string) {
 		//log.Println("sender ", tx.Sender)
 
 		_, sigmap := s.scanMap()
-		//fmt.Println("sigmap => ", sigmap)
 		//remove leading whitespace between vector elements
 		//sigmap = sigmap[1:]
 
@@ -415,6 +398,16 @@ func ScanScript(inputVector string) (string, string) {
 	}
 	return "", ""
 }
+
+//TODO
+// func MakeBlockStr(txs []string, pubk string) string {
+
+// 	txstr := MakeVector(txs)
+// 	k := []string{"txs", "pubkey"}
+// 	v := []string{txstr, pubk}
+// 	txmap := MakeMap(k, v)
+// 	return txmap
+// }
 
 //verify signature
 //independent of balance check
@@ -426,8 +419,10 @@ func VerifyTxScriptSig(v string) bool {
 }
 
 func CreateSimpleTxContent(sender string, receiver string, amount int) string {
-	v := []string{StringWrap(sender), StringWrap(receiver), strconv.Itoa(amount)}
-	k := []string{"Sender", "Receiver", "amount"}
-	txmap := MakeMap(v, k)
+	m := map[string]string{"sender": StringWrap(sender), "receiver": StringWrap(receiver), "amount": strconv.Itoa(amount)}
+
+	//m := map[string]string{}
+
+	txmap := MakeMap(m)
 	return txmap
 }
