@@ -46,7 +46,7 @@ func MakeMap(els []string, keys []string) string {
 }
 
 //read map and return keys and values as strings
-func ReadMap(mapstr string) ([]string, []string) {
+func ReadMap1(mapstr string) ([]string, []string) {
 
 	var vs []string
 	var ks []string

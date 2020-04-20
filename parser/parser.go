@@ -69,6 +69,9 @@ var eof = rune(0)
 //transaction types keyword
 const STX = "STX"
 
+//SCRIPT
+//CONTRACT
+
 // Scanner represents a lexical scanner.
 type Scanner struct {
 	r *bufio.Reader
@@ -96,6 +99,10 @@ func isMapStart(ch rune) bool {
 
 func isMapEnd(ch rune) bool {
 	return ch == '}'
+}
+
+func isIdent(ch rune) bool {
+	return isLetter(ch) || isDigit(ch) || ch == '_'
 }
 
 func isVectorStart(ch rune) bool {
@@ -156,15 +163,15 @@ func (s *Scanner) Scan() (tok Token, lit string) {
 	return ILLEGAL, string(ch)
 }
 
-// scanWhitespace consumes the current rune and all contiguous whitespace.
+// scanWhitespace consumes the current rune and all contiguous whitespace
 func (s *Scanner) scanWhitespace() (tok Token, lit string) {
 	fmt.Println("scan whitespace")
 	// Create a buffer and read the current character into it.
 	var buf bytes.Buffer
 	buf.WriteRune(s.read())
 
-	// Read every subsequent whitespace character into the buffer.
-	// Non-whitespace characters and EOF will cause the loop to exit.
+	// Read every subsequent whitespace character into the buffer
+	// Non-whitespace characters and EOF will cause the loop to exit
 	for {
 		if ch := s.read(); ch == eof {
 			break
@@ -179,18 +186,19 @@ func (s *Scanner) scanWhitespace() (tok Token, lit string) {
 	return WS, buf.String()
 }
 
-// scan identifier consumes the current rune and all contiguous ident runes.
+// scan identifier consumes the current rune and all contiguous ident runes
 func (s *Scanner) scanIdent() (tok Token, lit string) {
-	// Create a buffer and read the current character into it.
+	// Create a buffer and read the current character into it
 	var buf bytes.Buffer
-	buf.WriteRune(s.read())
+	//buf.WriteRune(s.read())
 
-	// Read every subsequent ident character into the buffer.
-	// Non-ident characters and EOF will cause the loop to exit.
+	// Read every subsequent ident character into the buffer
+	// Non-ident characters and EOF will cause the loop to exit
 	for {
-		if ch := s.read(); ch == eof {
+		ch := s.read()
+		if ch == eof {
 			break
-		} else if !isLetter(ch) && !isDigit(ch) && ch != '_' {
+		} else if !isIdent(ch) {
 			s.unread()
 			break
 		} else {
@@ -282,6 +290,39 @@ func (s *Scanner) scanSimpletx() (tok Token, lit string) {
 	}
 
 	return ILLEGAL, ""
+}
+
+func (s *Scanner) ReadMap() ([]string, []string) {
+
+	var vs []string
+	var ks []string
+
+	// Read every character into the buffer
+	// Non-ident characters and EOF will cause the loop to exit
+	for {
+		ch := s.read()
+
+		if ch == eof {
+			break
+		} else if isMapEnd(ch) {
+
+		} else if isMapStart(ch) {
+
+		} else if isKeyword(ch) {
+			//fmt.Println("keyword")
+			_, idtlit := s.scanIdent()
+			ks = append(ks, idtlit)
+		} else if isWhitespace(ch) {
+			//fmt.Println("ws ", string(ch))
+		} else {
+			_, vlit := s.scanIdent()
+			vlit = string(ch) + vlit
+			//fmt.Println("value ", vlit)
+			vs = append(vs, vlit)
+		}
+	}
+
+	return vs, ks
 }
 
 func (s *Scanner) scanRest() (rest string) {
