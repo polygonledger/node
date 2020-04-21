@@ -15,6 +15,7 @@ import (
 	"net"
 	"net/http"
 	"os"
+	"os/signal"
 	"strconv"
 	"time"
 
@@ -572,8 +573,9 @@ func runNode(t *TCPNode) {
 
 	//setupLogfile()
 	log.Println("run node")
+	t.log(fmt.Sprintf("run node"))
 
-	t.log(fmt.Sprintf("run node %d", t.Config.NodePort))
+	t.log(fmt.Sprintf("run node on port: %d", t.Config.NodePort))
 
 	// 	//if file exists read the chain
 
@@ -658,7 +660,7 @@ func runAll(config Configuration) {
 	//TODO signatures of genesis
 	node.Mgr.InitAccounts()
 
-	node.initSyncChain(config)
+	//node.initSyncChain(config)
 
 	if err != nil {
 		node.log(fmt.Sprintf("error creating TCP server"))
@@ -676,8 +678,10 @@ func runAll(config Configuration) {
 	// 	}()
 	// }
 
+	log.Println("run node")
 	go runNode(node)
 
+	log.Println("run web")
 	go runWeb(node)
 
 }
@@ -721,12 +725,12 @@ func runNodeAll() {
 	log.Println("DelegateName ", config.DelegateName)
 	log.Println("CreateGenesis ", config.CreateGenesis)
 
-	// quit := make(chan os.Signal)
-	// signal.Notify(quit, os.Interrupt)
+	quit := make(chan os.Signal)
+	signal.Notify(quit, os.Interrupt)
 
 	go runAll(config)
 
-	// <-quit
+	<-quit
 	// log.Println("Got quit signal: shutdown node ...")
 	// signal.Reset(os.Interrupt)
 
