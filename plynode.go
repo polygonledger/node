@@ -15,7 +15,6 @@ import (
 	"net"
 	"net/http"
 	"os"
-	"os/signal"
 	"strconv"
 	"time"
 
@@ -572,6 +571,7 @@ func (t *TCPNode) setupLogfile() {
 func runNode(t *TCPNode) {
 
 	//setupLogfile()
+	log.Println("run node")
 
 	t.log(fmt.Sprintf("run node %d", t.Config.NodePort))
 
@@ -605,15 +605,6 @@ func LoadConfiguration(file string) Configuration {
 	jsonParser := json.NewDecoder(configFile)
 	jsonParser.Decode(&config)
 	return config
-}
-
-func pubexample() {
-
-	// go ntcl.PublishTime(ntchan)
-	// go PubWriterLoop(ntchan)
-	// go ntcl.WriteLoop(ntchan, 100*time.Millisecond)
-
-	// time.Sleep(2000 * time.Millisecond)
 }
 
 //init sync or load of blocks
@@ -652,6 +643,8 @@ func (t *TCPNode) initSyncChain(config Configuration) {
 
 func runAll(config Configuration) {
 
+	log.Println("runNodeAll with config ", config)
+
 	node, err := NewNode()
 	node.Config = config
 	node.addr = ":" + strconv.Itoa(node.Config.NodePort)
@@ -673,15 +666,15 @@ func runAll(config Configuration) {
 	}
 
 	//TODO! this will be intrement sync, not get full chain after the init sync
-	if !config.CreateGenesis {
-		go func() {
-			for {
-				log.Println("fetch blocks loop")
-				FetchAllBlocks(config, node)
-				time.Sleep(10000 * time.Millisecond)
-			}
-		}()
-	}
+	// if !config.CreateGenesis {
+	// 	go func() {
+	// 		for {
+	// 			log.Println("fetch blocks loop")
+	// 			FetchAllBlocks(config, node)
+	// 			time.Sleep(10000 * time.Millisecond)
+	// 		}
+	// 	}()
+	// }
 
 	go runNode(node)
 
@@ -724,17 +717,18 @@ func runNodeAll() {
 
 	//config := LoadConfiguration(conffile)
 	config := getConf()
+	log.Println(config)
 	log.Println("DelegateName ", config.DelegateName)
 	log.Println("CreateGenesis ", config.CreateGenesis)
 
-	quit := make(chan os.Signal)
-	signal.Notify(quit, os.Interrupt)
+	// quit := make(chan os.Signal)
+	// signal.Notify(quit, os.Interrupt)
 
 	go runAll(config)
 
-	<-quit
-	log.Println("Got quit signal: shutdown node ...")
-	signal.Reset(os.Interrupt)
+	// <-quit
+	// log.Println("Got quit signal: shutdown node ...")
+	// signal.Reset(os.Interrupt)
 
 	log.Println("node exiting")
 
@@ -742,34 +736,7 @@ func runNodeAll() {
 
 }
 
-func signExample() {
-
-	log.Println("transaction sign")
-	data := `{:TxType "test",
-			  :Sender "abc",
-			  :Receiver "xyz",
-		      :amount 42,
-			  :nonce 1}`
-
-	var tx block.Tx
-	edn.Unmarshal([]byte(data), &tx)
-	log.Println(tx)
-
-	keypair := crypto.PairFromSecret("test")
-	message := data
-
-	signature := crypto.SignMsgHash(keypair, message)
-	//verified := crypto.VerifyMessageSign(signature, keypair, message)
-	log.Println(crypto.SignatureToHex(signature))
-
-	resign := crypto.SignatureFromHex(crypto.SignatureToHex(signature))
-	log.Println(signature)
-	log.Println(resign)
-
-}
-
 func main() {
 
-	signExample()
-	//runNodeAll
+	runNodeAll()
 }

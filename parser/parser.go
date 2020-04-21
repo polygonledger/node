@@ -71,6 +71,24 @@ const STX = "STX"
 //SCRIPT
 //CONTRACT
 
+func CreateSimpleTxContent(sender string, receiver string, amount int) string {
+	m := map[string]string{"sender": StringWrap(sender), "receiver": StringWrap(receiver), "amount": strconv.Itoa(amount)}
+	txmap := MakeMap(m)
+	return txmap
+}
+
+func CreateSigmap(pubkey_string string, txsighex string) string {
+	m := map[string]string{"senderPubkey": StringWrap(pubkey_string), "signature": StringWrap(txsighex)}
+	ms := MakeMap(m)
+	return ms
+}
+
+func CreateBlockmap(txs string, txsighex string) string {
+	m := map[string]string{"txs": txs, "signature": StringWrap(txsighex)}
+	ms := MakeMap(m)
+	return ms
+}
+
 // Scanner represents a lexical scanner.
 type Scanner struct {
 	r *bufio.Reader
@@ -331,36 +349,6 @@ func (s *Scanner) scanRest() (rest string) {
 	return buf.String()
 }
 
-func verifyTx(txmap string, sighex string, pubhex string) bool {
-	s1 := crypto.SignatureFromHex(sighex)
-	p1 := crypto.PubKeyFromHex(pubhex)
-	verified := crypto.VerifyMessageSignPub(s1, p1, txmap)
-	return verified
-}
-
-func CreateSigmap(pubkey_string string, txsighex string) string {
-	m := map[string]string{"senderPubkey": StringWrap(pubkey_string), "signature": StringWrap(txsighex)}
-	ms := MakeMap(m)
-	return ms
-}
-
-func SignMap(keypair crypto.Keypair, msg string) string {
-	txsig := crypto.SignMsgHash(keypair, msg)
-	txsighex := hex.EncodeToString(txsig.Serialize())
-	pubkey_string := crypto.PubKeyToHex(keypair.PubKey)
-	sigmap := CreateSigmap(pubkey_string, txsighex)
-	return sigmap
-}
-
-func VerifySigmap(sigmap string, txmap string) bool {
-	var txsig block.TxSig
-	edn.Unmarshal([]byte(sigmap), &txsig)
-	s1 := crypto.SignatureFromHex(txsig.Signature)
-	p1 := crypto.PubKeyFromHex(txsig.SenderPubkey)
-	verified := crypto.VerifyMessageSignPub(s1, p1, txmap)
-	return verified
-}
-
 //create the vector from tx and sig data
 func TxVector(simpletx string, sigmap string) string {
 	vs := []string{MakeKeyword(STX), simpletx, sigmap}
@@ -397,15 +385,29 @@ func ScanScript(inputVector string) (string, string) {
 	return "", ""
 }
 
-//TODO
-// func MakeBlockStr(txs []string, pubk string) string {
+func verifyTx(txmap string, sighex string, pubhex string) bool {
+	s1 := crypto.SignatureFromHex(sighex)
+	p1 := crypto.PubKeyFromHex(pubhex)
+	verified := crypto.VerifyMessageSignPub(s1, p1, txmap)
+	return verified
+}
 
-// 	txstr := MakeVector(txs)
-// 	k := []string{"txs", "pubkey"}
-// 	v := []string{txstr, pubk}
-// 	txmap := MakeMap(k, v)
-// 	return txmap
-// }
+func SignMap(keypair crypto.Keypair, msg string) string {
+	txsig := crypto.SignMsgHash(keypair, msg)
+	txsighex := hex.EncodeToString(txsig.Serialize())
+	pubkey_string := crypto.PubKeyToHex(keypair.PubKey)
+	sigmap := CreateSigmap(pubkey_string, txsighex)
+	return sigmap
+}
+
+func VerifySigmap(sigmap string, txmap string) bool {
+	var txsig block.TxSig
+	edn.Unmarshal([]byte(sigmap), &txsig)
+	s1 := crypto.SignatureFromHex(txsig.Signature)
+	p1 := crypto.PubKeyFromHex(txsig.SenderPubkey)
+	verified := crypto.VerifyMessageSignPub(s1, p1, txmap)
+	return verified
+}
 
 //verify signature
 //independent of balance check
@@ -416,11 +418,12 @@ func VerifyTxScriptSig(v string) bool {
 	return valid
 }
 
-func CreateSimpleTxContent(sender string, receiver string, amount int) string {
-	m := map[string]string{"sender": StringWrap(sender), "receiver": StringWrap(receiver), "amount": strconv.Itoa(amount)}
+//TODO
+// func MakeBlockStr(txs []string, pubk string) string {
 
-	//m := map[string]string{}
-
-	txmap := MakeMap(m)
-	return txmap
-}
+// 	txstr := MakeVector(txs)
+// 	k := []string{"txs", "pubkey"}
+// 	v := []string{txstr, pubk}
+// 	txmap := MakeMap(k, v)
+// 	return txmap
+// }
