@@ -67,7 +67,7 @@ func WriteKeys(kp crypto.Keypair, keysfile string) {
 
 func WritePubKeys(kp crypto.Keypair, keysfile string) {
 	pubkeyHex := crypto.PubKeyToHex(kp.PubKey)
-	address := crypto.Address(pubkeyHex)mp := map[string]string{"privkey": parser.StringWrap(privkey), "pubkey": parser.StringWrap(pubkey_string), "address": parser.StringWrap(address)}mp := map[string]string{"privkey": parser.StringWrap(privkey), "pubkey": parser.StringWrap(pubkey_string), "address": parser.StringWrap(address)}
+	address := crypto.Address(pubkeyHex)
 	s := CreatePubKeypairFormat(pubkeyHex, address)
 	ioutil.WriteFile(keysfile, []byte(s), 0644)
 }

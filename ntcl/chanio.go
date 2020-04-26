@@ -96,28 +96,6 @@ func ConnNtchanStub(name string) Ntchan {
 }
 
 //all major processes to operate
-func NetConnectorSetupEcho(ntchan Ntchan) {
-
-	// read_loop_time := 800 * time.Millisecond
-	// read_time_chan := 300 * time.Millisecond
-	// write_loop_time := 300 * time.Millisecond
-
-	//reads from the actual "physical" network
-	go ReadLoop(ntchan)
-	//process of reads
-	//go ReadProcessor(ntchan)
-	//processor of REQ_out REP_out
-	//go WriteProcessor(ntchan)
-	//write to network whatever is in writer queue
-	go ProcessorEchoMock(ntchan)
-
-	go WriteLoop(ntchan, 300*time.Millisecond)
-
-	//TODO
-	//go WriteProducer(ntchan)
-}
-
-//all major processes to operate
 func NetConnectorSetup(ntchan Ntchan) {
 
 	// read_loop_time := 800 * time.Millisecond
@@ -145,7 +123,7 @@ func ReadLoop(ntchan Ntchan) {
 	for {
 		//read from network and put in channel
 		vlog(ntchan, "iter ReadLoop "+ntchan.SrcName+" "+ntchan.DestName)
-		msg, err := MsgRead(ntchan)
+		msg, err := NetMsgRead(ntchan)
 		if err != nil {
 
 		}
@@ -168,17 +146,6 @@ func ReadLoop(ntchan Ntchan) {
 //only output the message read
 func ProcessorEchoMock(ntchan Ntchan) {
 
-	for {
-		logmsgd(ntchan, "ReadProcessor", "loop")
-		msgString := <-ntchan.Reader_queue
-
-		//echo back
-		//msg := <-ntchan.Writer_queue
-		//vlog(ntchan, "writeloop "+msg)
-		NetWrite(ntchan, msgString)
-
-		logmsgc(ntchan, ntchan.SrcName, "ReadProcessor", msgString) //, ntchan.Reader_processed)
-	}
 }
 
 //read from reader queue and process by forwarding to right channel
@@ -298,4 +265,35 @@ func PubWriterLoop(ntchan Ntchan) {
 
 	}
 
+}
+
+//simple echo net
+func NetConnectorSetupEcho(ntchan Ntchan) {
+
+	//read loop
+	go func() {
+		d := 300 * time.Millisecond
+		for {
+			//vlog(ntchan, "iter ReadLoop "+ntchan.SrcName+" "+ntchan.DestName)
+			msg, _ := NetMsgRead(ntchan)
+			//currently can be empty or len, shoudl fix one style
+			if len(msg) > 0 { //&& msg != EMPTY_MSG {
+				vlog(ntchan, "ntwk read => "+msg)
+				logmsgc(ntchan, ntchan.SrcName, "ReadLoop", msg)
+				vlog(ntchan, "put on Reader queue "+msg)
+				reply := "echo >>> " + msg
+				ntchan.Reader_queue <- reply
+			}
+
+			time.Sleep(d)
+		}
+	}()
+
+	//echo back
+	go func() {
+		for {
+			msgString := <-ntchan.Reader_queue
+			NetWrite(ntchan, msgString)
+		}
+	}()
 }

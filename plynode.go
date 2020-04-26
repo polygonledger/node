@@ -132,7 +132,8 @@ func (t *TCPNode) HandleConnect() {
 		p := ntcl.Peer{Address: strRemoteAddr, NodePort: t.NodePort, NTchan: ntchan}
 		t.Peers = append(t.Peers, p)
 
-		go t.handleConnection(t.Mgr, ntchan)
+		//go t.handleConnection(t.Mgr, ntchan)
+		go t.handleConnectionMock(t.Mgr, ntchan)
 
 		//conn.Close()
 
@@ -386,13 +387,36 @@ func RequestHandlerTel(t *TCPNode, ntchan ntcl.Ntchan) {
 	}
 }
 
-func (t *TCPNode) handleConnection(mgr *chain.ChainManager, ntchan ntcl.Ntchan) {
+func RequestHandlerTelOut(t *TCPNode, ntchan ntcl.Ntchan) {
+	for {
+		msg_string := <-ntchan.REQ_in
+		t.log(fmt.Sprintf("handle %s ", msg_string))
+		reply_msg := "out"
+		ntchan.REP_out <- reply_msg
+	}
+}
+
+func (t *TCPNode) handleConnectionMock(mgr *chain.ChainManager, ntchan ntcl.Ntchan) {
 	//tr := 100 * time.Millisecond
 	//defer ntchan.Conn.Close()
 	t.log(fmt.Sprintf("handleConnection"))
 
 	//ntcl.NetConnectorSetup(ntchan)
 	ntcl.NetConnectorSetupEcho(ntchan)
+
+	go RequestHandlerTelOut(t, ntchan)
+
+	//go ntcl.WriteLoop(ntchan, 100*time.Millisecond)
+
+}
+
+func (t *TCPNode) handleConnection(mgr *chain.ChainManager, ntchan ntcl.Ntchan) {
+	//tr := 100 * time.Millisecond
+	//defer ntchan.Conn.Close()
+	t.log(fmt.Sprintf("handleConnection"))
+
+	//ntcl.NetConnectorSetup(ntchan)
+	ntcl.NetConnectorSetup(ntchan)
 
 	go RequestHandlerTel(t, ntchan)
 

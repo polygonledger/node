@@ -26,7 +26,7 @@ func TestBasicCommand(t *testing.T) {
 	//ntchan.REQ_in <- msg
 	reply_msg := HandlePing(msg)
 	if reply_msg != "REP#PONG#|" {
-		t.Error(reply_msg)
+		t.Error("reply pong ", reply_msg)
 	}
 
 	ntchan := ntcl.ConnNtchanStub("")
@@ -34,8 +34,9 @@ func TestBasicCommand(t *testing.T) {
 	ntchan.REQ_in <- req_msg
 	reply := <-ntchan.REP_out
 
-	if reply != "REP#PONG#|" {
-		t.Error("reply_msg ", reply_msg)
+	//if reply != "REP#PONG#|" {
+	if reply != "out" {
+		t.Error("reply_msg ", reply)
 	}
 
 }
