@@ -285,7 +285,7 @@ func NetConnectorSetupEcho(ntchan Ntchan) {
 				ntchan.Reader_queue <- reply
 			}
 
-			time.Sleep(d)
+			time.Sleep(d)TestTxFile
 		}
 	}()
 

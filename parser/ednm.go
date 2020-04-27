@@ -44,7 +44,7 @@ func MakeMap(m map[string]string) string {
 	for k, _ := range m {
 		keys = append(keys, k)
 	}
-	sort.Strings(keys)
+	sort.Strings(keys)m
 
 	for _, k := range keys {
 		value := m[k]
