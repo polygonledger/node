@@ -21,7 +21,7 @@ func TestBasicCommand(t *testing.T) {
 	node.Loglevel = LOGLEVEL_OFF
 	node.Mgr = &mgr
 
-	req_msg := ntcl.EncodeMsgString(ntcl.REQ, ntcl.CMD_PING, ntcl.EMPTY_DATA)
+	req_msg := ntcl.EncodeMsgMap(ntcl.REQ, ntcl.CMD_PING)
 	msg := ntcl.ParseMessage(req_msg)
 	//ntchan.REQ_in <- msg
 	reply_msg := HandlePing(msg)

@@ -5,7 +5,10 @@ import (
 	"time"
 
 	"github.com/polygonledger/node/block"
+	"github.com/polygonledger/node/parser"
 )
+
+//TODO does not use edn yet
 
 //any message is defined through the delimters, no size restrictions as of now
 //MSG TYPE # CMD # DATA |
@@ -122,6 +125,14 @@ type MessageAccount struct {
 	Command     string
 	Account     block.Account
 }
+
+func EncodeMsgMap(msgType string, cmd string) string {
+	m := map[string]string{msgType: cmd}
+	msg := parser.MakeMap(m)
+	return msg
+}
+
+//////////////////////
 
 func AccountMessage(account block.Account) MessageAccount {
 	msg := MessageAccount{MessageType: REP, Command: "REP_ACCOUNT", Account: account}
