@@ -710,8 +710,8 @@ func runAll(config Configuration) {
 
 }
 
-func getConf() Configuration {
-	conffile := "conf.edn"
+func getConf(conffile string) Configuration {
+	
 	f, err := os.Open(conffile)
 	if err != nil {
 		fmt.Println(err)
@@ -736,7 +736,8 @@ func getConf() Configuration {
 
 func runNodeAll() {
 
-	conffile := "nodeconf.json"
+	conffile := "conf.edn"
+	log.Println("config file ", conffile)
 
 	if _, err := os.Stat(conffile); os.IsNotExist(err) {
 		log.Println("config file does not exist. create a file named ", conffile)
@@ -744,8 +745,8 @@ func runNodeAll() {
 	}
 
 	//config := LoadConfiguration(conffile)
-	config := getConf()
-	log.Println(config)
+	config := getConf(conffile)
+	log.Println("config ", config)
 	log.Println("DelegateName ", config.DelegateName)
 	log.Println("CreateGenesis ", config.CreateGenesis)
 
