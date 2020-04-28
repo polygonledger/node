@@ -66,43 +66,93 @@ func ReadMap1(mapstr string) ([]string, []string) {
 
 	s := NewScanner(strings.NewReader(mapstr))
 
-	ldone := false
+	//ldone := false
 
 	s.Scan() //open bracket
 
-	for !ldone {
+	//i := 0
 
-		fmt.Println(ldone)
+	for {
+		ch := s.read()
+		fmt.Println("> ", ch, " ", string(ch))	
 
-		//4 cases
-		//keyword => scanid
-		//whitespace => consume
-		//scanid => value
-		//close bracked => end
-
-		// _, kk := s.Scan() //":"
-		// switch kk {
-		// case ":":
-		// 	_, klit := s.scanIdent()
-		// 	ks = append(ks, klit)
-		// 	s.scanWhitespace()
-		// }
-
-		_, klit := s.scanIdent()
-		fmt.Println(klit)
-		ks = append(ks, klit)
-		s.scanWhitespace()
-
-		_, vlit := s.scanIdent()
-		fmt.Println(vlit)
-		vs = append(vs, vlit)
-
-		_, xlit := s.Scan() //close
-		if xlit == "}" {
-			//fmt.Println("Close map")
-			ldone = true
+		if ch == eof {
+			break
+		} else if isKeyword(ch) {
+			
 		}
 
+		if isMapEnd(ch) {
+			fmt.Println("end")
+			break
+		}
 	}
+
+	// for !ldone {
+
+	// 	fmt.Println("ldone ",ldone)
+
+	// 	//4 cases
+	// 	//keyword => scanid
+	// 	//whitespace => consume
+	// 	//scanid => value
+	// 	//close bracked => end
+
+	// 	_, kk := s.Scan() //":"
+	// 	fmt.Println("kk ",kk, len(kk),string(kk))
+	// 	if len(kk) == 0 {
+	// 		fmt.Println("!!")
+	// 		ldone = true
+	// 	}			
+	// 	switch kk {
+	// 	case ":":
+	// 		fmt.Println("keyword")
+	// 		_, klit := s.scanIdent()
+	// 		ks = append(ks, klit)
+	// 		fmt.Println(klit)
+	// 		//s.scanWhitespace()
+
+	// 	case "}":
+	// 		ldone = true
+
+	// 	case "":
+	// 		ldone = true
+
+	// 	case " ":
+	// 		fmt.Println("whitespace")
+	// 		s.scanWhitespace()
+	// 		_, vlit := s.scanIdent()
+	// 		vs = append(vs, vlit)
+
+	// 	default:
+	// 		fmt.Println("default")
+	// 		_, vlit := s.scanIdent()
+	// 		vs = append(vs, vlit)
+	// 		s.scanWhitespace()
+	// 		ldone = true
+
+	// 	}
+
+	// 	//debug
+		
+	// 	//ldone = i > 20
+	// 	i++
+
+	// 	// _, klit := s.scanIdent()
+	// 	// fmt.Println(klit)
+	// 	// ks = append(ks, klit)
+	// 	// s.scanWhitespace()
+
+	// 	// _, vlit := s.scanIdent()
+	// 	// fmt.Println(vlit)
+	// 	// vs = append(vs, vlit)
+
+	// 	// _, xlit := s.Scan() //close
+	// 	// if xlit == "}" {
+	// 	// 	//fmt.Println("Close map")
+	// 	// 	ldone = true
+	// 	// }
+
+	// }
 	return vs, ks
 }

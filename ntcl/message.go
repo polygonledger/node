@@ -5,7 +5,6 @@ import (
 	"time"
 
 	"github.com/polygonledger/node/block"
-	"github.com/polygonledger/node/parser"
 )
 
 //TODO does not use edn yet
@@ -124,12 +123,6 @@ type MessageAccount struct {
 	MessageType string
 	Command     string
 	Account     block.Account
-}
-
-func EncodeMsgMap(msgType string, cmd string) string {
-	m := map[string]string{msgType: cmd}
-	msg := parser.MakeMap(m)
-	return msg
 }
 
 //////////////////////
