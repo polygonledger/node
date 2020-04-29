@@ -1,7 +1,6 @@
 package parser
 
 import (
-	"fmt"
 	"sort"
 	"strings"
 )
@@ -59,7 +58,7 @@ func MakeMap(m map[string]string) string {
 }
 
 //read map and return keys and values as strings
-func ReadMap1(mapstr string) ([]string, []string) {
+func ReadMap(mapstr string) ([]string, []string) {
 
 	var vs []string
 	var ks []string
@@ -70,27 +69,26 @@ func ReadMap1(mapstr string) ([]string, []string) {
 
 	s.Scan() //open bracket
 
-	//i := 0
-
 	for {
 		ch := s.read()
-		fmt.Println("> ", ch, " ", string(ch))	
+		//fmt.Println("> ", ch, " ", string(ch))	
 
 		if ch == eof {
 			break
 		} else if isKeyword(ch) {
-			
+			//fmt.Println("keyword")
+			_, klit := s.scanIdent()
+	 		ks = append(ks, klit)
+		} else if isWhitespace(ch) {
+			//s.scanWhitespace()
+			_, vlit := s.scanIdent()
+	 		vs = append(vs, vlit)
 		}
-
 		if isMapEnd(ch) {
-			fmt.Println("end")
+			//fmt.Println("end")
 			break
 		}
 	}
-
-	// for !ldone {
-
-	// 	fmt.Println("ldone ",ldone)
 
 	// 	//4 cases
 	// 	//keyword => scanid
@@ -98,61 +96,5 @@ func ReadMap1(mapstr string) ([]string, []string) {
 	// 	//scanid => value
 	// 	//close bracked => end
 
-	// 	_, kk := s.Scan() //":"
-	// 	fmt.Println("kk ",kk, len(kk),string(kk))
-	// 	if len(kk) == 0 {
-	// 		fmt.Println("!!")
-	// 		ldone = true
-	// 	}			
-	// 	switch kk {
-	// 	case ":":
-	// 		fmt.Println("keyword")
-	// 		_, klit := s.scanIdent()
-	// 		ks = append(ks, klit)
-	// 		fmt.Println(klit)
-	// 		//s.scanWhitespace()
-
-	// 	case "}":
-	// 		ldone = true
-
-	// 	case "":
-	// 		ldone = true
-
-	// 	case " ":
-	// 		fmt.Println("whitespace")
-	// 		s.scanWhitespace()
-	// 		_, vlit := s.scanIdent()
-	// 		vs = append(vs, vlit)
-
-	// 	default:
-	// 		fmt.Println("default")
-	// 		_, vlit := s.scanIdent()
-	// 		vs = append(vs, vlit)
-	// 		s.scanWhitespace()
-	// 		ldone = true
-
-	// 	}
-
-	// 	//debug
-		
-	// 	//ldone = i > 20
-	// 	i++
-
-	// 	// _, klit := s.scanIdent()
-	// 	// fmt.Println(klit)
-	// 	// ks = append(ks, klit)
-	// 	// s.scanWhitespace()
-
-	// 	// _, vlit := s.scanIdent()
-	// 	// fmt.Println(vlit)
-	// 	// vs = append(vs, vlit)
-
-	// 	// _, xlit := s.Scan() //close
-	// 	// if xlit == "}" {
-	// 	// 	//fmt.Println("Close map")
-	// 	// 	ldone = true
-	// 	// }
-
-	// }
 	return vs, ks
 }

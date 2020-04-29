@@ -2,6 +2,7 @@ package main
 
 import (
 	"testing"
+	"fmt"
 
 	"github.com/polygonledger/node/parser"
 )
@@ -11,6 +12,7 @@ func TestMap(t *testing.T) {
 
 	m := map[string]string{"test": "value"}
 
+	fmt.Println("????? ")
 	mstr := parser.MakeMap(m)
 
 	if mstr != "{:test value}" {

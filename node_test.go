@@ -21,23 +21,23 @@ func TestBasicCommand(t *testing.T) {
 	node.Loglevel = LOGLEVEL_OFF
 	node.Mgr = &mgr
 
-	req_msg := ntcl.EncodeMsgMap(ntcl.REQ, ntcl.CMD_PING)
-	msg := ntcl.ParseMessage(req_msg)
-	//ntchan.REQ_in <- msg
-	reply_msg := HandlePing(msg)
-	if reply_msg != "REP#PONG#|" {
-		t.Error("reply pong ", reply_msg)
-	}
+	// req_msg := ntcl.EncodeMsgMap(ntcl.REQ, ntcl.CMD_PING)
+	// msg := ntcl.ParseMessage(req_msg)
+	// //ntchan.REQ_in <- msg
+	// reply_msg := HandlePing(msg)
+	// if reply_msg != "REP#PONG#|" {
+	// 	t.Error("reply pong ", reply_msg)
+	// }
 
-	ntchan := ntcl.ConnNtchanStub("")
-	go RequestHandlerTel(node, ntchan)
-	ntchan.REQ_in <- req_msg
-	reply := <-ntchan.REP_out
+	// ntchan := ntcl.ConnNtchanStub("")
+	// go RequestHandlerTel(node, ntchan)
+	// ntchan.REQ_in <- req_msg
+	// reply := <-ntchan.REP_out
 
-	//if reply != "REP#PONG#|" {
-	if reply != "out" {
-		t.Error("reply_msg ", reply)
-	}
+	// //if reply != "REP#PONG#|" {
+	// if reply != "out" {
+	// 	t.Error("reply_msg ", reply)
+	// }
 
 }
 
