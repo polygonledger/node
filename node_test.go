@@ -22,7 +22,6 @@ func TestBasicCommand(t *testing.T) {
 	node.Mgr = &mgr
 
 	// req_msg := ntcl.EncodeMsgMap(ntcl.REQ, ntcl.CMD_PING)
-	// msg := ntcl.ParseMessage(req_msg)
 	// //ntchan.REQ_in <- msg
 	// reply_msg := HandlePing(msg)
 	// if reply_msg != "REP#PONG#|" {
@@ -62,8 +61,8 @@ func TestBalance(t *testing.T) {
 	mgr.InitAccounts()
 	node.Mgr = &mgr
 
-	req_msg := ntcl.EncodeMsgString(ntcl.REQ, ntcl.CMD_BALANCE, "abc")
-	msg := ntcl.ParseMessage(req_msg)
+	req_msg := ntcl.EncodeMsgMapData(ntcl.REQ, ntcl.CMD_BALANCE, "abc")
+	msg := ntcl.ParseMessageMap(req_msg)
 
 	reply_msg := HandleBalance(node, msg)
 	if reply_msg != "REP#BALANCE#0|" {
@@ -77,8 +76,8 @@ func TestBalance(t *testing.T) {
 	mgr.SetAccount(ra, 10)
 
 	//log.Println(ra.AccountKey)
-	req_msg = ntcl.EncodeMsgString(ntcl.REQ, ntcl.CMD_BALANCE, ra)
-	msg = ntcl.ParseMessage(req_msg)
+	req_msg = ntcl.EncodeMsgMapData(ntcl.REQ, ntcl.CMD_BALANCE, ra)
+	msg = ntcl.ParseMessageMapData(req_msg)
 
 	reply_msg = HandleBalance(node, msg)
 	if reply_msg != "REP#BALANCE#10|" {
@@ -99,8 +98,8 @@ func TestBalance(t *testing.T) {
 // 	kp := crypto.PairFromSecret("test")
 // 	pubk := crypto.PubKeyToHex(kp.PubKey)
 // 	addr := crypto.Address(pubk)
-// 	req_msg := ntcl.EncodeMsgString(ntcl.REQ, ntcl.CMD_FAUCET, addr)
-// 	msg := ntcl.ParseMessage(req_msg)
+// 	req_msg := ntcl.EncodeMsgxx(ntcl.REQ, ntcl.CMD_FAUCET, addr)
+// 	msg := ntcl.ParseMessag(req_msg)
 
 // 	node, _ := NewNode()
 // 	//defer node.Close()
@@ -118,14 +117,14 @@ func TestBalance(t *testing.T) {
 
 // 	time.Sleep(2000 * time.Millisecond)
 
-// 	req_msg = ntcl.EncodeMsgString(ntcl.REQ, ntcl.CMD_BALANCE, addr)
-// 	msg = ntcl.ParseMessage(req_msg)
+// 	req_msg = ntcl.EncodeMEncodeMsgxx(ntcl.REQ, ntcl.CMD_BALANCE, addr)
+// 	msg = ntcl.ParseMessag(req_msg)
 
 // 	log.Println(mgr.Accounts)
 
 // 	reply_msg_string := HandleBalance(node, msg)
 // 	log.Println(reply_msg_string)
-// 	msg = ntcl.ParseMessage(reply_msg_string)
+// 	msg = ntcl.ParseMessag(reply_msg_string)
 // 	// if reply_msg_string != "REP#BALANCE#1|" {
 // 	// 	t.Error(msg)
 // 	// }
@@ -150,8 +149,8 @@ func TestBalance(t *testing.T) {
 // 	kp := crypto.PairFromSecret("test")
 // 	pubk := crypto.PubKeyToHex(kp.PubKey)
 // 	addr := crypto.Address(pubk)
-// 	req_msg := ntcl.EncodeMsgString(ntcl.REQ, ntcl.CMD_FAUCET, addr)
-// 	msg := ntcl.ParseMessage(req_msg)
+// 	req_msg := ntcl.EncodeMsgxx(ntcl.REQ, ntcl.CMD_FAUCET, addr)
+// 	msg := ntcl.ParseMessag(req_msg)
 
 // 	reply_msg := HandleFaucet(node, msg)
 // 	if reply_msg != "REP#FAUCET#ok|" {
@@ -159,10 +158,10 @@ func TestBalance(t *testing.T) {
 // 	}
 // 	chain.MakeBlock(&mgr)
 // 	time.Sleep(100 * time.Millisecond)
-// 	req_msg = ntcl.EncodeMsgString(ntcl.REQ, ntcl.CMD_BALANCE, addr)
-// 	msg = ntcl.ParseMessage(req_msg)
+// 	req_msg = ntcl.EncodeMsgxx(ntcl.REQ, ntcl.CMD_BALANCE, addr)
+// 	msg = ntcl.ParseMessag(req_msg)
 // 	reply_msg = HandleBalance(node, msg)
-// 	msg = ntcl.ParseMessage(reply_msg)
+// 	msg = ntcl.ParseMessa(reply_msg)
 
 // 	if msg.MessageType != "REP" || msg.Command != ntcl.CMD_BALANCE {
 // 		t.Error("msg ", msg)
@@ -196,7 +195,7 @@ func TestBalance(t *testing.T) {
 
 // 	txJson, _ := json.Marshal(tx)
 // 	req_msg = ntcl.EncodeMessageTx(txJson)
-// 	msg = ntcl.ParseMessage(req_msg)
+// 	msg = ntcl.ParseMessa(req_msg)
 
 // 	reply_msg = HandleTx(node, msg)
 // 	// //TODO!
@@ -207,12 +206,12 @@ func TestBalance(t *testing.T) {
 // 	chain.MakeBlock(&mgr)
 // 	time.Sleep(100 * time.Millisecond)
 
-// 	req_msg = ntcl.EncodeMsgString(ntcl.REQ, ntcl.CMD_BALANCE, addr2)
-// 	msg = ntcl.ParseMessage(req_msg)
+// 	req_msg = ntcl.EncodeMsgxx(ntcl.REQ, ntcl.CMD_BALANCE, addr2)
+// 	msg = ntcl.ParseMessae(req_msg)
 // 	reply_msg = HandleBalance(node, msg)
-// 	msg = ntcl.ParseMessage(reply_msg)
+// 	msg = ntcl.ParseMessa(reply_msg)
 // 	//if reply_msg != "REP#BALANCE#5|" {
-// 	//bal := ntcl.ParseMessageBalance(reply_msg)
+// 	//bal := ntcl.ParseMeseBalance(reply_msg)
 
 // 	if msg.MessageType != "REP" || msg.Command != ntcl.CMD_BALANCE {
 // 		t.Error("reply_msg ", reply_msg)

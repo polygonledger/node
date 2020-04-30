@@ -32,7 +32,7 @@ func initserver() *TCPNode {
 
 	go testsrv.Run()
 	//log.Println("waiting ", newpeerchan)
-	go testsrv.HandleConnect()
+	go testsrv.HandleConnectTCP()
 
 	return testsrv
 }

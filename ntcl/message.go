@@ -132,13 +132,6 @@ func AccountMessage(account block.Account) MessageAccount {
 	return msg
 }
 
-//encode a message
-func EncodeMsgString(msgType string, cmd string, data string) string {
-	//TODO types
-	msg := msgType + string(DELIM_HEAD) + cmd + string(DELIM_HEAD) + data + string(DELIM)
-	return msg
-}
-
 func EncodeMsg(msgType string, cmd string, data string) Message {
 	m := Message{MessageType: msgType, Command: cmd, Data: []byte(data)}
 	return m
@@ -147,12 +140,6 @@ func EncodeMsg(msgType string, cmd string, data string) Message {
 func EncodeMsgBytes(msgType string, cmd string, data []byte) Message {
 	m := Message{MessageType: msgType, Command: cmd, Data: data}
 	return m
-}
-
-func MsgString(m Message) string {
-	//TODO types
-	msg := m.MessageType + string(DELIM_HEAD) + m.Command + string(DELIM_HEAD) + string(m.Data) + string(DELIM)
-	return msg
 }
 
 func DecodeMsg(msg string) string {

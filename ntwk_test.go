@@ -43,7 +43,8 @@ func TestReaderin(t *testing.T) {
 
 func SimulateRequest(ntchan *ntcl.Ntchan) {
 
-	req_msg := ntcl.EncodeMsgString(ntcl.REQ, ntcl.CMD_PING, ntcl.EMPTY_DATA)
+	req_msg := ntcl.EncodeMsgMap(ntcl.REQ, ntcl.CMD_PING)
+	fmt.Println("sim ", req_msg)
 	ntchan.Reader_queue <- req_msg
 	//log.Println(len(ntchan.Reader_queue))
 	time.Sleep(100 * time.Millisecond)
@@ -73,8 +74,8 @@ func TestRequestIn(t *testing.T) {
 	}
 
 	req_in := <-ntchan.REQ_in
-	if req_in != ntcl.EncodeMsgString(ntcl.REQ, ntcl.CMD_PING, ntcl.EMPTY_DATA) {
-		t.Error("req not")
+	if req_in != ntcl.EncodeMsgMap(ntcl.REQ, ntcl.CMD_PING) {
+		t.Error("req not ?? ", req_in, ntcl.EncodeMsgMap(ntcl.REQ, ntcl.CMD_PING))
 	}
 
 	//req_in
@@ -89,8 +90,7 @@ func TestRequestOut(t *testing.T) {
 
 	ntchan := ntcl.ConnNtchanStub("")
 
-	req_out_msg := ntcl.EncodeMsgString(ntcl.REQ, ntcl.CMD_PING, ntcl.EMPTY_DATA)
-	log.Println(req_out_msg)
+	//GGreq_out_msg := ntcl.EncodeMsgMap(ntcl.REQ, ntcl.CMD_PING)
 
 	select {
 	case msg := <-ntchan.REQ_out:
@@ -211,7 +211,7 @@ func TestReaderRequest(t *testing.T) {
 
 	go ntcl.ReadProcessor(ntchan)
 
-	req_msg := ntcl.EncodeMsgString(ntcl.REQ, ntcl.CMD_PING, ntcl.EMPTY_DATA)
+	req_msg := ntcl.EncodeMsgMap(ntcl.REQ, ntcl.CMD_PING)
 
 	ntchan.Reader_queue <- req_msg
 	time.Sleep(50 * time.Millisecond)
@@ -222,7 +222,7 @@ func TestReaderRequest(t *testing.T) {
 	}
 
 	req_in := <-ntchan.REQ_in
-	if req_in != ntcl.EncodeMsgString(ntcl.REQ, ntcl.CMD_PING, ntcl.EMPTY_DATA) {
+	if req_in != ntcl.EncodeMsgMap(ntcl.REQ, ntcl.CMD_PING) {
 		t.Error("req not equal")
 	}
 
@@ -236,7 +236,7 @@ func pinghandler(ntchan ntcl.Ntchan) {
 		if req_msg == "" {
 			//<-req_msg
 		}
-		rep_msg := ntcl.EncodeMsgString(ntcl.REP, ntcl.CMD_PONG, "")
+		rep_msg := ntcl.EncodeMsgMap(ntcl.REP, ntcl.CMD_PONG)
 		ntchan.REP_out <- rep_msg
 		//log.Println("REP_out >> ", rep_msg)
 	}
@@ -251,7 +251,7 @@ func TestReaderPing(t *testing.T) {
 
 	go pinghandler(ntchan)
 
-	ntchan.REQ_in <- ntcl.EncodeMsgString(ntcl.REQ, ntcl.CMD_PING, ntcl.EMPTY_DATA)
+	ntchan.REQ_in <- ntcl.EncodeMsgMap(ntcl.REQ, ntcl.CMD_PING)
 
 	time.Sleep(50 * time.Millisecond)
 
@@ -260,7 +260,7 @@ func TestReaderPing(t *testing.T) {
 	}
 
 	x := <-ntchan.REP_out
-	if x != ntcl.EncodeMsgString(ntcl.REP, ntcl.CMD_PONG, "") {
+	if x != ntcl.EncodeMsgMap(ntcl.REP, ntcl.CMD_PONG) {
 		t.Error("not poing")
 	}
 
@@ -276,7 +276,7 @@ func TestAllPingPoingIn(t *testing.T) {
 	go ntcl.WriteProcessor(ntchan)
 	go pinghandler(ntchan)
 
-	ntchan.Reader_queue <- ntcl.EncodeMsgString(ntcl.REQ, ntcl.CMD_PING, ntcl.EMPTY_DATA)
+	ntchan.Reader_queue <- ntcl.EncodeMsgMap(ntcl.REQ, ntcl.CMD_PING)
 
 	time.Sleep(50 * time.Millisecond)
 
