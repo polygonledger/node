@@ -41,6 +41,15 @@ func TestBasicCommand(t *testing.T) {
 
 }
 
+func TestPing(t *testing.T){
+	msgs := ntcl.EncodeMsgMap(ntcl.REQ, "PING")
+	msg := ntcl.ParseMessageMap(msgs)
+	reply := HandlePing(msg)
+	if reply.MessageType != "REP" {
+		t.Error("reply type ", reply)
+	}
+}
+
 func TestBalance(t *testing.T) {
 
 	log.Println("TestBalance")

@@ -220,9 +220,14 @@ func HandleEcho(ins string) string {
 	return resp
 }
 
-func HandlePing(msg ntcl.Message) string {
-	reply_msg := ntcl.EncodeMsgString(ntcl.REP, "PONG", "")
-	return reply_msg
+func HandlePing(msg ntcl.Message) ntcl.Message {
+	validRequest := msg.MessageType == ntcl.REQ && msg.Command == "PING"
+	if !validRequest{
+		//error	
+	}
+	reply_msg := ntcl.EncodeMsgMap(ntcl.REP, "PONG")
+	m := ntcl.ParseMessageMap(reply_msg)
+	return m
 }
 
 func HandleBlockheight(t *TCPNode, msg ntcl.Message) string {

@@ -160,7 +160,7 @@ func basicPingReqProcessor(ntchan ntcl.Ntchan, t *testing.T) {
 	ntchan.REP_out <- "pong"
 }
 
-func TestPing(t *testing.T) {
+func TestPingAll(t *testing.T) {
 	log.Println("TestPing")
 
 	ntchan := ntcl.ConnNtchanStub("")
