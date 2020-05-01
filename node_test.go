@@ -40,7 +40,7 @@ func TestBasicCommand(t *testing.T) {
 
 }
 
-func TestPing(t *testing.T){
+func TestPing(t *testing.T) {
 	msgs := ntcl.EncodeMsgMap(ntcl.REQ, "PING")
 	msg := ntcl.ParseMessageMap(msgs)
 	reply := HandlePing(msg)
@@ -65,8 +65,9 @@ func TestBalance(t *testing.T) {
 	msg := ntcl.ParseMessageMap(req_msg)
 
 	reply_msg := HandleBalance(node, msg)
-	if reply_msg != "REP#BALANCE#0|" {
-		t.Error("reply_msg ", reply_msg)
+	target := "{:REP BALANCE :data 0}"
+	if reply_msg != target {
+		t.Error("reply_msg ", reply_msg, target)
 	}
 
 	//TODO with chain setup
@@ -76,11 +77,11 @@ func TestBalance(t *testing.T) {
 	mgr.SetAccount(ra, 10)
 
 	//log.Println(ra.AccountKey)
-	req_msg = ntcl.EncodeMsgMapData(ntcl.REQ, ntcl.CMD_BALANCE, ra)
-	msg = ntcl.ParseMessageMapData(req_msg)
+	req_msg_string := ntcl.EncodeMsgMapData(ntcl.REQ, ntcl.CMD_BALANCE, ra)
+	req_msg_balance := ntcl.ParseMessageMapData(req_msg_string)
 
-	reply_msg = HandleBalance(node, msg)
-	if reply_msg != "REP#BALANCE#10|" {
+	reply_msg = HandleBalance(node, req_msg_balance)
+	if reply_msg != "{:REP BALANCE :data 10}" {
 		t.Error("reply_msg ", reply_msg)
 	}
 

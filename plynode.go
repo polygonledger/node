@@ -222,7 +222,7 @@ func HandleEcho(ins string) string {
 func HandlePing(msg ntcl.Message) ntcl.Message {
 	// validRequest := msg.MessageType == ntcl.REQ && msg.Command == "PING"
 	// if !validRequest{
-	// 	//error	
+	// 	//error
 	// }
 	reply_msg := ntcl.EncodeMsgMap(ntcl.REP, "PONG")
 	m := ntcl.ParseMessageMap(reply_msg)
@@ -250,6 +250,7 @@ func HandleBalance(t *TCPNode, msg ntcl.Message) string {
 	// }
 
 	a := string(msg.Data)
+	fmt.Println("!! balance for ", a, msg)
 	balance := t.Mgr.Accounts[a]
 
 	//s := strconv.Itoa(balance)
@@ -307,7 +308,6 @@ func HandleTx(t *TCPNode, msg ntcl.Message) string {
 	return reply
 }
 
-
 //handle requests in telnet style i.e. string encoding
 func RequestHandlerTel(t *TCPNode, ntchan ntcl.Ntchan) {
 	for {
@@ -317,7 +317,7 @@ func RequestHandlerTel(t *TCPNode, ntchan ntcl.Ntchan) {
 		msg := ntcl.ParseMessageMap(msg_string)
 
 		var reply_msg string
-		//var reply_msg ntcl.Message 
+		//var reply_msg ntcl.Message
 
 		t.log(fmt.Sprintf("Handle %v", msg.Command))
 
@@ -326,7 +326,6 @@ func RequestHandlerTel(t *TCPNode, ntchan ntcl.Ntchan) {
 		case ntcl.CMD_PING:
 			reply := HandlePing(msg)
 			reply_msg = ntcl.EncodeMsgMapS(reply)
-
 
 		case ntcl.CMD_BALANCE:
 			reply_msg = HandleBalance(t, msg)
@@ -392,8 +391,6 @@ func RequestHandlerTel(t *TCPNode, ntchan ntcl.Ntchan) {
 
 	}
 }
-
-
 
 func (t *TCPNode) handleConnection(mgr *chain.ChainManager, ntchan ntcl.Ntchan) {
 	//tr := 100 * time.Millisecond
@@ -696,7 +693,7 @@ func runAll(config Configuration) {
 }
 
 func getConf(conffile string) Configuration {
-	
+
 	f, err := os.Open(conffile)
 	if err != nil {
 		fmt.Println(err)

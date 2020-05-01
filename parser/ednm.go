@@ -65,28 +65,37 @@ func ReadMap(mapstr string) ([]string, []string) {
 
 	s := NewScanner(strings.NewReader(mapstr))
 
+	//fmt.Println("read ", mapstr)
+
 	//ldone := false
 
-	s.Scan() //open bracket
+	//s.Scan() //open bracket
+
+	expectvalue := false
 
 	for {
 		ch := s.read()
-		//fmt.Println("> ", ch, " ", string(ch))	
+		//fmt.Println("> ", ch, " ", string(ch))
 
 		if ch == eof {
 			break
 		} else if isKeyword(ch) {
-			//fmt.Println("keyword")
 			_, klit := s.scanIdent()
-	 		ks = append(ks, klit)
+			//fmt.Println("keyword ", klit)
+			ks = append(ks, klit)
+			expectvalue = true
 		} else if isWhitespace(ch) {
-			//s.scanWhitespace()
-			_, vlit := s.scanIdent()
-	 		vs = append(vs, vlit)
-		}
-		if isMapEnd(ch) {
+			if expectvalue {
+				_, vlit := s.scanIdent()
+				//fmt.Println("value ", vlit)
+				vs = append(vs, vlit)
+				expectvalue = false
+			}
+		} else if isMapEnd(ch) {
 			//fmt.Println("end")
 			break
+		} else if isMapStart(ch) {
+
 		}
 	}
 

@@ -2,6 +2,8 @@ package ntcl
 
 import (
 	"fmt"
+	"reflect"
+
 	"github.com/polygonledger/node/parser"
 )
 
@@ -23,13 +25,12 @@ func EncodeMsgMapData(msgType string, cmd string, data string) string {
 	return msg
 }
 
-
 func ParseMessageMap(msgString string) Message {
 	//msgString = strings.Trim(msgString, string(DELIM))
 	//s := strings.Split(msgString, string(DELIM_HEAD))
 	//ERROR handling of malformed messages
 
-	fmt.Println("msgString ",msgString)
+	fmt.Println("msgString ", msgString)
 	v, k := parser.ReadMap(msgString)
 	// fmt.Println(v)
 	// fmt.Println(k)
@@ -49,12 +50,21 @@ func ParseMessageMapData(msgString string) Message {
 	//s := strings.Split(msgString, string(DELIM_HEAD))
 	//ERROR handling of malformed messages
 
-	fmt.Println("msgString ",msgString)
+	fmt.Println("msgString ", msgString)
 	v, k := parser.ReadMap(msgString)
-	
+	fmt.Println(">> ", v, k)
 	var msg Message
 	msg.MessageType = k[0]
 	msg.Command = v[0]
+
+	fmt.Println("?? ", v, reflect.TypeOf(v), ">>>> ", len(v))
+
+	for i, s := range v {
+		fmt.Println(i, s)
+	}
+
+	fmt.Println(v[2])
+
 	msg.Data = []byte(v[1])
 	// dataJson := s[2] //data can empty but still we expect the delim to be there
 
