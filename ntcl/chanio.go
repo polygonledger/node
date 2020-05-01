@@ -45,7 +45,7 @@ type Ntchan struct {
 func vlog(ntchan Ntchan, s string) {
 	verbose := ntchan.verbose
 	if verbose {
-		log.Println(s)
+		log.Println("vlog ", s)
 	}
 }
 
@@ -171,7 +171,6 @@ func ReadProcessor(ntchan Ntchan) {
 				//TODO!
 				ntchan.REQ_in <- msg_string
 				// reply_string := "echo:" + msg_string
-				// log.Println(">> ", reply_string)
 				// ntchan.Writer_queue <- reply_string
 
 			} else if msg.MessageType == REP {

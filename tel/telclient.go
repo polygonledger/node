@@ -7,10 +7,8 @@ import (
 	"log"
 	"net"
 
-	ntwk "github.com/polygonledger/node/ntwk"
+	"github.com/polygonledger/node/ntcl"
 )
-
-const DELIM = '|'
 
 func main() {
 
@@ -34,6 +32,6 @@ func main() {
 
 	log.Println(num)
 
-	s, _ := ntcl.NetRead(conn, DELIM)
+	s, _ := ntcl.NetRead(conn, "}")
 	log.Println(s)
 }

@@ -65,8 +65,6 @@ func ReadMap(mapstr string) ([]string, []string) {
 
 	s := NewScanner(strings.NewReader(mapstr))
 
-	//fmt.Println("read ", mapstr)
-
 	//ldone := false
 
 	//s.Scan() //open bracket
@@ -75,24 +73,20 @@ func ReadMap(mapstr string) ([]string, []string) {
 
 	for {
 		ch := s.read()
-		//fmt.Println("> ", ch, " ", string(ch))
 
 		if ch == eof {
 			break
 		} else if isKeyword(ch) {
 			_, klit := s.scanIdent()
-			//fmt.Println("keyword ", klit)
 			ks = append(ks, klit)
 			expectvalue = true
 		} else if isWhitespace(ch) {
 			if expectvalue {
 				_, vlit := s.scanIdent()
-				//fmt.Println("value ", vlit)
 				vs = append(vs, vlit)
 				expectvalue = false
 			}
 		} else if isMapEnd(ch) {
-			//fmt.Println("end")
 			break
 		} else if isMapStart(ch) {
 

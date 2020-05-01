@@ -8,8 +8,6 @@ const (
 	// Port is the port number that the server listens to.
 	//TODO move to message type
 	Genesis_Address string = "P0614579c42f2"
-	DELIM           byte   = '|'
-	//DELIM_HEAD      byte   = '#'
 	EMPTY_MSG              = "EMPTY"
 	ERROR_READ             = "error_read"
 )
@@ -19,26 +17,6 @@ func trace(msg string) {
 }
 
 //parse message string into a message struct
-//delimiters of two kind:
-//* DELIM for delimiting the entire message
-//* DELIM_HEAD
-//currently we employ delimiters instead of byte encoding, so the size of messages is unlimited
-//can however easily fix by adding size to header and reject messages larger than maximum size
-// func ParseMessagx(msgString string) Message {
-// 	msgString = strings.Trim(msgString, string(DELIM))
-// 	s := strings.Split(msgString, string(DELIM_HEAD))
-
-// 	//ERROR handling of malformed messages
-
-// 	var msg Message
-// 	msg.MessageType = s[0]
-// 	msg.Command = s[1]
-// 	dataJson := s[2] //data can empty but still we expect the delim to be there
-
-// 	msg.Data = []byte(dataJson)
-// 	//trace(msg)
-// 	return msg
-// }
 
 func EncodeReply(resp string) string {
 	//TODO header missing
@@ -71,16 +49,3 @@ func EncodeMessageTx(txJson []byte) string {
 	msg := EncodeMsgMapData(REQ, msgCmd, string(txJson))
 	return msg
 }
-
-func ConstructMessage(cmd string) string {
-	msg := cmd + string(DELIM)
-	return msg
-}
-
-// func ParseMessagxBalance(msgString string) int {
-// 	msgString = strings.Trim(msgString, string(DELIM))
-// 	s := strings.Split(msgString, string(DELIM_HEAD))
-// 	data := s[2]
-// 	b, _ := strconv.Atoi(data)
-// 	return b
-// }

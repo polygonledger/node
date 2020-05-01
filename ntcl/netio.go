@@ -2,10 +2,8 @@ package ntcl
 
 // functions relating to network stack
 // TCP implementation currently works like this
-// we expect messages which are delimited by special byte DELIM
 // we read and write from the network whenever we can
 // the types of read/write operations depends on the type of message flow
-// the network reads are not optimized we just read until we see the DELIM byte
 // any heartbeating and higher level protocols can be added on top of this
 // disconnects and throttling can be added
 
@@ -25,7 +23,6 @@ import (
 func NetWrite(ntchan Ntchan, content string) (int, error) {
 	//since Netread READLINE uses \n add it here
 	NEWLINE := '\n'
-	//respContent := fmt.Sprintf("%s%c%c", content, DELIM, NEWLINE)
 	respContent := fmt.Sprintf("%s%c", content, NEWLINE)
 	//log.Println("write > ", content, respContent)
 	writer := bufio.NewWriter(ntchan.Conn)
@@ -69,6 +66,7 @@ func NetRead(ntchan Ntchan, delim byte) (string, error) {
 }
 
 func NetMsgRead(ntchan Ntchan) (string, error) {
+	DELIM := byte('}')
 	msg_string, err := NetRead(ntchan, DELIM)
 	msg_string = strings.Trim(msg_string, string(DELIM))
 	return msg_string, err

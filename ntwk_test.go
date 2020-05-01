@@ -97,7 +97,7 @@ func TestRequestOut(t *testing.T) {
 		fmt.Println("received message", msg)
 		t.Error("should not contain")
 	case <-time.After(100 * time.Millisecond):
-		//fmt.Println("no message received")
+		//trace("no message received")
 	}
 
 	go func() {

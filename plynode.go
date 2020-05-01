@@ -250,7 +250,7 @@ func HandleBalance(t *TCPNode, msg ntcl.Message) string {
 	// }
 
 	a := string(msg.Data)
-	fmt.Println("!! balance for ", a, msg)
+	//fmt.Println("balance for ", a, msg)
 	balance := t.Mgr.Accounts[a]
 
 	//s := strconv.Itoa(balance)

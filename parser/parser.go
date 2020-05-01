@@ -210,7 +210,6 @@ func (s *Scanner) scanIdent() (tok Token, lit string) {
 	// Non-ident characters and EOF will cause the loop to exit
 	for {
 		ch := s.read()
-		//fmt.Println("> ", ch, " ", string(ch))
 		if ch == eof {
 			break
 		} else if !isIdent(ch) {

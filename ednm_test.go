@@ -67,6 +67,4 @@ func TestDecodeMap(t *testing.T) {
 	// 	t.Error("msg ", msg)
 	// }
 
-	//fmt.Println(msg)
-
 }

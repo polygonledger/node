@@ -44,7 +44,7 @@ func TestPing(t *testing.T) {
 	msgs := ntcl.EncodeMsgMap(ntcl.REQ, "PING")
 	msg := ntcl.ParseMessageMap(msgs)
 	reply := HandlePing(msg)
-	if reply.MessageType != "REP" {
+	if reply.MessageType != "REP" || reply.Command != "PONG" {
 		t.Error("reply type ", reply)
 	}
 }
@@ -70,6 +70,12 @@ func TestBalance(t *testing.T) {
 		t.Error("reply_msg ", reply_msg, target)
 	}
 
+	msg = ntcl.ParseMessageMap(reply_msg)
+
+	if msg.MessageType != ntcl.REP {
+		t.Error("balance msg")
+	}
+
 	//TODO with chain setup
 
 	//log.Println(mgr.Accounts)
@@ -78,6 +84,10 @@ func TestBalance(t *testing.T) {
 
 	//log.Println(ra.AccountKey)
 	req_msg_string := ntcl.EncodeMsgMapData(ntcl.REQ, ntcl.CMD_BALANCE, ra)
+	if req_msg_string != "{:REQ BALANCE :data P2e2bfb58c9db}" {
+		t.Error("req string")
+	}
+
 	req_msg_balance := ntcl.ParseMessageMapData(req_msg_string)
 
 	reply_msg = HandleBalance(node, req_msg_balance)
@@ -85,7 +95,9 @@ func TestBalance(t *testing.T) {
 		t.Error("reply_msg ", reply_msg)
 	}
 
-	log.Println(mgr.Accounts)
+	if mgr.Accounts["P2e2bfb58c9db"] != 10 {
+		t.Error("balance")
+	}
 
 	//log.Println(ra)
 
@@ -236,7 +248,6 @@ func TestGenesis(t *testing.T) {
 	// //chain.SetAccount()
 
 	// for k, v := range mgr.Accounts {
-	// 	fmt.Println(k, v)
 	// 	if !mgr.IsTreasury(k) {
 	// 		if v != 20 {
 	// 			t.Error("...")
