@@ -78,7 +78,6 @@ func TestBalance(t *testing.T) {
 
 	//TODO with chain setup
 
-	//log.Println(mgr.Accounts)
 	ra := mgr.RandomAccount()
 	mgr.SetAccount(ra, 10)
 

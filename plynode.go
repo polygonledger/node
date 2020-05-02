@@ -179,7 +179,7 @@ func FetchBlocksPeer(config Configuration, peer ntcl.Peer) []block.Block {
 	//log.Println("FetchBlocksPeer ", peer)
 	ping(peer)
 	req_msg := ntcl.EncodeMsgMap(ntcl.REQ, ntcl.CMD_GETBLOCKS)
-	log.Println(req_msg)
+	//log.Println(req_msg)
 
 	peer.NTchan.REQ_out <- req_msg
 	time.Sleep(1000 * time.Millisecond)
