@@ -1,0 +1,34 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+</head>
+<body>
+    <h1>{{.PageTitle}}</h1>
+
+    <h2>Wallet</h2>
+
+<div>
+  <form method="POST" action="/">     
+      <label>Pw</label><input name="pw" type="text" value="" />
+      <input type="submit" value="set password" />
+  </form>
+</div>
+
+<p>password {{.Password}}</p>
+
+<p>Public key {{.Pubkey}}</p>
+<p>Private key {{.Privkey}}</p>
+<p>Address {{.Address}}</p>
+
+<h2>Tx</h2>
+<ul>
+{{range .values}}
+    <li>{{.}}</li>
+{{end}}
+</ul>
+
+
+</body>
+</html>
