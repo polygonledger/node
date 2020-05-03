@@ -67,9 +67,10 @@ func (t *TCPNode) GetPeers() []ntcl.Peer {
 }
 
 func (t *TCPNode) log(s string) {
-	if t.Loglevel != LOGLEVEL_OFF {
-		t.Logger.Println(s)
-	}
+	// if t.Loglevel != LOGLEVEL_OFF {
+	// 	t.Logger.Println(s)
+	// }
+	fmt.Println(s)
 }
 
 // start listening on tcp and handle connection through channels
@@ -312,14 +313,14 @@ func HandleTx(t *TCPNode, msg ntcl.Message) string {
 func RequestHandlerTel(t *TCPNode, ntchan ntcl.Ntchan) {
 	for {
 		msg_string := <-ntchan.REQ_in
-		t.log(fmt.Sprintf("handle %s ", msg_string))
+		t.log(fmt.Sprintf("handle request %s ", msg_string))
 
 		msg := ntcl.ParseMessageMap(msg_string)
 
 		var reply_msg string
 		//var reply_msg ntcl.Message
 
-		t.log(fmt.Sprintf("Handle %v", msg.Command))
+		t.log(fmt.Sprintf("Handle cmd %v", msg.Command))
 
 		switch msg.Command {
 
@@ -386,8 +387,8 @@ func RequestHandlerTel(t *TCPNode, ntchan ntcl.Ntchan) {
 
 		}
 
-		//ntchan.Writer_queue <- reply_msg
 		t.log(fmt.Sprintf("reply_msg %s", reply_msg))
+		ntchan.Writer_queue <- reply_msg
 
 	}
 }
@@ -582,8 +583,7 @@ func (t *TCPNode) setupLogfile() {
 func runNode(t *TCPNode) {
 
 	//setupLogfile()
-	log.Println("run node")
-	t.log(fmt.Sprintf("run node"))
+	log.Println(fmt.Sprintf("run node on port: %d", t.Config.NodePort))
 
 	t.log(fmt.Sprintf("run node on port: %d", t.Config.NodePort))
 
@@ -684,7 +684,6 @@ func runAll(config Configuration) {
 	// 	}()
 	// }
 
-	log.Println("run node")
 	go runNode(node)
 
 	log.Println("run web")
@@ -749,7 +748,7 @@ func runNodeWithConfig() {
 
 func main() {
 	GitCommit := os.Getenv("GIT_COMMIT")
-	fmt.Printf("polygon, git : %s\n", GitCommit)
+	fmt.Printf("--- run polygon ---\ngit commit: %s ----\n", GitCommit)
 
 	runNodeWithConfig()
 }
