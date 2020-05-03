@@ -15,7 +15,6 @@ import (
 	"log"
 	"net"
 	"strconv"
-	"strings"
 
 	"github.com/pkg/errors"
 )
@@ -68,7 +67,7 @@ func NetRead(ntchan Ntchan, delim byte) (string, error) {
 func NetMsgRead(ntchan Ntchan) (string, error) {
 	DELIM := byte('}')
 	msg_string, err := NetRead(ntchan, DELIM)
-	msg_string = strings.Trim(msg_string, string(DELIM))
+	//msg_string = strings.Trim(msg_string, string(DELIM))
 	return msg_string, err
 }
 

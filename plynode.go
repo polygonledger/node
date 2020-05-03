@@ -313,7 +313,7 @@ func HandleTx(t *TCPNode, msg ntcl.Message) string {
 func RequestHandlerTel(t *TCPNode, ntchan ntcl.Ntchan) {
 	for {
 		msg_string := <-ntchan.REQ_in
-		t.log(fmt.Sprintf("handle request %s ", msg_string))
+		t.log(fmt.Sprintf("?? handle request %s ", msg_string))
 
 		msg := ntcl.ParseMessageMap(msg_string)
 
@@ -624,11 +624,12 @@ func LoadConfiguration(file string) Configuration {
 //TODO! replace with quering for blockheight?
 func (t *TCPNode) initSyncChain(config Configuration) {
 	if config.CreateGenesis {
-
+		fmt.Println("CreateGenesis")
 		genBlock := chain.MakeGenesisBlock()
 		t.Mgr.ApplyBlock(genBlock)
 		//TODO!
 		t.Mgr.AppendBlock(genBlock)
+		fmt.Println("accounts\n ", t.Mgr.Accounts)
 
 	} else {
 
@@ -666,7 +667,7 @@ func runAll(config Configuration) {
 	//TODO signatures of genesis
 	node.Mgr.InitAccounts()
 
-	//node.initSyncChain(config)
+	node.initSyncChain(config)
 
 	if err != nil {
 		node.log(fmt.Sprintf("error creating TCP server"))

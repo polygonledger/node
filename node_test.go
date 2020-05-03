@@ -62,6 +62,8 @@ func TestBalance(t *testing.T) {
 	node.Mgr = &mgr
 
 	req_msg := ntcl.EncodeMsgMapData(ntcl.REQ, ntcl.CMD_BALANCE, "abc")
+	//fmt.Println(req_msg)
+
 	msg := ntcl.ParseMessageMap(req_msg)
 
 	reply_msg := HandleBalance(node, msg)

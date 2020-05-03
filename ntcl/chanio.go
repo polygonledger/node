@@ -44,6 +44,7 @@ type Ntchan struct {
 
 func vlog(ntchan Ntchan, s string) {
 	verbose := ntchan.verbose
+	fmt.Println(s)
 	if verbose {
 		log.Println("vlog ", s)
 	}
