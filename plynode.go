@@ -748,6 +748,8 @@ func runNodeWithConfig() {
 }
 
 func main() {
+	GitCommit := os.Getenv("GIT_COMMIT")
+	fmt.Printf("polygon, git : %s\n", GitCommit)
 
 	runNodeWithConfig()
 }
