@@ -411,13 +411,18 @@ func VerifySigmap(sigmap string, txmap string) bool {
 
 //verify signature
 //independent of balance check
+//
+//[:simpletx unlock sig]
 func VerifyTxScriptSig(v string) bool {
+	//TODO
+	//1. get only the type
 
 	sigmap, txmap := ScanScript(v)
 	valid := VerifySigmap(sigmap, txmap)
 	return valid
 }
 
+//////////////////
 //TODO
 // func MakeBlockStr(txs []string, pubk string) string {
 

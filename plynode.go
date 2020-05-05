@@ -154,7 +154,7 @@ func initOutbound(mainPeerAddress string, node_port int, verbose bool) ntcl.Ntch
 		//return
 	}
 
-	//log.Println("connected")
+	//log.Println("connected")NetMsgRead
 	ntchan := ntcl.ConnNtchan(conn, "client", addr, verbose)
 
 	go ntcl.ReadLoop(ntchan)
@@ -309,7 +309,7 @@ func HandleTx(t *TCPNode, msg ntcl.Message) string {
 	return reply
 }
 
-//handle requests in telnet style i.e. string encoding
+//handle requests in telnet style. messages are edn based
 func RequestHandlerTel(t *TCPNode, ntchan ntcl.Ntchan) {
 	for {
 		msg_string := <-ntchan.REQ_in

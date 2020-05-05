@@ -40,6 +40,10 @@ create keys
 
 contributions, such as pull requests, bug reports and comments are very welcome
 
+Discord:
 https://discord.gg/wf5Qu72
+
+Telegram:
+https://t.me/joinchat/Dzif7R1cHnAzulflui53fA
 
 License: MIT license
