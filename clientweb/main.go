@@ -33,6 +33,18 @@ func randSeq(n int) string {
 	return string(b)
 }
 
+func CreatePubKeypairFormat(pubkey_string string, address string) string {
+	mp := map[string]string{"pubkey": parser.StringWrap(pubkey_string), "address": parser.StringWrap(address)}
+	m := parser.MakeMap(mp)
+	return m
+}
+
+func CreateKeypairFormat(privkey string, pubkey_string string, address string) string {
+	mp := map[string]string{"privkey": parser.StringWrap(privkey), "pubkey": parser.StringWrap(pubkey_string), "address": parser.StringWrap(address)}
+	m := parser.MakeMap(mp)
+	return m
+}
+
 func index(w http.ResponseWriter, r *http.Request) {
 	if r.URL.Path != "/" {
 		http.Error(w, "404 not found.", http.StatusNotFound)
@@ -95,18 +107,6 @@ func postpw(w http.ResponseWriter, r *http.Request) {
 	default:
 		fmt.Fprintf(w, "only GET and POST methods are supported.")
 	}
-}
-
-func CreatePubKeypairFormat(pubkey_string string, address string) string {
-	mp := map[string]string{"pubkey": parser.StringWrap(pubkey_string), "address": parser.StringWrap(address)}
-	m := parser.MakeMap(mp)
-	return m
-}
-
-func CreateKeypairFormat(privkey string, pubkey_string string, address string) string {
-	mp := map[string]string{"privkey": parser.StringWrap(privkey), "pubkey": parser.StringWrap(pubkey_string), "address": parser.StringWrap(address)}
-	m := parser.MakeMap(mp)
-	return m
 }
 
 func main() {

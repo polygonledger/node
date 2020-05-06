@@ -76,17 +76,17 @@
           <li class="nav-item active">
             <a class="nav-link" href="#">Wallet <span class="sr-only">(current)</span></a>
           </li>
-          <li class="nav-item">
+          <!--<li class="nav-item">
             <a class="nav-link" href="#">About</a>
-          </li>          
+          </li>          -->
         </ul>
       </div>
     </nav>
     
     <main role="main" class="container">
                       
-        <h2>Wallet</h2>
-        <p class="lead">Basic polygon wallet</p>
+        <h2>Polygon wallet</h2>        
+        <p>balance: <span id="balance">0.0</span></p> 
     
     <div>
       <!--<form method="POST" action="/pw">     
@@ -101,13 +101,33 @@
     
     <p>Password: <span id="pw">{{.Password}}</span></p>
     
-    <p>Public key {{.Pubkey}}</p>
-    <p>Private key {{.Privkey}}</p>
-    <p>Address {{.Address}}</p>
+    <p>Address: {{.Address}}</p>
+    <p>Public key: {{.Pubkey}}</p>
+    <p>Private key: {{.Privkey}}</p>
 
     <button type="button" class="btn btn-primary" id="savepw">save wallet file</button>
     <br><br>
-    <h2>Tx</h2>
+    <button type="button" class="btn btn-primary" id="reqfaucet">request faucet</button>
+    <br><br>
+    <h2>Send cash</h2>
+
+    <label>address: &nbsp;</label><input name="pw" type="text" value="" />          
+    <label>amount: &nbsp;</label><input name="pw" type="text" value="" />          
+    <button type="button" class="btn btn-primary" id="registername">send</button>
+
+    <h2>Register name</h2>
+
+    <label>Name: &nbsp;</label><input name="pw" type="text" value="" />
+        
+    <button type="button" class="btn btn-primary" id="registername">register</button>
+    <!--
+      <br><br>
+    <label>Add contact: &nbsp;</label><input name="pw" type="text" value="" />
+          
+    <button type="button" class="btn btn-primary" id="addcontact">add</button>
+    -->
+    
+
     <ul>
     {{range .values}}
         <li>{{.}}</li>
