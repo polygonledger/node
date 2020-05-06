@@ -9,8 +9,60 @@
 
     <!-- Bootstrap CSS -->
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+
 
     <title>Polygon</title>
+
+    <script>
+
+      function updatePw(){
+        
+      }
+
+      function downloadFile(urlToSend) {
+      var req = new XMLHttpRequest();
+      req.open("GET", urlToSend, true);
+      req.responseType = "blob";
+      req.onload = function (event) {
+          var blob = req.response;
+          var fileName = "wallet.wfe" //req.getResponseHeader("fileName") //if you have the fileName header available
+          var link=document.createElement('a');
+          link.href=window.URL.createObjectURL(blob);
+          link.download=fileName;
+          link.click();
+      };
+
+     req.send();
+ }
+
+      $(document).ready(function(){
+
+      // jQuery methods go here...
+      console.log("start")
+
+    $.ajax({
+      url: "http://localhost:8080/pw",  
+      success: function( result ) { $( "#pw" ).html( result);}
+    });
+
+    $('#postpw').click(function (event) {     
+      console.log("postpw")
+
+      $.post("http://localhost:8080/pw", {pw: "testing"}, function(data, status){
+        alert("Data: " + data + "\nStatus: " + status);
+      });
+
+    });
+
+    $('#savepw').click(function (event) {     
+      console.log("save wallet file")
+        downloadFile("http://localhost:8080/wallet")
+    });
+
+    
+}); 
+    </script>
   </head>
   <body>
 
@@ -32,26 +84,29 @@
     </nav>
     
     <main role="main" class="container">
-      
-        <h1>{{.PageTitle}}</h1>
-                
+                      
         <h2>Wallet</h2>
-        <p class="lead">Create polygon wallet</p>
+        <p class="lead">Basic polygon wallet</p>
     
     <div>
-      <form method="POST" action="/">     
+      <!--<form method="POST" action="/pw">     
           <label>Set password: &nbsp;</label><input name="pw" type="text" value="" />
-          <input class="btn btn-primary" type="submit" value="Set password" />
+          
+          <button type="button" class="btn btn-primary" id="postpw">set password</button>
 
-      </form>
+      </form>-->
+
+
     </div>
     
-    <p>password {{.Password}}</p>
+    <p>Password: <span id="pw">{{.Password}}</span></p>
     
     <p>Public key {{.Pubkey}}</p>
     <p>Private key {{.Privkey}}</p>
     <p>Address {{.Address}}</p>
-    
+
+    <button type="button" class="btn btn-primary" id="savepw">save wallet file</button>
+    <br><br>
     <h2>Tx</h2>
     <ul>
     {{range .values}}
