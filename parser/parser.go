@@ -357,10 +357,10 @@ func TxVector(simpletx string, sigmap string) string {
 
 //[:type {tx} {sig}]
 //extract the components
-func ScanScript(inputVector string) (string, string) {
+func ScanScript(inputVector string) (string, string, string) {
 
 	s := NewScanner(strings.NewReader(inputVector))
-	ftok, _ := s.scanFirstKey()
+	ftok, ltok := s.scanFirstKey()
 	//s.scanWhitespace()
 	s.Scan()
 
@@ -379,10 +379,10 @@ func ScanScript(inputVector string) (string, string) {
 		//remove leading whitespace between vector elements
 		//sigmap = sigmap[1:]
 
-		return sigmap, txmap
+		return ltok, sigmap, txmap
 
 	}
-	return "", ""
+	return "", "", ""
 }
 
 func verifyTx(txmap string, sighex string, pubhex string) bool {
@@ -417,7 +417,8 @@ func VerifyTxScriptSig(v string) bool {
 	//TODO
 	//1. get only the type
 
-	sigmap, txmap := ScanScript(v)
+	_, sigmap, txmap := ScanScript(v)
+
 	valid := VerifySigmap(sigmap, txmap)
 	return valid
 }

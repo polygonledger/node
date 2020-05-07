@@ -1,6 +1,9 @@
 package main
 
 import (
+	"fmt"
+	"io/ioutil"
+	"os"
 	"reflect"
 	"testing"
 
@@ -61,5 +64,25 @@ func TestReadMap(t *testing.T) {
 	if reflect.DeepEqual(ks, h2) {
 		t.Error("scan map")
 	}
+
+}
+
+func TestTxStore(t *testing.T) {
+	simpletx := parser.CreateSimpleTxContent("Pa033f6528cc1", "P7ba453f23337", 42)
+
+	keypair := crypto.PairFromSecret("test")
+	sigmap := parser.SignMap(keypair, simpletx)
+	v := parser.TxVector(simpletx, sigmap)
+
+	ioutil.WriteFile("test.tx", []byte(v), 0644)
+
+	dat, _ := ioutil.ReadFile("test.tx")
+
+	txtype, sigmap, txmap := parser.ScanScript(string(dat))
+	fmt.Println(sigmap)
+	fmt.Println(txmap)
+	fmt.Println(txtype)
+
+	os.Remove("test.tx")
 
 }
