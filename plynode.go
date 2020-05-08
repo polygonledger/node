@@ -603,18 +603,6 @@ func runNode(t *TCPNode) {
 	t.Run()
 }
 
-func LoadConfiguration(file string) Configuration {
-	var config Configuration
-	configFile, err := os.Open(file)
-	defer configFile.Close()
-	if err != nil {
-		log.Println(err.Error())
-	}
-	jsonParser := json.NewDecoder(configFile)
-	jsonParser.Decode(&config)
-	return config
-}
-
 //init sync or load of blocks
 //if we have only genesis then load from mainpeer
 //TODO check if we are mainpeer
@@ -726,7 +714,6 @@ func runNodeWithConfig() {
 		return
 	}
 
-	//config := LoadConfiguration(conffile)
 	config := getConf(conffile)
 	log.Println("config ", config)
 	log.Println("DelegateName ", config.DelegateName)

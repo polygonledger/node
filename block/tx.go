@@ -10,6 +10,31 @@ const (
 	CONCESSION_REG = "CONCESSION_REG"
 )
 
+// type TxE struct {
+// 	TxType string `edn:"TxType"`
+// 	//Transfer   string `edn:"Transfer"`
+// 	//Sigmap
+// }
+
+type SimpleTx struct {
+	Amount   int    `edn:"amount"`
+	Sender   string `edn:"sender"`   //[32]byte
+	Receiver string `end:"receiver"` //[32]byte
+	//Nonce        int    `edn:"Nonce"`
+}
+
+type TxSigmap struct {
+	SenderPubkey string `edn:"senderPubkey"`
+	Signature    string `edn:"signature"`
+}
+
+type TxExpr struct {
+	TxType   string   `edn:"TxType"`
+	Transfer SimpleTx `edn:"TxTransfer"`
+	Sigmap   TxSigmap `edn:"Sigmap"`
+}
+
+//OLD
 type Tx struct {
 	TxType   string `edn:"TxType"`
 	Amount   int    `edn:"Amount"`
@@ -27,9 +52,4 @@ type Tx struct {
 
 	//confirmations
 	//height
-}
-
-type TxSig struct {
-	SenderPubkey string `edn:"SenderPubkey"` //hex string
-	Signature    string `edn:"Signature"`    //hex string
 }

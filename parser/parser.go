@@ -20,7 +20,10 @@ import (
 // transactions are typed
 // [:txtype {:content as map} {:signature data}]
 // [:multisig <txcontent> <sig1 sig2>]
+
 //multiplexing
+//alternative with maps
+//{:txtype STX :tx {...} :sig {...}}
 
 //{:simple ...}
 //{:script [...]}
@@ -401,7 +404,7 @@ func SignMap(keypair crypto.Keypair, msg string) string {
 }
 
 func VerifySigmap(sigmap string, txmap string) bool {
-	var txsig block.TxSig
+	var txsig block.TxSigmap
 	edn.Unmarshal([]byte(sigmap), &txsig)
 	s1 := crypto.SignatureFromHex(txsig.Signature)
 	p1 := crypto.PubKeyFromHex(txsig.SenderPubkey)

@@ -3,12 +3,13 @@ package main
 import (
 	"fmt"
 	"io/ioutil"
-	"os"
 	"reflect"
 	"testing"
 
+	"github.com/polygonledger/node/block"
 	"github.com/polygonledger/node/crypto"
 	"github.com/polygonledger/node/parser"
+	"olympos.io/encoding/edn"
 )
 
 //basic block functions
@@ -74,15 +75,43 @@ func TestTxStore(t *testing.T) {
 	sigmap := parser.SignMap(keypair, simpletx)
 	v := parser.TxVector(simpletx, sigmap)
 
-	ioutil.WriteFile("test.tx", []byte(v), 0644)
+	testtx := "test.tx"
 
-	dat, _ := ioutil.ReadFile("test.tx")
+	ioutil.WriteFile(testtx, []byte(v), 0644)
+
+	dat, _ := ioutil.ReadFile(testtx)
 
 	txtype, sigmap, txmap := parser.ScanScript(string(dat))
 	fmt.Println(sigmap)
 	fmt.Println(txmap)
 	fmt.Println(txtype)
 
-	os.Remove("test.tx")
+	//os.Remove(testtx)
+
+}
+
+func TestTxSimpleStruct(t *testing.T) {
+
+	data := `{:amount 10 :sender "abc" :receiver "xyz"}`
+	var tx block.SimpleTx
+	edn.Unmarshal([]byte(data), &tx)
+
+	if tx.Amount != 10 {
+		t.Error("wrong amount")
+	}
+
+	d2 := `{:senderPubkey "abc" :signature "xyz"}`
+	var txs block.TxSigmap
+	edn.Unmarshal([]byte(d2), &txs)
+	if txs.SenderPubkey != "abc" || txs.Signature != "xyz" {
+		t.Error("senderpubkey")
+	}
+
+	d3 := `{:TxType "STX" :TxTransfer {:amount 10 :sender "abc" :receiver "xyz"} :Sigmap {:senderPubkey "abc" :signature "xyz"}}`
+	var txe block.TxExpr
+	edn.Unmarshal([]byte(d3), &txe)
+	if txe.Transfer.Amount != 10 {
+		t.Error("amount")
+	}
 
 }
