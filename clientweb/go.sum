@@ -70,11 +70,15 @@ github.com/modern-go/reflect2 v0.0.0-20180701023420-4b7aa43c6742/go.mod h1:bx2lN
 github.com/onsi/ginkgo v1.6.0/go.mod h1:lLunBs/Ym6LB5Z9jYTR76FiuTmxDTDusOGeTQH+WWjE=
 github.com/onsi/ginkgo v1.7.0/go.mod h1:lLunBs/Ym6LB5Z9jYTR76FiuTmxDTDusOGeTQH+WWjE=
 github.com/onsi/gomega v1.4.3/go.mod h1:ex+gbHU/CVuBBDIJjb2X0qEXbFg53c61hWP/1CpauHY=
+github.com/pkg/errors v0.9.1 h1:FEBLx1zS214owpjy7qsBeixbURkuhQAwrK5UwLGTwt4=
 github.com/pkg/errors v0.9.1/go.mod h1:bwawxfHBFNV+L2hUp1rHADufV3IMtnDRdf1r5NINEl0=
 github.com/pkg/profile v1.2.1/go.mod h1:hJw3o1OdXxsrSjjVksARp5W95eeEaEfptyVZyv6JUPA=
 github.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
+github.com/polygonledger/edn v0.0.2/go.mod h1:bN0UtosYshovMfCJm3OlVHJ93aN7GrF3T2vl4v7pnqM=
 github.com/polygonledger/node v0.0.0-20200502072124-46b566873313 h1:/GKV61TPm0xVB8XTHniSNsQBa33Ce8H1HQdw0qlouoM=
 github.com/polygonledger/node v0.0.0-20200502072124-46b566873313/go.mod h1:B3nrPg7WREpO6Px+0N//+EkG7G3Ipqbo90W9jeBnEYk=
+github.com/polygonledger/node v0.0.0-20200508041901-4b277bcfbd75 h1:57yEY0bBUESCi/j6AhZDEumJaUueAzVtoHzs/vigYag=
+github.com/polygonledger/node v0.0.0-20200508041901-4b277bcfbd75/go.mod h1:B3nrPg7WREpO6Px+0N//+EkG7G3Ipqbo90W9jeBnEYk=
 github.com/stretchr/objx v0.1.0/go.mod h1:HFkY916IF+rwdDfMAkV7OtwuqBVzrE8GR6GFx+wExME=
 github.com/stretchr/testify v1.3.0/go.mod h1:M5WIy9Dh21IEIfnGCwXGc5bZfKNJtfHm1UVUgZn+9EI=
 github.com/stretchr/testify v1.4.0/go.mod h1:j7eGeouHqKxXV5pUuKE4zz7dFj8WfuZ+81PSLYec5m4=

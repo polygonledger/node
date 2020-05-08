@@ -3,8 +3,8 @@ package main
 import (
 	"testing"
 
+	"github.com/polygonledger/edn"
 	"github.com/polygonledger/node/block"
-	"olympos.io/encoding/edn"
 )
 
 func TestEDN(t *testing.T) {

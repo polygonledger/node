@@ -6,12 +6,17 @@ import (
 	"io/ioutil"
 	"log"
 	"math/rand"
+	"net"
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/polygonledger/node/crypto"
+	"github.com/polygonledger/node/ntcl"
 	"github.com/polygonledger/node/parser"
 )
+
+var connect_peer ntcl.Peer
 
 var pw string
 
@@ -109,10 +114,83 @@ func postpw(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func sendnode(w http.ResponseWriter, r *http.Request) {
+
+	switch r.Method {
+	case "POST":
+		// Call ParseForm() to parse the raw query and update r.PostForm and r.Form.
+		if err := r.ParseForm(); err != nil {
+			//fmt.Fprintf(w, "ParseForm() err: %v", err)
+			return
+		}
+		//fmt.Fprintf(w, "r.PostFrom = %v\n", r.PostForm)
+		message := r.FormValue("message")
+		fmt.Println("send message to node ", message)
+		reply := sendmsg(connect_peer, message)
+		fmt.Println("reply ", reply)
+		fmt.Fprintf(w, reply)
+
+	default:
+		fmt.Fprintf(w, "only POST method is supported.")
+	}
+}
+
+func initClient(mainPeerAddress string, verbose bool) ntcl.Ntchan {
+	const node_port = 8888
+	addr := mainPeerAddress + ":" + strconv.Itoa(node_port)
+	log.Println("dial ", addr)
+	conn, err := net.Dial("tcp", addr)
+	if err != nil {
+		log.Println("cant run")
+		//return
+	}
+
+	log.Println("connected")
+	ntchan := ntcl.ConnNtchan(conn, "client", addr, verbose)
+
+	go ntcl.ReadLoop(ntchan)
+	go ntcl.ReadProcessor(ntchan)
+	go ntcl.WriteProcessor(ntchan)
+	go ntcl.WriteLoop(ntchan, 300*time.Millisecond)
+	return ntchan
+
+}
+
+func sendmsg(peer ntcl.Peer, req_msg string) string {
+
+	peer.NTchan.REQ_out <- req_msg
+
+	time.Sleep(1000 * time.Millisecond)
+
+	reply := <-peer.NTchan.REP_in
+	log.Println("reply ", reply)
+	success := reply == "{:REP PONG}"
+	log.Println("success ", success)
+	return reply
+
+}
+
+func ping(peer ntcl.Peer) {
+
+	ping_msg := ntcl.EncodeMsgMap(ntcl.REQ, ntcl.CMD_PING)
+	reply := sendmsg(peer, ping_msg)
+	success := reply == "{:REP PONG}"
+	log.Println("success ", success)
+
+}
+
 func main() {
+	peerAddress := "localhost"
+	ntchan := initClient(peerAddress, true)
+
+	const node_port = 8888
+	connect_peer = ntcl.CreatePeer(peerAddress, peerAddress, node_port, ntchan)
+
+	ping(connect_peer)
 
 	http.HandleFunc("/", index)
 	http.HandleFunc("/pw", postpw)
+	http.HandleFunc("/sendnode", sendnode)
 	http.HandleFunc("/wallet", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Disposition", "attachment; filename=wallet.wfe")
 		w.Header().Set("Content-Type", r.Header.Get("Content-Type"))
@@ -128,7 +206,7 @@ func main() {
 	})
 
 	fmt.Printf("Starting client web...\n")
-	if err := http.ListenAndServe(":8080", nil); err != nil {
+	if err := http.ListenAndServe(":9999", nil); err != nil {
 		log.Fatal(err)
 	}
 }

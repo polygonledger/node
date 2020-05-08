@@ -6,10 +6,8 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/polygonledger/node/block"
 	"github.com/polygonledger/node/crypto"
 	"github.com/polygonledger/node/parser"
-	"olympos.io/encoding/edn"
 )
 
 //basic block functions
@@ -90,28 +88,38 @@ func TestTxStore(t *testing.T) {
 
 }
 
-func TestTxSimpleStruct(t *testing.T) {
+// func TestTxSimpleStruct(t *testing.T) {
 
-	data := `{:amount 10 :sender "abc" :receiver "xyz"}`
-	var tx block.SimpleTx
-	edn.Unmarshal([]byte(data), &tx)
+// 	data := `{:amount 10 :sender "abc" :receiver "xyz"}`
+// 	var tx block.SimpleTx
+// 	edn.Unmarshal([]byte(data), &tx)
 
-	if tx.Amount != 10 {
-		t.Error("wrong amount")
-	}
+// 	if tx.Amount != 10 {
+// 		t.Error("wrong amount")
+// 	}
 
-	d2 := `{:senderPubkey "abc" :signature "xyz"}`
-	var txs block.TxSigmap
-	edn.Unmarshal([]byte(d2), &txs)
-	if txs.SenderPubkey != "abc" || txs.Signature != "xyz" {
-		t.Error("senderpubkey")
-	}
+// 	d2 := `{:senderPubkey "abc" :signature "xyz"}`
+// 	var txs block.TxSigmap
+// 	edn.Unmarshal([]byte(d2), &txs)
+// 	if txs.SenderPubkey != "abc" || txs.Signature != "xyz" {
+// 		t.Error("senderpubkey")
+// 	}
 
-	d3 := `{:TxType "STX" :TxTransfer {:amount 10 :sender "abc" :receiver "xyz"} :Sigmap {:senderPubkey "abc" :signature "xyz"}}`
-	var txe block.TxExpr
-	edn.Unmarshal([]byte(d3), &txe)
-	if txe.Transfer.Amount != 10 {
-		t.Error("amount")
-	}
+// 	d3 := `{:TxType "STX" :TxTransfer {:amount 10 :sender "abc" :receiver "xyz"} :Sigmap {:senderPubkey "abc" :signature "xyz"}}`
+// 	var txe block.TxExpr
+// 	edn.Unmarshal([]byte(d3), &txe)
+// 	if txe.Transfer.Amount != 10 {
+// 		t.Error("amount")
+// 	}
 
-}
+// 	var txe2 block.TxExpr
+// 	txe2.TxType = "STX"
+// 	txe2.Transfer.Amount = 5
+// 	txe2.Transfer.Sender = "abc"
+// 	txe2.Transfer.Receiver = "xyz"
+// 	txe2.Sigmap.SenderPubkey = "zzz"
+// 	txe2.Sigmap.Signature = "aaa"
+// 	b, _ := edn.Marshal(txe2)
+// 	fmt.Println(string(b))
+
+// }

@@ -3,7 +3,7 @@ package config
 import (
 	"io/ioutil"
 
-	"olympos.io/encoding/edn"
+	"github.com/polygonledger/edn"
 )
 
 type Configuration struct {

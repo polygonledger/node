@@ -8,9 +8,9 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/polygonledger/edn"
 	"github.com/polygonledger/node/block"
 	"github.com/polygonledger/node/crypto"
-	"olympos.io/encoding/edn"
 )
 
 // generic tx and messages parser

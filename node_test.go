@@ -5,7 +5,7 @@ import (
 	"strconv"
 	"testing"
 
-	chain "github.com/polygonledger/node/chain"
+	"github.com/polygonledger/node/chain"
 	"github.com/polygonledger/node/ntcl"
 )
 

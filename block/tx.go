@@ -16,23 +16,23 @@ const (
 // 	//Sigmap
 // }
 
-type SimpleTx struct {
-	Amount   int    `edn:"amount"`
-	Sender   string `edn:"sender"`   //[32]byte
-	Receiver string `end:"receiver"` //[32]byte
-	//Nonce        int    `edn:"Nonce"`
-}
+// type SimpleTx struct {
+// 	Amount   int    `edn:"amount"`
+// 	Sender   string `edn:"sender"`   //[32]byte
+// 	Receiver string `end:"receiver"` //[32]byte
+// 	//Nonce        int    `edn:"Nonce"`
+// }
 
 type TxSigmap struct {
 	SenderPubkey string `edn:"senderPubkey"`
 	Signature    string `edn:"signature"`
 }
 
-type TxExpr struct {
-	TxType   string   `edn:"TxType"`
-	Transfer SimpleTx `edn:"TxTransfer"`
-	Sigmap   TxSigmap `edn:"Sigmap"`
-}
+// type TxExpr struct {
+// 	TxType   string   `edn:"TxType"`
+// 	Transfer SimpleTx `edn:"TxTransfer"`
+// 	Sigmap   TxSigmap `edn:"Sigmap"`
+// }
 
 //OLD
 type Tx struct {

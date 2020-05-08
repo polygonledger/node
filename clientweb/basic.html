@@ -42,14 +42,14 @@
       console.log("start")
 
     $.ajax({
-      url: "http://localhost:8080/pw",  
+      url: "http://localhost:9999/pw",  
       success: function( result ) { $( "#pw" ).html( result);}
     });
 
     $('#postpw').click(function (event) {     
       console.log("postpw")
 
-      $.post("http://localhost:8080/pw", {pw: "testing"}, function(data, status){
+      $.post("http://localhost:9999/pw", {pw: "testing"}, function(data, status){
         alert("Data: " + data + "\nStatus: " + status);
       });
 
@@ -57,8 +57,21 @@
 
     $('#savepw').click(function (event) {     
       console.log("save wallet file")
-        downloadFile("http://localhost:8080/wallet")
+        downloadFile("http://localhost:9999/wallet")
     });
+
+    $('#sendnode').click(function (event) {     
+      console.log("sendnode")
+
+      $.post("http://localhost:9999/sendnode", {message: "{:REQ PING}"}, function(data, status){
+        //alert("Data: " + data + "\nStatus: " + status);
+        $( "#reply" ).append( data + "<br>");
+      });
+
+    });
+
+
+    
 
     
 }); 
@@ -120,6 +133,15 @@
     <label>Name: &nbsp;</label><input name="pw" type="text" value="" />
         
     <button type="button" class="btn btn-primary" id="registername">register</button>
+
+    <h2>Node shell</h2>
+
+    <label>Input: &nbsp;</label><input name="pw" type="text" value="" />
+        
+    <button type="button" class="btn btn-primary" id="sendnode">send</button>
+
+    <p>server reply: <span id="reply"></span></p>
+
     <!--
       <br><br>
     <label>Add contact: &nbsp;</label><input name="pw" type="text" value="" />

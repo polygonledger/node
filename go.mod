@@ -11,5 +11,5 @@ require (
 	github.com/gin-gonic/gin v1.5.0
 	github.com/jcburley/go-spew v1.3.0 // indirect
 	github.com/pkg/errors v0.9.1
-	olympos.io/encoding/edn v0.0.0-20200308123125-93e3b8dd0e24
+	github.com/polygonledger/edn v0.0.2
 )

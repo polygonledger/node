@@ -265,17 +265,17 @@ func PushTx(ntchan ntcl.Ntchan) error {
 }
 
 func fetchbalance(ntchan ntcl.Ntchan, addr string) {
-	req_msg := ntcl.EncodeMsgString(ntcl.REQ, ntcl.CMD_BALANCE, string(addr))
+	req_msg := ntcl.EncodeMsgMapData(ntcl.REQ, ntcl.CMD_BALANCE, string(addr))
 	log.Println(req_msg)
 
 	ntchan.REQ_out <- req_msg
 
-	rep := <-ntchan.REP_in
-	//log.Println("reply ", rep)
-	rep = strings.Trim(rep, string(ntcl.DELIM))
-	s := strings.Split(rep, string(ntcl.DELIM_HEAD))
-	balance_int, _ := strconv.Atoi(string(s[2]))
-	log.Println(fmt.Sprintf("balance of %s %d", addr, balance_int))
+	// rep := <-ntchan.REP_in
+	// //log.Println("reply ", rep)
+	// rep = strings.Trim(rep, string(ntcl.DELIM))
+	// s := strings.Split(rep, string(ntcl.DELIM_HEAD))
+	// balance_int, _ := strconv.Atoi(string(s[2]))
+	// log.Println(fmt.Sprintf("balance of %s %d", addr, balance_int))
 }
 
 func Mybalance(ntchan ntcl.Ntchan) error {
@@ -312,7 +312,7 @@ func Getbalance(ntchan ntcl.Ntchan) error {
 }
 
 func Getblockheight(peer ntcl.Peer) error {
-	req_msg := ntcl.EncodeMsgString(ntcl.REQ, ntcl.CMD_BLOCKHEIGHT, "")
+	req_msg := ntcl.EncodeMsgMap(ntcl.REQ, ntcl.CMD_BLOCKHEIGHT)
 	log.Println(req_msg)
 	// response := ntcl.RequestReplyChan(req_msg, peer.Req_chan, peer.Rep_chan)
 
@@ -326,7 +326,7 @@ func Getblockheight(peer ntcl.Peer) error {
 }
 
 func Gettxpool(peer ntcl.Peer) error {
-	req_msg := ntcl.EncodeMsgString(ntcl.REQ, ntcl.CMD_GETTXPOOL, "")
+	req_msg := ntcl.EncodeMsgMap(ntcl.REQ, ntcl.CMD_GETTXPOOL)
 	log.Println("> ", req_msg)
 	// resp := ntcl.RequestReplyChan(req_msg, peer.Req_chan, peer.Rep_chan)
 
@@ -396,14 +396,14 @@ func ping(peer ntcl.Peer) {
 
 	//subscribe example
 	//reqs := "REQ#PING#|"
-	req_msg := ntcl.EncodeMsgString(ntcl.REQ, ntcl.CMD_PING, "")
+	req_msg := ntcl.EncodeMsgMap(ntcl.REQ, ntcl.CMD_PING)
 	peer.NTchan.REQ_out <- req_msg
 	//ntcl.NetWrite(ntchan, reqs)
 
 	time.Sleep(1000 * time.Millisecond)
 
 	reply := <-peer.NTchan.REP_in
-	success := reply == "REP#PONG#|"
+	success := reply == "{:REP PONG}"
 	log.Println("success ", success)
 
 }
@@ -415,7 +415,7 @@ func MakeFaucet(ntchan ntcl.Ntchan) {
 
 	addr := crypto.Address(pubk)
 	log.Println("request faucet to ", addr)
-	req_msg := ntcl.EncodeMsgString(ntcl.REQ, ntcl.CMD_FAUCET, addr)
+	req_msg := ntcl.EncodeMsgMapData(ntcl.REQ, ntcl.CMD_FAUCET, addr)
 
 	ntchan.REQ_out <- req_msg
 
@@ -424,7 +424,7 @@ func MakeFaucet(ntchan ntcl.Ntchan) {
 	log.Println("wait for block....")
 	time.Sleep(5000 * time.Millisecond)
 
-	req_msg2 := ntcl.EncodeMsgString(ntcl.REQ, ntcl.CMD_BALANCE, addr)
+	req_msg2 := ntcl.EncodeMsgMapData(ntcl.REQ, ntcl.CMD_BALANCE, addr)
 	ntchan.REQ_out <- req_msg2
 
 	rep2 := <-ntchan.REP_in

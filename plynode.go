@@ -19,7 +19,7 @@ import (
 	"strconv"
 	"time"
 
-	"olympos.io/encoding/edn"
+	"github.com/polygonledger/edn"
 
 	"github.com/pkg/errors"
 	"github.com/polygonledger/node/block"
