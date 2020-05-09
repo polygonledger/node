@@ -8,3 +8,4 @@ nodeconf.json
 conf.edn
 __debug_bin
 debug.test
+test.tx

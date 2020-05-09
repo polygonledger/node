@@ -19,6 +19,7 @@ import (
 var connect_peer ntcl.Peer
 
 var pw string
+var node_status string
 
 type PageData struct {
 	PageTitle string
@@ -115,7 +116,6 @@ func postpw(w http.ResponseWriter, r *http.Request) {
 }
 
 func sendnode(w http.ResponseWriter, r *http.Request) {
-
 	switch r.Method {
 	case "POST":
 		// Call ParseForm() to parse the raw query and update r.PostForm and r.Form.
@@ -164,19 +164,32 @@ func sendmsg(peer ntcl.Peer, req_msg string) string {
 
 	reply := <-peer.NTchan.REP_in
 	log.Println("reply ", reply)
-	success := reply == "{:REP PONG}"
-	log.Println("success ", success)
 	return reply
 
 }
 
 func ping(peer ntcl.Peer) {
-
 	ping_msg := ntcl.EncodeMsgMap(ntcl.REQ, ntcl.CMD_PING)
 	reply := sendmsg(peer, ping_msg)
 	success := reply == "{:REP PONG}"
 	log.Println("success ", success)
+}
 
+func getStatus(peer ntcl.Peer) {
+	node_status = sendmsg(connect_peer, "{:REQ STATUS}")
+	fmt.Println(node_status)
+	//return node_status
+}
+
+func nodestatus(w http.ResponseWriter, r *http.Request) {
+	switch r.Method {
+	case "GET":
+		getStatus(connect_peer)
+		fmt.Fprintf(w, node_status)
+
+	default:
+		fmt.Fprintf(w, "only POST method is supported.")
+	}
 }
 
 func main() {
@@ -190,6 +203,7 @@ func main() {
 
 	http.HandleFunc("/", index)
 	http.HandleFunc("/pw", postpw)
+	http.HandleFunc("/nodestatus", nodestatus)
 	http.HandleFunc("/sendnode", sendnode)
 	http.HandleFunc("/wallet", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Disposition", "attachment; filename=wallet.wfe")

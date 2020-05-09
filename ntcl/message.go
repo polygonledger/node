@@ -29,8 +29,13 @@ const (
 	CMD_PING             = "PING"
 	CMD_PONG             = "PONG"
 	CMD_HANDSHAKE_HELLO  = "HELLO"
+	CMD_LOGOFF           = "LOGOFF"
 	CMD_HANDSHAKE_STABLE = "STABLE"
 	CMD_HEARTBEAT        = "HEARTBEAT"
+	CMD_NUMACCOUNTS      = "NUMACCOUNTS" //number of accounts
+	CMD_NUMCONN          = "NUMCONN"     //number of connected
+	CMD_ACCOUNTS         = "ACCOUNTS"
+	CMD_STATUS           = "STATUS"
 	CMD_BALANCE          = "BALANCE" //get balance of account
 	CMD_FAUCET           = "FAUCET"
 	CMD_TX               = "TX" //send transaction

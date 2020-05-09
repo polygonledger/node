@@ -8,7 +8,9 @@ import (
 	"os"
 	"os/signal"
 	"strconv"
+
 	"github.com/polygonledger/node/chain"
+	"github.com/polygonledger/node/config"
 	"github.com/polygonledger/node/ntcl"
 )
 
@@ -64,7 +66,6 @@ func (t *TCPNode) HandleConnectTCPMock() {
 	}
 }
 
-
 func runNodeMock(t *TCPNode) {
 
 	//setupLogfile()
@@ -89,7 +90,7 @@ func runNodeMock(t *TCPNode) {
 	t.Run()
 }
 
-func runAllMock(config Configuration) {
+func runAllMock(config config.Configuration) {
 
 	log.Println("runNodeAll with config ", config)
 
@@ -117,7 +118,6 @@ func runAllMock(config Configuration) {
 	go runNode(node)
 
 }
-
 
 func runNodeWithConfigMock() {
 
@@ -154,6 +154,3 @@ func runNodeWithConfigMock() {
 
 // 	runNodeWithConfigMock()
 // }
-
-
-

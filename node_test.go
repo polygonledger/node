@@ -24,9 +24,6 @@ func TestBasicCommand(t *testing.T) {
 	// req_msg := ntcl.EncodeMsgMap(ntcl.REQ, ntcl.CMD_PING)
 	// //ntchan.REQ_in <- msg
 	// reply_msg := HandlePing(msg)
-	// if reply_msg != "REP#PONG#|" {
-	// 	t.Error("reply pong ", reply_msg)
-	// }
 
 	// ntchan := ntcl.ConnNtchanStub("")
 	// go RequestHandlerTel(node, ntchan)
@@ -41,9 +38,12 @@ func TestBasicCommand(t *testing.T) {
 }
 
 func TestPing(t *testing.T) {
-	msgs := ntcl.EncodeMsgMap(ntcl.REQ, "PING")
-	msg := ntcl.ParseMessageMap(msgs)
-	reply := HandlePing(msg)
+	reqstring := ntcl.EncodeMsgMap(ntcl.REQ, "PING")
+	req := ntcl.ParseMessageMap(reqstring)
+	if req.MessageType != "REQ" || req.Command != "PING" {
+		t.Error("req ", req)
+	}
+	reply := HandlePing(req)
 	if reply.MessageType != "REP" || reply.Command != "PONG" {
 		t.Error("reply type ", reply)
 	}

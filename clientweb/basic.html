@@ -46,6 +46,11 @@
       success: function( result ) { $( "#pw" ).html( result);}
     });
 
+    $.ajax({
+      url: "http://localhost:9999/nodestatus",  
+      success: function( result ) { $( "#nodestatus" ).html( result);}
+    });
+
     $('#postpw').click(function (event) {     
       console.log("postpw")
 
@@ -63,7 +68,12 @@
     $('#sendnode').click(function (event) {     
       console.log("sendnode")
 
-      $.post("http://localhost:9999/sendnode", {message: "{:REQ PING}"}, function(data, status){
+      var msg = $('#shellmessage').val();
+
+      alert(msg);
+
+
+      $.post("http://localhost:9999/sendnode", {message: msg}, function(data, status){
         //alert("Data: " + data + "\nStatus: " + status);
         $( "#reply" ).append( data + "<br>");
       });
@@ -136,11 +146,13 @@
 
     <h2>Node shell</h2>
 
-    <label>Input: &nbsp;</label><input name="pw" type="text" value="" />
+    <label>Input: &nbsp;</label><input id="shellmessage" type="text" value="" />
         
     <button type="button" class="btn btn-primary" id="sendnode">send</button>
 
     <p>server reply: <span id="reply"></span></p>
+
+    <p>server reply: <span id="nodestatus"></span></p>
 
     <!--
       <br><br>

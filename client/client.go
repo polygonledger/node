@@ -408,6 +408,18 @@ func ping(peer ntcl.Peer) {
 
 }
 
+func request_reply(peer ntcl.Peer, req_msg string) {
+	peer.NTchan.REQ_out <- req_msg
+	time.Sleep(1000 * time.Millisecond)
+	reply := <-peer.NTchan.REP_in
+	log.Println("reply ", reply)
+}
+
+func status(peer ntcl.Peer) {
+	req_msg := "{:REQ STATUS}"
+	request_reply(peer, req_msg)
+}
+
 func MakeFaucet(ntchan ntcl.Ntchan) {
 	log.Println("read keys")
 	kp := ReadKeys(keysfile)
@@ -449,6 +461,9 @@ func runSingleMode(cmd string, config Configuration) {
 		ping(p)
 
 		time.Sleep(100 * time.Millisecond)
+
+	case "status":
+		status(p)
 
 	case "faucet":
 		MakeFaucet(ntchan)
@@ -730,7 +745,7 @@ func main() {
 
 	switch cmd {
 
-	case "test", "ping", "heartbeat", "getbalance", "faucet", "faucetloop", "txpool", "pushtx", "randomtx", "mybalance", "dnslook":
+	case "test", "ping", "status", "heartbeat", "getbalance", "faucet", "faucetloop", "txpool", "pushtx", "randomtx", "mybalance", "dnslook":
 		runSingleMode(cmd, config)
 
 	case "createkeys", "sign", "signtx", "createtx", "verify", "verifytx":

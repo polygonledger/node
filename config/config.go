@@ -17,13 +17,13 @@ type Configuration struct {
 	Verbose bool
 }
 
-func (c *Configuration) UnmarshalEDN(bs []byte) error {
+// func (c *Configuration) UnmarshalEDN(bs []byte) error {
 
-	input.Log = &c.Log
-	err := edn.Unmarshal(bs, &input)
-	c.Env = string(input.Env)
-	return err
-}
+// 	//input.Log = &c.Log
+// 	err := edn.Unmarshal(bs, &input)
+// 	c.Env = string(input.Env)
+// 	return err
+// }
 
 func ReadConf(fname string) (*Configuration, error) {
 	bs, err := ioutil.ReadFile(fname)
