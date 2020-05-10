@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/polygonledger/node/chain"
+	"github.com/polygonledger/node/crypto"
 	"github.com/polygonledger/node/ntcl"
 )
 
@@ -48,6 +49,13 @@ func TestPing(t *testing.T) {
 		t.Error("reply type ", reply)
 	}
 }
+
+// func TestPingRequest(t *testing.T) {
+
+// 	reqstring := ntcl.EncodeMsgMap(ntcl.REQ, "PING")
+// 	req := ntcl.ParseMessageMap(reqstring)
+
+// }
 
 func TestBalance(t *testing.T) {
 
@@ -107,48 +115,49 @@ func TestBalance(t *testing.T) {
 	// mgr.ApplyBlock(b)
 }
 
-// func TestFaucetTx(t *testing.T) {
+func TestFaucetTx(t *testing.T) {
 
-// 	kp := crypto.PairFromSecret("test")
-// 	pubk := crypto.PubKeyToHex(kp.PubKey)
-// 	addr := crypto.Address(pubk)
-// 	req_msg := ntcl.EncodeMsgxx(ntcl.REQ, ntcl.CMD_FAUCET, addr)
-// 	msg := ntcl.ParseMessag(req_msg)
+	kp := crypto.PairFromSecret("test")
+	pubk := crypto.PubKeyToHex(kp.PubKey)
+	addr := crypto.Address(pubk)
+	req_msg_string := ntcl.EncodeMsgMapData(ntcl.REQ, ntcl.CMD_FAUCET, addr)
+	req_msg := ntcl.ParseMessageMap(req_msg_string)
 
-// 	node, _ := NewNode()
-// 	//defer node.Close()
-// 	node.addr = ":" + strconv.Itoa(8888)
-// 	node.Loglevel = LOGLEVEL_OFF
-// 	mgr := chain.CreateManager()
-// 	mgr.InitAccounts()
-// 	node.Mgr = &mgr
+	node, _ := NewNode()
+	//defer node.Close()
+	node.addr = ":" + strconv.Itoa(8888)
+	node.Loglevel = LOGLEVEL_OFF
+	mgr := chain.CreateManager()
+	mgr.InitAccounts()
+	node.Mgr = &mgr
 
-// 	reply_msg := HandleFaucet(node, msg)
-// 	if reply_msg != "REP#FAUCET#ok|" {
-// 		t.Error("reply_msg ", reply_msg)
-// 	}
-// 	chain.MakeBlock(&mgr)
+	reply_msg := HandleFaucet(node, req_msg)
+	if reply_msg != "{:REP FAUCET :data ok}" {
+		t.Error("reply_msg ", reply_msg)
+	}
 
-// 	time.Sleep(2000 * time.Millisecond)
+	// chain.MakeBlock(&mgr)
 
-// 	req_msg = ntcl.EncodeMEncodeMsgxx(ntcl.REQ, ntcl.CMD_BALANCE, addr)
-// 	msg = ntcl.ParseMessag(req_msg)
+	// time.Sleep(2000 * time.Millisecond)
 
-// 	log.Println(mgr.Accounts)
+	// req_msg = ntcl.EncodeMEncodeMsgxx(ntcl.REQ, ntcl.CMD_BALANCE, addr)
+	// msg = ntcl.ParseMessag(req_msg)
 
-// 	reply_msg_string := HandleBalance(node, msg)
-// 	log.Println(reply_msg_string)
-// 	msg = ntcl.ParseMessag(reply_msg_string)
-// 	// if reply_msg_string != "REP#BALANCE#1|" {
-// 	// 	t.Error(msg)
-// 	// }
+	// log.Println(mgr.Accounts)
 
-// 	// bal := ntcl.ParseMessageBalance(reply_msg)
-// 	if msg.MessageType != "REP" || msg.Command != ntcl.CMD_BALANCE {
-// 		t.Error("msg ", msg)
-// 	}
+	// reply_msg_string := HandleBalance(node, msg)
+	// log.Println(reply_msg_string)
+	// msg = ntcl.ParseMessag(reply_msg_string)
+	// // if reply_msg_string != "REP#BALANCE#1|" {
+	// // 	t.Error(msg)
+	// // }
 
-// }
+	// // bal := ntcl.ParseMessageBalance(reply_msg)
+	// if msg.MessageType != "REP" || msg.Command != ntcl.CMD_BALANCE {
+	// 	t.Error("msg ", msg)
+	// }
+
+}
 
 //TODO fix
 // func TestTx(t *testing.T) {

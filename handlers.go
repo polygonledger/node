@@ -91,7 +91,8 @@ func HandleBalance(t *TCPNode, msg ntcl.Message) string {
 }
 
 func HandleFaucet(t *TCPNode, msg ntcl.Message) string {
-	t.log(fmt.Sprintf("HandleFaucet"))
+	//t.log(fmt.Sprintf("HandleFaucet"))
+
 	// dataBytes := msg.Data
 	// var account block.Account
 	// if err := json.Unmarshal(dataBytes, &account); err != nil {
@@ -114,7 +115,7 @@ func HandleFaucet(t *TCPNode, msg ntcl.Message) string {
 
 	tx = crypto.SignTxAdd(tx, keypair)
 	reply_string := chain.HandleTx(t.Mgr, tx)
-	t.log(fmt.Sprintf("resp > %s", reply_string))
+	//t.log(fmt.Sprintf("resp > %s", reply_string))
 
 	reply := ntcl.EncodeMsgMapData(ntcl.REP, ntcl.CMD_FAUCET, reply_string)
 	return reply
