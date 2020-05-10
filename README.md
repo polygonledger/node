@@ -2,7 +2,7 @@
 
 Polygon is a new blockchain. It is written in golang and uses a novel networking stack built from two primitives: channels and extensible data notation.
 On this lower layer an economic system is built - the proof-of-asset algorithm. The lower layer is created such that in principle any sensible economic incentive and consensus algorithm
-can be plugged in and more generically a distributed system can be built. Polygon allows for arbitrary message encoding and signing, using new primitives for communication between nodes. This makes it more general as a transaction and communcation platform. See [docs/wp.md](whitepaper for details)
+can be plugged in and more generically a distributed system can be built. Polygon allows for arbitrary message encoding and signing, using new primitives for communication between nodes. This makes it more general as a transaction and communcation platform. See [whitepaper for details](docs/whitepaper.md)
 
 ## runing a node
 
