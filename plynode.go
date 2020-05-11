@@ -403,8 +403,8 @@ func runAll(config config.Configuration) {
 
 	go runNode(node)
 
-	log.Println("run web")
-	go runWeb(node)
+	//log.Println("run web")
+	//go runWeb(node)
 
 }
 

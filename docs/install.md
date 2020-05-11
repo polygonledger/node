@@ -2,6 +2,8 @@
 
 the following is for Ubuntu but Mac works almost the same
 
+## basics
+
 Install git
 
 Install golang - https://golang.org/
@@ -20,6 +22,8 @@ go1.13.4 linux/amd64
 set GOPATH with
 ```export GOPATH=/home/ubuntu/go```
 
+## node
+
 ```go get -u github.com/polygonledger/node
 cd ~/go/src/github.com/polygonledger/node/
 go build
@@ -35,3 +39,11 @@ sudo apt-get install -y ufw
 
 Run with script
 ./run.sh
+
+## service
+
+sudo cp ./deploy/plynode.service /etc/systemd/system
+sudo systemctl daemon-reload
+sudo systemctl start plynode
+sudo journalctl -f -u  plynode
+
