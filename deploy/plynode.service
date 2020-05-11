@@ -1,0 +1,15 @@
+[Unit]
+Description=polygon node
+Wants=network.target
+After=network.target
+
+[Service]
+Type=simple
+User=ubuntu
+WorkingDirectory=/home/ubuntu/go/src/github.com/polygonledger/node
+ExecStart=/home/ubuntu/go/src/github.com/polygonledger/node/plynode
+Restart=always
+RestartSec=3
+
+[Install]
+WantedBy=multi-user.target
