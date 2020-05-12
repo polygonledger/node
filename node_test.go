@@ -57,6 +57,26 @@ func TestPing(t *testing.T) {
 
 // }
 
+func TestAccountmsg(t *testing.T) {
+
+	// log.Println("TestBalance")
+
+	// node, _ := NewNode()
+	// //defer node.Close()
+	// node.addr = ":" + strconv.Itoa(8888)
+	// node.Loglevel = LOGLEVEL_OFF
+	// mgr := chain.CreateManager()
+	// mgr.InitAccounts()
+	// node.Mgr = &mgr
+
+	// req_msg := netio.EncodeMsgMap(netio.REQ, netio.CMD_ACCOUNTS)
+
+	// msg := netio.ParseMessageMap(req_msg)
+
+	// reply_msg := HandleAccounts(node, msg)
+
+}
+
 func TestBalance(t *testing.T) {
 
 	log.Println("TestBalance")

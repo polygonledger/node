@@ -33,17 +33,19 @@ Check tests with ```go test```
 
 Check firewall with `sudo ufw status numbered`
 
+```
 sudo ufw enable
 sudo ufw allow ssh
 sudo apt-get install -y ufw
+```
 
-Run with script
-./run.sh
+Run with script ```./run.sh```
 
 ## service
 
+```
 sudo cp ./deploy/plynode.service /etc/systemd/system
 sudo systemctl daemon-reload
 sudo systemctl start plynode
 sudo journalctl -f -u  plynode
-
+```
