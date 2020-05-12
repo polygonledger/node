@@ -11,7 +11,7 @@ import (
 	"github.com/polygonledger/node/block"
 	"github.com/polygonledger/node/chain"
 	"github.com/polygonledger/node/crypto"
-	"github.com/polygonledger/node/ntcl"
+	"github.com/polygonledger/node/netio"
 )
 
 //--- handlers ---
@@ -31,20 +31,20 @@ func HandleEcho(ins string) string {
 	return resp
 }
 
-func HandlePing(msg ntcl.Message) ntcl.Message {
-	// validRequest := msg.MessageType == ntcl.REQ && msg.Command == "PING"
+func HandlePing(msg netio.Message) netio.Message {
+	// validRequest := msg.MessageType == netio.REQ && msg.Command == "PING"
 	// if !validRequest{
 	// 	//error
 	// }
-	reply_msg := ntcl.EncodeMsgMap(ntcl.REP, "PONG")
-	m := ntcl.ParseMessageMap(reply_msg)
+	reply_msg := netio.EncodeMsgMap(netio.REP, "PONG")
+	m := netio.ParseMessageMap(reply_msg)
 	return m
 }
 
-func HandleBlockheight(t *TCPNode, msg ntcl.Message) string {
+func HandleBlockheight(t *TCPNode, msg netio.Message) string {
 	bh := len(t.Mgr.Blocks)
 	data := strconv.Itoa(bh)
-	reply_msg := ntcl.EncodeMsgMapData(ntcl.REP, ntcl.CMD_BLOCKHEIGHT, data)
+	reply_msg := netio.EncodeMsgMapData(netio.REP, netio.CMD_BLOCKHEIGHT, data)
 	//("BLOCKHEIGHT ", reply_msg)
 	return reply_msg
 }
@@ -52,7 +52,7 @@ func HandleBlockheight(t *TCPNode, msg ntcl.Message) string {
 //Standard Tx handler
 //InteractiveTx also possible
 //client requests tranaction <=> server response with challenge <=> client proves
-func HandleTx(t *TCPNode, msg ntcl.Message) string {
+func HandleTx(t *TCPNode, msg netio.Message) string {
 	dataBytes := msg.Data
 
 	var tx block.Tx
@@ -63,11 +63,11 @@ func HandleTx(t *TCPNode, msg ntcl.Message) string {
 	t.log(fmt.Sprintf("tx %v ", tx))
 
 	resp := chain.HandleTx(t.Mgr, tx)
-	reply := ntcl.EncodeMsgMapData(ntcl.REP, ntcl.CMD_TX, resp)
+	reply := netio.EncodeMsgMapData(netio.REP, netio.CMD_TX, resp)
 	return reply
 }
 
-func HandleBalance(t *TCPNode, msg ntcl.Message) string {
+func HandleBalance(t *TCPNode, msg netio.Message) string {
 	dataBytes := msg.Data
 	t.log(fmt.Sprintf("HandleBalance data %v %v", string(msg.Data), dataBytes))
 
@@ -86,11 +86,11 @@ func HandleBalance(t *TCPNode, msg ntcl.Message) string {
 	//s := strconv.Itoa(balance)
 	// data, _ := json.Marshal(balance)
 	data := strconv.Itoa(balance)
-	reply_msg := ntcl.EncodeMsgMapData(ntcl.REP, ntcl.CMD_BALANCE, data)
+	reply_msg := netio.EncodeMsgMapData(netio.REP, netio.CMD_BALANCE, data)
 	return reply_msg
 }
 
-func HandleFaucet(t *TCPNode, msg ntcl.Message) string {
+func HandleFaucet(t *TCPNode, msg netio.Message) string {
 	//t.log(fmt.Sprintf("HandleFaucet"))
 
 	// dataBytes := msg.Data
@@ -117,96 +117,96 @@ func HandleFaucet(t *TCPNode, msg ntcl.Message) string {
 	reply_string := chain.HandleTx(t.Mgr, tx)
 	//t.log(fmt.Sprintf("resp > %s", reply_string))
 
-	reply := ntcl.EncodeMsgMapData(ntcl.REP, ntcl.CMD_FAUCET, reply_string)
+	reply := netio.EncodeMsgMapData(netio.REP, netio.CMD_FAUCET, reply_string)
 	return reply
 }
 
 //handle requests in telnet style. messages are edn based
-func RequestHandlerTel(t *TCPNode, ntchan ntcl.Ntchan) {
+func RequestHandlerTel(t *TCPNode, ntchan netio.Ntchan) {
 	for {
 		msg_string := <-ntchan.REQ_in
 		t.log(fmt.Sprintf("?? handle request %s ", msg_string))
 
-		msg := ntcl.ParseMessageMap(msg_string)
+		msg := netio.ParseMessageMap(msg_string)
 
 		var reply_msg string
-		//var reply_msg ntcl.Message
+		//var reply_msg netio.Message
 
 		t.log(fmt.Sprintf("Handle cmd %v", msg.Command))
 
 		switch msg.Command {
 
-		case ntcl.CMD_PING:
+		case netio.CMD_PING:
 			reply := HandlePing(msg)
-			reply_msg = ntcl.EncodeMsgMapS(reply)
+			reply_msg = netio.EncodeMsgMapS(reply)
 
-		case ntcl.CMD_NUMACCOUNTS:
+		case netio.CMD_NUMACCOUNTS:
 			numacc := len(t.Mgr.Accounts)
 			data := strconv.Itoa(numacc)
-			reply_msg = ntcl.EncodeMsgMapData(ntcl.REP, ntcl.CMD_NUMACCOUNTS, data)
+			reply_msg = netio.EncodeMsgMapData(netio.REP, netio.CMD_NUMACCOUNTS, data)
 
-		case ntcl.CMD_ACCOUNTS:
+		case netio.CMD_ACCOUNTS:
 			dat, _ := edn.Marshal(t.Mgr.Accounts)
-			reply_msg = ntcl.EncodeMsgMapData(ntcl.REP, ntcl.CMD_ACCOUNTS, string(dat))
+			reply_msg = netio.EncodeMsgMapData(netio.REP, netio.CMD_ACCOUNTS, string(dat))
 
-		case ntcl.CMD_STATUS:
+		case netio.CMD_STATUS:
 			statusdata := string(StatusContent(t.Mgr, t))
-			reply_msg = ntcl.EncodeMsgMapData(ntcl.REP, ntcl.CMD_STATUS, statusdata)
+			reply_msg = netio.EncodeMsgMapData(netio.REP, netio.CMD_STATUS, statusdata)
 
-		case ntcl.CMD_NUMCONN:
+		case netio.CMD_NUMCONN:
 			pn := len(t.GetPeers())
 			data := strconv.Itoa(pn)
-			reply_msg = ntcl.EncodeMsgMapData(ntcl.REP, ntcl.CMD_NUMCONN, data)
+			reply_msg = netio.EncodeMsgMapData(netio.REP, netio.CMD_NUMCONN, data)
 
-		case ntcl.CMD_BALANCE:
+		case netio.CMD_BALANCE:
 			reply_msg = HandleBalance(t, msg)
 
-		case ntcl.CMD_FAUCET:
+		case netio.CMD_FAUCET:
 			//send money to specified address
 			reply_msg = HandleFaucet(t, msg)
 
-		case ntcl.CMD_BLOCKHEIGHT:
+		case netio.CMD_BLOCKHEIGHT:
 			reply_msg = HandleBlockheight(t, msg)
 
-		case ntcl.CMD_GETTXPOOL:
+		case netio.CMD_GETTXPOOL:
 			t.log("get tx pool")
 
 			//TODO
 			data, _ := json.Marshal(t.Mgr.Tx_pool)
-			reply_msg = ntcl.EncodeMsgMapData(ntcl.REP, ntcl.CMD_GETTXPOOL, string(data))
+			reply_msg = netio.EncodeMsgMapData(netio.REP, netio.CMD_GETTXPOOL, string(data))
 
-		case ntcl.CMD_GETBLOCKS:
+		case netio.CMD_GETBLOCKS:
 			t.log("get tx pool")
 
 			//TODO
 			data, _ := json.Marshal(t.Mgr.Blocks)
-			reply_msg = ntcl.EncodeMsgMapData(ntcl.REP, ntcl.CMD_GETBLOCKS, string(data))
+			reply_msg = netio.EncodeMsgMapData(netio.REP, netio.CMD_GETBLOCKS, string(data))
 
 			//Login would be challenge response protocol
-			// case ntcl.CMD_LOGIN:
+			// case netio.CMD_LOGIN:
 			// 	log.Println("> ", msg.Data)
 
-		case ntcl.CMD_TX:
+		case netio.CMD_TX:
 			t.log("Handle tx")
 			reply_msg = HandleTx(t, msg)
 
-		case ntcl.CMD_RANDOM_ACCOUNT:
+		case netio.CMD_RANDOM_ACCOUNT:
 			t.log("Handle random account")
 
 			txJson, _ := json.Marshal(t.Mgr.RandomAccount())
-			reply_msg = ntcl.EncodeMsgMapData(ntcl.REP, ntcl.CMD_RANDOM_ACCOUNT, string(txJson))
+			reply_msg = netio.EncodeMsgMapData(netio.REP, netio.CMD_RANDOM_ACCOUNT, string(txJson))
 
 		//TODO separate handle process
 		//PUBSUB
-		case ntcl.CMD_SUB:
+		case netio.CMD_SUB:
 			t.log(fmt.Sprintf("subscribe to topic %v", msg.Data))
 
 			//quitpub := make(chan int)
-			go ntcl.PublishTime(ntchan)
-			go ntcl.PubWriterLoop(ntchan)
+			go netio.PublishTime(ntchan)
+			go netio.PubWriterLoop(ntchan)
 			//TODO reply sub ok
 
-		case ntcl.CMD_SUBUN:
+		case netio.CMD_SUBUN:
 			t.log(fmt.Sprintf("unsubscribe from topic %v", msg.Data))
 
 			go func() {
@@ -216,7 +216,7 @@ func RequestHandlerTel(t *TCPNode, ntchan ntcl.Ntchan) {
 
 			//TODO reply unsub ok
 
-		case ntcl.CMD_LOGOFF:
+		case netio.CMD_LOGOFF:
 			reply_msg = "{:REP BYE}"
 			ntchan.Writer_queue <- reply_msg
 			time.Sleep(500 * time.Millisecond)

@@ -7,7 +7,7 @@ import (
 
 	"github.com/polygonledger/node/chain"
 	"github.com/polygonledger/node/crypto"
-	"github.com/polygonledger/node/ntcl"
+	"github.com/polygonledger/node/netio"
 )
 
 func TestBasicCommand(t *testing.T) {
@@ -22,11 +22,11 @@ func TestBasicCommand(t *testing.T) {
 	node.Loglevel = LOGLEVEL_OFF
 	node.Mgr = &mgr
 
-	// req_msg := ntcl.EncodeMsgMap(ntcl.REQ, ntcl.CMD_PING)
+	// req_msg := netio.EncodeMsgMap(netio.REQ, netio.CMD_PING)
 	// //ntchan.REQ_in <- msg
 	// reply_msg := HandlePing(msg)
 
-	// ntchan := ntcl.ConnNtchanStub("")
+	// ntchan := netio.ConnNtchanStub("")
 	// go RequestHandlerTel(node, ntchan)
 	// ntchan.REQ_in <- req_msg
 	// reply := <-ntchan.REP_out
@@ -39,8 +39,8 @@ func TestBasicCommand(t *testing.T) {
 }
 
 func TestPing(t *testing.T) {
-	reqstring := ntcl.EncodeMsgMap(ntcl.REQ, "PING")
-	req := ntcl.ParseMessageMap(reqstring)
+	reqstring := netio.EncodeMsgMap(netio.REQ, "PING")
+	req := netio.ParseMessageMap(reqstring)
 	if req.MessageType != "REQ" || req.Command != "PING" {
 		t.Error("req ", req)
 	}
@@ -52,8 +52,8 @@ func TestPing(t *testing.T) {
 
 // func TestPingRequest(t *testing.T) {
 
-// 	reqstring := ntcl.EncodeMsgMap(ntcl.REQ, "PING")
-// 	req := ntcl.ParseMessageMap(reqstring)
+// 	reqstring := netio.EncodeMsgMap(netio.REQ, "PING")
+// 	req := netio.ParseMessageMap(reqstring)
 
 // }
 
@@ -69,10 +69,10 @@ func TestBalance(t *testing.T) {
 	mgr.InitAccounts()
 	node.Mgr = &mgr
 
-	req_msg := ntcl.EncodeMsgMapData(ntcl.REQ, ntcl.CMD_BALANCE, "abc")
+	req_msg := netio.EncodeMsgMapData(netio.REQ, netio.CMD_BALANCE, "abc")
 	//fmt.Println(req_msg)
 
-	msg := ntcl.ParseMessageMap(req_msg)
+	msg := netio.ParseMessageMap(req_msg)
 
 	reply_msg := HandleBalance(node, msg)
 	target := "{:REP BALANCE :data 0}"
@@ -80,9 +80,9 @@ func TestBalance(t *testing.T) {
 		t.Error("reply_msg ", reply_msg, target)
 	}
 
-	msg = ntcl.ParseMessageMap(reply_msg)
+	msg = netio.ParseMessageMap(reply_msg)
 
-	if msg.MessageType != ntcl.REP {
+	if msg.MessageType != netio.REP {
 		t.Error("balance msg")
 	}
 
@@ -92,12 +92,12 @@ func TestBalance(t *testing.T) {
 	mgr.SetAccount(ra, 10)
 
 	//log.Println(ra.AccountKey)
-	req_msg_string := ntcl.EncodeMsgMapData(ntcl.REQ, ntcl.CMD_BALANCE, ra)
+	req_msg_string := netio.EncodeMsgMapData(netio.REQ, netio.CMD_BALANCE, ra)
 	if req_msg_string != "{:REQ BALANCE :data P2e2bfb58c9db}" {
 		t.Error("req string")
 	}
 
-	req_msg_balance := ntcl.ParseMessageMapData(req_msg_string)
+	req_msg_balance := netio.ParseMessageMapData(req_msg_string)
 
 	reply_msg = HandleBalance(node, req_msg_balance)
 	if reply_msg != "{:REP BALANCE :data 10}" {
@@ -120,8 +120,8 @@ func TestFaucetTx(t *testing.T) {
 	kp := crypto.PairFromSecret("test")
 	pubk := crypto.PubKeyToHex(kp.PubKey)
 	addr := crypto.Address(pubk)
-	req_msg_string := ntcl.EncodeMsgMapData(ntcl.REQ, ntcl.CMD_FAUCET, addr)
-	req_msg := ntcl.ParseMessageMap(req_msg_string)
+	req_msg_string := netio.EncodeMsgMapData(netio.REQ, netio.CMD_FAUCET, addr)
+	req_msg := netio.ParseMessageMap(req_msg_string)
 
 	node, _ := NewNode()
 	//defer node.Close()
@@ -140,20 +140,20 @@ func TestFaucetTx(t *testing.T) {
 
 	// time.Sleep(2000 * time.Millisecond)
 
-	// req_msg = ntcl.EncodeMEncodeMsgxx(ntcl.REQ, ntcl.CMD_BALANCE, addr)
-	// msg = ntcl.ParseMessag(req_msg)
+	// req_msg = netio.EncodeMEncodeMsgxx(netio.REQ, netio.CMD_BALANCE, addr)
+	// msg = netio.ParseMessag(req_msg)
 
 	// log.Println(mgr.Accounts)
 
 	// reply_msg_string := HandleBalance(node, msg)
 	// log.Println(reply_msg_string)
-	// msg = ntcl.ParseMessag(reply_msg_string)
+	// msg = netio.ParseMessag(reply_msg_string)
 	// // if reply_msg_string != "REP#BALANCE#1|" {
 	// // 	t.Error(msg)
 	// // }
 
-	// // bal := ntcl.ParseMessageBalance(reply_msg)
-	// if msg.MessageType != "REP" || msg.Command != ntcl.CMD_BALANCE {
+	// // bal := netio.ParseMessageBalance(reply_msg)
+	// if msg.MessageType != "REP" || msg.Command != netio.CMD_BALANCE {
 	// 	t.Error("msg ", msg)
 	// }
 
@@ -172,8 +172,8 @@ func TestFaucetTx(t *testing.T) {
 // 	kp := crypto.PairFromSecret("test")
 // 	pubk := crypto.PubKeyToHex(kp.PubKey)
 // 	addr := crypto.Address(pubk)
-// 	req_msg := ntcl.EncodeMsgxx(ntcl.REQ, ntcl.CMD_FAUCET, addr)
-// 	msg := ntcl.ParseMessag(req_msg)
+// 	req_msg := netio.EncodeMsgxx(netio.REQ, netio.CMD_FAUCET, addr)
+// 	msg := netio.ParseMessag(req_msg)
 
 // 	reply_msg := HandleFaucet(node, msg)
 // 	if reply_msg != "REP#FAUCET#ok|" {
@@ -181,12 +181,12 @@ func TestFaucetTx(t *testing.T) {
 // 	}
 // 	chain.MakeBlock(&mgr)
 // 	time.Sleep(100 * time.Millisecond)
-// 	req_msg = ntcl.EncodeMsgxx(ntcl.REQ, ntcl.CMD_BALANCE, addr)
-// 	msg = ntcl.ParseMessag(req_msg)
+// 	req_msg = netio.EncodeMsgxx(netio.REQ, netio.CMD_BALANCE, addr)
+// 	msg = netio.ParseMessag(req_msg)
 // 	reply_msg = HandleBalance(node, msg)
-// 	msg = ntcl.ParseMessa(reply_msg)
+// 	msg = netio.ParseMessa(reply_msg)
 
-// 	if msg.MessageType != "REP" || msg.Command != ntcl.CMD_BALANCE {
+// 	if msg.MessageType != "REP" || msg.Command != netio.CMD_BALANCE {
 // 		t.Error("msg ", msg)
 // 	}
 
@@ -217,8 +217,8 @@ func TestFaucetTx(t *testing.T) {
 // 	}
 
 // 	txJson, _ := json.Marshal(tx)
-// 	req_msg = ntcl.EncodeMessageTx(txJson)
-// 	msg = ntcl.ParseMessa(req_msg)
+// 	req_msg = netio.EncodeMessageTx(txJson)
+// 	msg = netio.ParseMessa(req_msg)
 
 // 	reply_msg = HandleTx(node, msg)
 // 	// //TODO!
@@ -229,14 +229,14 @@ func TestFaucetTx(t *testing.T) {
 // 	chain.MakeBlock(&mgr)
 // 	time.Sleep(100 * time.Millisecond)
 
-// 	req_msg = ntcl.EncodeMsgxx(ntcl.REQ, ntcl.CMD_BALANCE, addr2)
-// 	msg = ntcl.ParseMessae(req_msg)
+// 	req_msg = netio.EncodeMsgxx(netio.REQ, netio.CMD_BALANCE, addr2)
+// 	msg = netio.ParseMessae(req_msg)
 // 	reply_msg = HandleBalance(node, msg)
-// 	msg = ntcl.ParseMessa(reply_msg)
+// 	msg = netio.ParseMessa(reply_msg)
 // 	//if reply_msg != "REP#BALANCE#5|" {
-// 	//bal := ntcl.ParseMeseBalance(reply_msg)
+// 	//bal := netio.ParseMeseBalance(reply_msg)
 
-// 	if msg.MessageType != "REP" || msg.Command != ntcl.CMD_BALANCE {
+// 	if msg.MessageType != "REP" || msg.Command != netio.CMD_BALANCE {
 // 		t.Error("reply_msg ", reply_msg)
 // 	}
 

@@ -5,23 +5,23 @@ import (
 	"testing"
 
 	block "github.com/polygonledger/node/block"
-	"github.com/polygonledger/node/ntcl"
+	"github.com/polygonledger/node/netio"
 )
 
 func TestMessageBasic(t *testing.T) {
 
-	msg := ntcl.Message{MessageType: ntcl.REQ, Command: "CMD"}
-	if !ntcl.IsValidMsgType(msg.MessageType) {
+	msg := netio.Message{MessageType: netio.REQ, Command: "CMD"}
+	if !netio.IsValidMsgType(msg.MessageType) {
 		t.Error("msg type invalid")
 	}
 }
 
 func TestMessageJson(t *testing.T) {
 
-	msg := ntcl.Message{MessageType: ntcl.REQ, Command: "CMD"}
+	msg := netio.Message{MessageType: netio.REQ, Command: "CMD"}
 	msgJson, _ := json.Marshal(msg)
 
-	var msgUn ntcl.Message
+	var msgUn netio.Message
 	if err := json.Unmarshal(msgJson, &msgUn); err != nil {
 		panic(err)
 	}
@@ -30,19 +30,19 @@ func TestMessageJson(t *testing.T) {
 		t.Error("JSON marshal failed")
 	}
 
-	if msgUn.MessageType != ntcl.REQ {
+	if msgUn.MessageType != netio.REQ {
 		t.Error("JSON marshal failed")
 	}
 }
 
 func TestMessageType(t *testing.T) {
-	msg := ntcl.RequestMessage()
-	if msg.MessageType != ntcl.REQ {
+	msg := netio.RequestMessage()
+	if msg.MessageType != netio.REQ {
 		t.Error("msg failed")
 	}
 
-	msg = ntcl.ReplyMessage()
-	if msg.MessageType != ntcl.REP {
+	msg = netio.ReplyMessage()
+	if msg.MessageType != netio.REP {
 		t.Error("msg failed")
 	}
 
@@ -50,14 +50,14 @@ func TestMessageType(t *testing.T) {
 
 func TestMessageAccount(t *testing.T) {
 	a := block.Account{AccountKey: "test"}
-	msg := ntcl.AccountMessage(a)
+	msg := netio.AccountMessage(a)
 	if msg.Account != a {
 		t.Error("msg failed")
 	}
 
 	msgJson, _ := json.Marshal(msg)
 
-	var msgUn ntcl.MessageAccount
+	var msgUn netio.MessageAccount
 	if err := json.Unmarshal(msgJson, &msgUn); err != nil {
 		panic(err)
 	}

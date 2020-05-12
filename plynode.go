@@ -24,7 +24,7 @@ import (
 	"github.com/polygonledger/node/block"
 	"github.com/polygonledger/node/chain"
 	"github.com/polygonledger/node/config"
-	"github.com/polygonledger/node/ntcl"
+	"github.com/polygonledger/node/netio"
 )
 
 var blocktime = 10000 * time.Millisecond
@@ -39,7 +39,7 @@ type TCPNode struct {
 	server        net.Listener
 	accepting     bool
 	ConnectedChan chan net.Conn //channel of newly connected clients/peers
-	Peers         []ntcl.Peer
+	Peers         []netio.Peer
 	Mgr           *chain.ChainManager
 	Starttime     time.Time
 	Logger        *log.Logger
@@ -47,7 +47,7 @@ type TCPNode struct {
 	Config        config.Configuration
 }
 
-func (t *TCPNode) GetPeers() []ntcl.Peer {
+func (t *TCPNode) GetPeers() []netio.Peer {
 	if &t.Peers == nil {
 		return nil
 	}
@@ -116,9 +116,9 @@ func (t *TCPNode) HandleConnectTCP() {
 		// log.Println("> ", t.Peers)
 		// log.Println("# peers ", len(t.Peers))
 		Verbose := true
-		ntchan := ntcl.ConnNtchan(newpeerConn, "server", strRemoteAddr, Verbose)
+		ntchan := netio.ConnNtchan(newpeerConn, "server", strRemoteAddr, Verbose)
 
-		p := ntcl.Peer{Address: strRemoteAddr, NodePort: t.NodePort, NTchan: ntchan}
+		p := netio.Peer{Address: strRemoteAddr, NodePort: t.NodePort, NTchan: ntchan}
 		t.Peers = append(t.Peers, p)
 
 		go t.handleConnection(t.Mgr, ntchan)
@@ -132,7 +132,7 @@ func (t *TCPNode) HandleConnectTCP() {
 
 //init an output connection
 //TODO check if connected inbound already
-func initOutbound(mainPeerAddress string, node_port int, verbose bool) ntcl.Ntchan {
+func initOutbound(mainPeerAddress string, node_port int, verbose bool) netio.Ntchan {
 
 	addr := mainPeerAddress + ":" + strconv.Itoa(node_port)
 	//log.Println("dial ", addr)
@@ -143,18 +143,18 @@ func initOutbound(mainPeerAddress string, node_port int, verbose bool) ntcl.Ntch
 	}
 
 	//log.Println("connected")NetMsgRead
-	ntchan := ntcl.ConnNtchan(conn, "client", addr, verbose)
+	ntchan := netio.ConnNtchan(conn, "client", addr, verbose)
 
-	go ntcl.ReadLoop(ntchan)
-	go ntcl.ReadProcessor(ntchan)
-	go ntcl.WriteProcessor(ntchan)
-	go ntcl.WriteLoop(ntchan, 300*time.Millisecond)
+	go netio.ReadLoop(ntchan)
+	go netio.ReadProcessor(ntchan)
+	go netio.WriteProcessor(ntchan)
+	go netio.WriteLoop(ntchan, 300*time.Millisecond)
 	return ntchan
 
 }
 
-func ping(peer ntcl.Peer) bool {
-	req_msg := ntcl.EncodeMsgMap(ntcl.REQ, ntcl.CMD_PING)
+func ping(peer netio.Peer) bool {
+	req_msg := netio.EncodeMsgMap(netio.REQ, netio.CMD_PING)
 	peer.NTchan.REQ_out <- req_msg
 	time.Sleep(1000 * time.Millisecond)
 	reply := <-peer.NTchan.REP_in
@@ -163,18 +163,18 @@ func ping(peer ntcl.Peer) bool {
 	return success
 }
 
-func FetchBlocksPeer(config config.Configuration, peer ntcl.Peer) []block.Block {
+func FetchBlocksPeer(config config.Configuration, peer netio.Peer) []block.Block {
 
 	//log.Println("FetchBlocksPeer ", peer)
 	ping(peer)
-	req_msg := ntcl.EncodeMsgMap(ntcl.REQ, ntcl.CMD_GETBLOCKS)
+	req_msg := netio.EncodeMsgMap(netio.REQ, netio.CMD_GETBLOCKS)
 	//log.Println(req_msg)
 
 	peer.NTchan.REQ_out <- req_msg
 	time.Sleep(1000 * time.Millisecond)
 	reply := <-peer.NTchan.REP_in
 	//log.Println("reply ", reply)
-	reply_msg := ntcl.ParseMessageMap(reply)
+	reply_msg := netio.ParseMessageMap(reply)
 	var blocks []block.Block
 	if err := json.Unmarshal(reply_msg.Data, &blocks); err != nil {
 		panic(err)
@@ -189,7 +189,7 @@ func FetchAllBlocks(config config.Configuration, t *TCPNode) {
 	mainPeerAddress := config.PeerAddresses[0]
 	verbose := true
 	ntchan := initOutbound(mainPeerAddress, config.NodePort, verbose)
-	peer := ntcl.CreatePeer(mainPeerAddress, mainPeerAddress, config.NodePort, ntchan)
+	peer := netio.CreatePeer(mainPeerAddress, mainPeerAddress, config.NodePort, ntchan)
 	blocks := FetchBlocksPeer(config, peer)
 	//log.Println("got blocks ", len(blocks))
 	t.Mgr.Blocks = blocks
@@ -201,17 +201,17 @@ func FetchAllBlocks(config config.Configuration, t *TCPNode) {
 
 }
 
-func (t *TCPNode) handleConnection(mgr *chain.ChainManager, ntchan ntcl.Ntchan) {
+func (t *TCPNode) handleConnection(mgr *chain.ChainManager, ntchan netio.Ntchan) {
 	//tr := 100 * time.Millisecond
 	//defer ntchan.Conn.Close()
 	t.log(fmt.Sprintf("handleConnection"))
 
-	//ntcl.NetConnectorSetup(ntchan)
-	ntcl.NetConnectorSetup(ntchan)
+	//netio.NetConnectorSetup(ntchan)
+	netio.NetConnectorSetup(ntchan)
 
 	go RequestHandlerTel(t, ntchan)
 
-	//go ntcl.WriteLoop(ntchan, 100*time.Millisecond)
+	//go netio.WriteLoop(ntchan, 100*time.Millisecond)
 
 }
 

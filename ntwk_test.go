@@ -6,10 +6,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/polygonledger/node/ntcl"
+	"github.com/polygonledger/node/netio"
 )
 
-func SimulateNetworkInput(ntchan *ntcl.Ntchan) {
+func SimulateNetworkInput(ntchan *netio.Ntchan) {
 	for {
 		ntchan.Reader_queue <- "test"
 		//log.Println(len(ntchan.Reader_queue))
@@ -20,7 +20,7 @@ func SimulateNetworkInput(ntchan *ntcl.Ntchan) {
 func TestReaderin(t *testing.T) {
 	log.Println("TestReaderin")
 
-	ntchan := ntcl.ConnNtchanStub("")
+	ntchan := netio.ConnNtchanStub("")
 	go SimulateNetworkInput(&ntchan)
 	time.Sleep(300 * time.Millisecond)
 	start := time.Now()
@@ -41,9 +41,9 @@ func TestReaderin(t *testing.T) {
 	}
 }
 
-func SimulateRequest(ntchan *ntcl.Ntchan) {
+func SimulateRequest(ntchan *netio.Ntchan) {
 
-	req_msg := ntcl.EncodeMsgMap(ntcl.REQ, ntcl.CMD_PING)
+	req_msg := netio.EncodeMsgMap(netio.REQ, netio.CMD_PING)
 	fmt.Println("sim ", req_msg)
 	ntchan.Reader_queue <- req_msg
 	//log.Println(len(ntchan.Reader_queue))
@@ -54,9 +54,9 @@ func SimulateRequest(ntchan *ntcl.Ntchan) {
 // in reader should bet forwarded to req_chan
 func TestRequestIn(t *testing.T) {
 	log.Println("TestRequestIn")
-	ntchan := ntcl.ConnNtchanStub("")
+	ntchan := netio.ConnNtchanStub("")
 
-	go ntcl.ReadProcessor(ntchan)
+	go netio.ReadProcessor(ntchan)
 
 	if !isEmpty(ntchan.Reader_queue, 1*time.Second) {
 		t.Error("channel full")
@@ -74,8 +74,8 @@ func TestRequestIn(t *testing.T) {
 	}
 
 	req_in := <-ntchan.REQ_in
-	if req_in != ntcl.EncodeMsgMap(ntcl.REQ, ntcl.CMD_PING) {
-		t.Error("req not ?? ", req_in, ntcl.EncodeMsgMap(ntcl.REQ, ntcl.CMD_PING))
+	if req_in != netio.EncodeMsgMap(netio.REQ, netio.CMD_PING) {
+		t.Error("req not ?? ", req_in, netio.EncodeMsgMap(netio.REQ, netio.CMD_PING))
 	}
 
 	//req_in
@@ -88,9 +88,9 @@ func TestRequestIn(t *testing.T) {
 func TestRequestOut(t *testing.T) {
 	log.Println("TestRequestOut")
 
-	ntchan := ntcl.ConnNtchanStub("")
+	ntchan := netio.ConnNtchanStub("")
 
-	//GGreq_out_msg := ntcl.EncodeMsgMap(ntcl.REQ, ntcl.CMD_PING)
+	//GGreq_out_msg := netio.EncodeMsgMap(netio.REQ, netio.CMD_PING)
 
 	select {
 	case msg := <-ntchan.REQ_out:
@@ -132,7 +132,7 @@ func TestRequestOut(t *testing.T) {
 func TestReplyIn(t *testing.T) {
 	log.Println("TestReplyIn")
 
-	ntchan := ntcl.ConnNtchanStub("")
+	ntchan := netio.ConnNtchanStub("")
 
 	go func() {
 		ntchan.REP_in <- "test"
@@ -151,7 +151,7 @@ func TestReplyIn(t *testing.T) {
 
 }
 
-func basicPingReqProcessor(ntchan ntcl.Ntchan, t *testing.T) {
+func basicPingReqProcessor(ntchan netio.Ntchan, t *testing.T) {
 
 	x := <-ntchan.REQ_in
 	if x != "ping" {
@@ -163,7 +163,7 @@ func basicPingReqProcessor(ntchan ntcl.Ntchan, t *testing.T) {
 func TestPingAll(t *testing.T) {
 	log.Println("TestPing")
 
-	ntchan := ntcl.ConnNtchanStub("")
+	ntchan := netio.ConnNtchanStub("")
 
 	//REQ in
 	//reply request ping with pong
@@ -207,11 +207,11 @@ func TestPingAll(t *testing.T) {
 func TestReaderRequest(t *testing.T) {
 	log.Println("TestReaderRequest")
 
-	ntchan := ntcl.ConnNtchanStub("")
+	ntchan := netio.ConnNtchanStub("")
 
-	go ntcl.ReadProcessor(ntchan)
+	go netio.ReadProcessor(ntchan)
 
-	req_msg := ntcl.EncodeMsgMap(ntcl.REQ, ntcl.CMD_PING)
+	req_msg := netio.EncodeMsgMap(netio.REQ, netio.CMD_PING)
 
 	ntchan.Reader_queue <- req_msg
 	time.Sleep(50 * time.Millisecond)
@@ -222,13 +222,13 @@ func TestReaderRequest(t *testing.T) {
 	}
 
 	req_in := <-ntchan.REQ_in
-	if req_in != ntcl.EncodeMsgMap(ntcl.REQ, ntcl.CMD_PING) {
+	if req_in != netio.EncodeMsgMap(netio.REQ, netio.CMD_PING) {
 		t.Error("req not equal")
 	}
 
 }
 
-func pinghandler(ntchan ntcl.Ntchan) {
+func pinghandler(ntchan netio.Ntchan) {
 	for {
 		//REQUEST
 		req_msg := <-ntchan.REQ_in
@@ -236,7 +236,7 @@ func pinghandler(ntchan ntcl.Ntchan) {
 		if req_msg == "" {
 			//<-req_msg
 		}
-		rep_msg := ntcl.EncodeMsgMap(ntcl.REP, ntcl.CMD_PONG)
+		rep_msg := netio.EncodeMsgMap(netio.REP, netio.CMD_PONG)
 		ntchan.REP_out <- rep_msg
 		//log.Println("REP_out >> ", rep_msg)
 	}
@@ -245,13 +245,13 @@ func pinghandler(ntchan ntcl.Ntchan) {
 func TestReaderPing(t *testing.T) {
 	log.Println("TestReaderPing")
 
-	ntchan := ntcl.ConnNtchanStub("")
+	ntchan := netio.ConnNtchanStub("")
 
-	go ntcl.ReadProcessor(ntchan)
+	go netio.ReadProcessor(ntchan)
 
 	go pinghandler(ntchan)
 
-	ntchan.REQ_in <- ntcl.EncodeMsgMap(ntcl.REQ, ntcl.CMD_PING)
+	ntchan.REQ_in <- netio.EncodeMsgMap(netio.REQ, netio.CMD_PING)
 
 	time.Sleep(50 * time.Millisecond)
 
@@ -260,7 +260,7 @@ func TestReaderPing(t *testing.T) {
 	}
 
 	x := <-ntchan.REP_out
-	if x != ntcl.EncodeMsgMap(ntcl.REP, ntcl.CMD_PONG) {
+	if x != netio.EncodeMsgMap(netio.REP, netio.CMD_PONG) {
 		t.Error("not poing")
 	}
 
@@ -270,13 +270,13 @@ func TestReaderPing(t *testing.T) {
 func TestAllPingPoingIn(t *testing.T) {
 	log.Println("TestAllPingPoingIn")
 
-	ntchan := ntcl.ConnNtchanStub("")
+	ntchan := netio.ConnNtchanStub("")
 
-	go ntcl.ReadProcessor(ntchan)
-	go ntcl.WriteProcessor(ntchan)
+	go netio.ReadProcessor(ntchan)
+	go netio.WriteProcessor(ntchan)
 	go pinghandler(ntchan)
 
-	ntchan.Reader_queue <- ntcl.EncodeMsgMap(ntcl.REQ, ntcl.CMD_PING)
+	ntchan.Reader_queue <- netio.EncodeMsgMap(netio.REQ, netio.CMD_PING)
 
 	time.Sleep(50 * time.Millisecond)
 
@@ -298,7 +298,7 @@ func TestAllPingPoingIn(t *testing.T) {
 
 //connect to ntchans to each other
 //this simulates a real network connection
-func ConnectWrite(ntchan1 ntcl.Ntchan, ntchan2 ntcl.Ntchan) {
+func ConnectWrite(ntchan1 netio.Ntchan, ntchan2 netio.Ntchan) {
 	for {
 		xout := <-ntchan1.Writer_queue
 		ntchan2.Reader_queue <- xout
@@ -311,11 +311,11 @@ func ConnectWrite(ntchan1 ntcl.Ntchan, ntchan2 ntcl.Ntchan) {
 func TestAllPingPongDuplex(t *testing.T) {
 	log.Println("TestAllPingPongDuplex")
 
-	ntchan1 := ntcl.ConnNtchanStub("")
-	ntchan2 := ntcl.ConnNtchanStub("")
+	ntchan1 := netio.ConnNtchanStub("")
+	ntchan2 := netio.ConnNtchanStub("")
 
-	go ntcl.ReadProcessor(ntchan1)
-	go ntcl.WriteProcessor(ntchan1)
+	go netio.ReadProcessor(ntchan1)
+	go netio.WriteProcessor(ntchan1)
 	go ConnectWrite(ntchan1, ntchan2)
 
 	ntchan1.Writer_queue <- "test"

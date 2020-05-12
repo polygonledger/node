@@ -11,25 +11,25 @@ import (
 
 	"github.com/polygonledger/node/chain"
 	"github.com/polygonledger/node/config"
-	"github.com/polygonledger/node/ntcl"
+	"github.com/polygonledger/node/netio"
 )
 
-func (t *TCPNode) handleConnectionMock(mgr *chain.ChainManager, ntchan ntcl.Ntchan) {
+func (t *TCPNode) handleConnectionMock(mgr *chain.ChainManager, ntchan netio.Ntchan) {
 	//tr := 100 * time.Millisecond
 	//defer ntchan.Conn.Close()
 	t.log(fmt.Sprintf("handleConnection"))
 
-	//ntcl.NetConnectorSetup(ntchan)
-	ntcl.NetConnectorSetupEcho(ntchan)
+	//netio.NetConnectorSetup(ntchan)
+	netio.NetConnectorSetupEcho(ntchan)
 
 	go RequestHandlerTelMock(t, ntchan)
 
-	//go ntcl.WriteLoop(ntchan, 100*time.Millisecond)
+	//go netio.WriteLoop(ntchan, 100*time.Millisecond)
 
 }
 
 //handle requests in telnet style i.e. string encoding
-func RequestHandlerTelMock(t *TCPNode, ntchan ntcl.Ntchan) {
+func RequestHandlerTelMock(t *TCPNode, ntchan netio.Ntchan) {
 	for {
 		msg_string := <-ntchan.REQ_in
 		t.log(fmt.Sprintf("handle %s ", msg_string))
@@ -53,9 +53,9 @@ func (t *TCPNode) HandleConnectTCPMock() {
 		// log.Println("> ", t.Peers)
 		// log.Println("# peers ", len(t.Peers))
 		Verbose := true
-		ntchan := ntcl.ConnNtchan(newpeerConn, "server", strRemoteAddr, Verbose)
+		ntchan := netio.ConnNtchan(newpeerConn, "server", strRemoteAddr, Verbose)
 
-		p := ntcl.Peer{Address: strRemoteAddr, NodePort: t.NodePort, NTchan: ntchan}
+		p := netio.Peer{Address: strRemoteAddr, NodePort: t.NodePort, NTchan: ntchan}
 		t.Peers = append(t.Peers, p)
 
 		//go t.handleConnection(t.Mgr, ntchan)

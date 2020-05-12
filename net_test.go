@@ -7,7 +7,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/polygonledger/node/ntcl"
+	"github.com/polygonledger/node/netio"
 )
 
 const test_node_port = 8888
@@ -37,7 +37,7 @@ func initserver() *TCPNode {
 	return testsrv
 }
 
-func testclient() ntcl.Ntchan {
+func testclient() netio.Ntchan {
 	time.Sleep(200 * time.Millisecond)
 	addr := ":" + strconv.Itoa(test_node_port)
 	conn, err := net.Dial("tcp", addr)
@@ -46,7 +46,7 @@ func testclient() ntcl.Ntchan {
 	}
 	//t.Error("...")
 	log.Println("connected")
-	ntchan := ntcl.ConnNtchan(conn, "client", addr, false)
+	ntchan := netio.ConnNtchan(conn, "client", addr, false)
 	//defer conn.Close()
 	return ntchan
 
@@ -88,8 +88,8 @@ func TestServer_Write(t *testing.T) {
 	defer testsrv.Close()
 
 	clientNt := testclient()
-	go ntcl.ReadLoop(clientNt)
-	//go ntcl.ReadProcessor(clientNt)
+	go netio.ReadLoop(clientNt)
+	//go netio.ReadProcessor(clientNt)
 
 	time.Sleep(2000 * time.Millisecond)
 
@@ -105,7 +105,7 @@ func TestServer_Write(t *testing.T) {
 	}
 
 	reqs := "hello world"
-	n, err := ntcl.NetWrite(firstpeer.NTchan, reqs)
+	n, err := netio.NetWrite(firstpeer.NTchan, reqs)
 
 	if err != nil {
 		t.Error("could not write to server:", err)
@@ -142,16 +142,16 @@ func TestServer_Write(t *testing.T) {
 
 // 	reqs := "hello world"
 
-// 	n, err := ntcl.NetWrite(conn, reqs)
+// 	n, err := netio.NetWrite(conn, reqs)
 // 	if err != nil {
 // 		t.Error("could not write payload to server:", err)
 // 	} else {
 // 		log.Println("bytes written ", n)
 // 	}
 
-// 	read_msg, err := ntcl.MsgRead(conn)
+// 	read_msg, err := netio.MsgRead(conn)
 
-// 	expected_result := ntcl.EncodeMsg("Echo:" + reqs)
+// 	expected_result := netio.EncodeMsg("Echo:" + reqs)
 // 	if err != nil {
 // 		log.Println(err)
 // 	}

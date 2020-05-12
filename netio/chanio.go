@@ -1,8 +1,8 @@
-package ntcl
+package netio
 
-// network layer (NTCL)
+// network communication layer (netio)
 
-// NTCL -> semantics of channels
+// netio -> semantics of channels
 // TCP/IP -> golang net
 
 // see whitepaper for details

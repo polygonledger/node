@@ -1,4 +1,4 @@
-package ntcl
+package netio
 
 import (
 	"time"

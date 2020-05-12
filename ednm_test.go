@@ -5,7 +5,7 @@ import (
 
 	//"fmt"
 
-	"github.com/polygonledger/node/ntcl"
+	"github.com/polygonledger/node/netio"
 	"github.com/polygonledger/node/parser"
 )
 
@@ -23,12 +23,12 @@ func TestMap(t *testing.T) {
 }
 
 func TestEncodeReq(t *testing.T) {
-	msgs := ntcl.EncodeMsgMap(ntcl.REQ, "PING")
+	msgs := netio.EncodeMsgMap(netio.REQ, "PING")
 	if msgs != "{:REQ PING}" {
 		t.Error("wrong encoding ", msgs)
 	}
 
-	msg := ntcl.ParseMessageMap(msgs)
+	msg := netio.ParseMessageMap(msgs)
 	if msg.MessageType != "REQ" {
 		t.Error("type")
 	}
@@ -58,9 +58,9 @@ func TestDecodeMap(t *testing.T) {
 		t.Error(k)
 	}
 
-	//req_msg_string := ntcl.EncodeMsgMapData(ntcl.REQ, ntcl.CMD_BALANCE, ra)
-	//req_msg_balance := ntcl.ParseMessageMapData(req_msg_string)
-	// msg := ntcl.ParseMessageMapData(s)
+	//req_msg_string := netio.EncodeMsgMapData(netio.REQ, netio.CMD_BALANCE, ra)
+	//req_msg_balance := netio.ParseMessageMapData(req_msg_string)
+	// msg := netio.ParseMessageMapData(s)
 
 	// //if x.Data != []byte("P2e2bfb58c9db") {
 	// if msg.Data == nil {

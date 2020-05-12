@@ -1,4 +1,4 @@
-package ntcl
+package netio
 
 // functions relating to network stack
 // TCP implementation currently works like this
@@ -20,6 +20,8 @@ import (
 )
 
 func NetWrite(ntchan Ntchan, content string) (int, error) {
+	fmt.Println("NetWrite ", content)
+
 	//since Netread READLINE uses \n add it here
 	NEWLINE := '\n'
 	respContent := fmt.Sprintf("%s%c", content, NEWLINE)
@@ -28,6 +30,8 @@ func NetWrite(ntchan Ntchan, content string) (int, error) {
 	n, err := writer.WriteString(respContent)
 	if err == nil {
 		err = writer.Flush()
+	} else {
+		fmt.Println("error writing to ", ntchan)
 	}
 	s := fmt.Sprintf("bytes written %d %s %s", n, ntchan.SrcName, ntchan.DestName)
 	vlog(ntchan, s)

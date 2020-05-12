@@ -7,7 +7,7 @@ import (
 	"log"
 	"net"
 
-	"github.com/polygonledger/node/ntcl"
+	"github.com/polygonledger/node/netio"
 )
 
 func main() {
@@ -18,7 +18,7 @@ func main() {
 	//cmd = strings.Trim(cmd, string('\n'))
 
 	mainPeerAddress := "localhost:8888"
-	mainPeer := ntcl.CreatePeer(mainPeerAddress, 8888)
+	mainPeer := netio.CreatePeer(mainPeerAddress, 8888)
 	log.Println("client with mainPeer ", mainPeer)
 
 	log.Println("Dial " + mainPeerAddress)
@@ -28,10 +28,10 @@ func main() {
 	}
 
 	content := "telnet"
-	num, err := ntcl.NetWrite(conn, content)
+	num, err := netio.NetWrite(conn, content)
 
 	log.Println(num)
 
-	s, _ := ntcl.NetRead(conn, "}")
+	s, _ := netio.NetRead(conn, "}")
 	log.Println(s)
 }

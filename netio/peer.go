@@ -1,4 +1,4 @@
-package ntcl
+package netio
 
 type Peer struct {
 	Address  string `json:"Address"`
