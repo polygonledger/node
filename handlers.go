@@ -143,15 +143,6 @@ func RequestReply(t *TCPNode, ntchan netio.Ntchan, msg netio.Message) string {
 		dat, _ := edn.Marshal(t.Mgr.Accounts)
 		reply_msg = netio.EncodeMsgMapData(netio.REP, netio.CMD_ACCOUNTS, string(dat))
 
-	case netio.CMD_STATUS:
-		statusdata := string(StatusContent(t.Mgr, t))
-		reply_msg = netio.EncodeMsgMapData(netio.REP, netio.CMD_STATUS, statusdata)
-
-	case netio.CMD_NUMCONN:
-		pn := len(t.GetPeers())
-		data := strconv.Itoa(pn)
-		reply_msg = netio.EncodeMsgMapData(netio.REP, netio.CMD_NUMCONN, data)
-
 	case netio.CMD_BALANCE:
 		reply_msg = HandleBalance(t, msg)
 
@@ -189,6 +180,15 @@ func RequestReply(t *TCPNode, ntchan netio.Ntchan, msg netio.Message) string {
 
 		txJson, _ := json.Marshal(t.Mgr.RandomAccount())
 		reply_msg = netio.EncodeMsgMapData(netio.REP, netio.CMD_RANDOM_ACCOUNT, string(txJson))
+
+	case netio.CMD_STATUS:
+		statusdata := string(StatusContent(t.Mgr, t))
+		reply_msg = netio.EncodeMsgMapData(netio.REP, netio.CMD_STATUS, statusdata)
+
+	case netio.CMD_NUMCONN:
+		pn := len(t.GetPeers())
+		data := strconv.Itoa(pn)
+		reply_msg = netio.EncodeMsgMapData(netio.REP, netio.CMD_NUMCONN, data)
 
 	//TODO separate handle process
 	//PUBSUB

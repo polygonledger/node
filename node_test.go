@@ -59,21 +59,25 @@ func TestPing(t *testing.T) {
 
 func TestAccountmsg(t *testing.T) {
 
-	// log.Println("TestBalance")
+	node, _ := NewNode()
+	//defer node.Close()
+	node.addr = ":" + strconv.Itoa(8888)
+	node.Loglevel = LOGLEVEL_OFF
+	mgr := chain.CreateManager()
+	mgr.InitAccounts()
+	node.Mgr = &mgr
 
-	// node, _ := NewNode()
-	// //defer node.Close()
-	// node.addr = ":" + strconv.Itoa(8888)
-	// node.Loglevel = LOGLEVEL_OFF
-	// mgr := chain.CreateManager()
-	// mgr.InitAccounts()
-	// node.Mgr = &mgr
+	req_msg := netio.EncodeMsgMap(netio.REQ, netio.CMD_ACCOUNTS)
 
-	// req_msg := netio.EncodeMsgMap(netio.REQ, netio.CMD_ACCOUNTS)
+	msg := netio.ParseMessageMap(req_msg)
 
-	// msg := netio.ParseMessageMap(req_msg)
+	ntchan := netio.ConnNtchanStub("")
 
-	// reply_msg := HandleAccounts(node, msg)
+	reply_msg := RequestReply(node, ntchan, msg)
+
+	if reply_msg != "{:REP ACCOUNTS :data {\"P2e2bfb58c9db\"400}}" {
+		t.Error(reply_msg)
+	}
 
 }
 
