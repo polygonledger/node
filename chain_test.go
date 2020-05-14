@@ -15,7 +15,7 @@ func TestChainsetup(t *testing.T) {
 
 	mgr := chain.CreateManager()
 	mgr.InitAccounts()
-	log.Println(mgr.Accounts)
+	log.Println(mgr.State.Accounts)
 	//ra := mgr.RandomAccount()
 	//log.Println(ra)
 
@@ -34,7 +34,7 @@ func TestChainsetup(t *testing.T) {
 	b.Txs = append(b.Txs, someTx)
 	mgr.ApplyBlock(b)
 
-	if mgr.Accounts[address_r] != 10 {
+	if mgr.State.Accounts[address_r] != 10 {
 		t.Error("wrong amount")
 	}
 

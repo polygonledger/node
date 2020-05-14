@@ -128,7 +128,7 @@ func TestBalance(t *testing.T) {
 		t.Error("reply_msg ", reply_msg)
 	}
 
-	if mgr.Accounts["P2e2bfb58c9db"] != 10 {
+	if mgr.State.Accounts["P2e2bfb58c9db"] != 10 {
 		t.Error("balance")
 	}
 

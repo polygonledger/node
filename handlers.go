@@ -81,7 +81,7 @@ func HandleBalance(t *TCPNode, msg netio.Message) string {
 
 	a := string(msg.Data)
 	//fmt.Println("balance for ", a, msg)
-	balance := t.Mgr.Accounts[a]
+	balance := t.Mgr.State.Accounts[a]
 
 	//s := strconv.Itoa(balance)
 	// data, _ := json.Marshal(balance)
@@ -135,12 +135,12 @@ func RequestReply(t *TCPNode, ntchan netio.Ntchan, msg netio.Message) string {
 		reply_msg = netio.EncodeMsgMapS(reply)
 
 	case netio.CMD_NUMACCOUNTS:
-		numacc := len(t.Mgr.Accounts)
+		numacc := len(t.Mgr.State.Accounts)
 		data := strconv.Itoa(numacc)
 		reply_msg = netio.EncodeMsgMapData(netio.REP, netio.CMD_NUMACCOUNTS, data)
 
 	case netio.CMD_ACCOUNTS:
-		dat, _ := edn.Marshal(t.Mgr.Accounts)
+		dat, _ := edn.Marshal(t.Mgr.State.Accounts)
 		reply_msg = netio.EncodeMsgMapData(netio.REP, netio.CMD_ACCOUNTS, string(dat))
 
 	case netio.CMD_BALANCE:

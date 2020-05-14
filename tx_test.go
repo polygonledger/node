@@ -4,6 +4,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"io/ioutil"
+	"os"
 	"testing"
 
 	"github.com/polygonledger/node/block"
@@ -104,6 +105,8 @@ func TestTxFile(t *testing.T) {
 	ioutil.WriteFile("tx_test.json", []byte(txJson), 0644)
 
 	dat, _ := ioutil.ReadFile("tx_test.json")
+
+	os.Remove("tx_test.json")
 
 	var rtx block.Tx
 

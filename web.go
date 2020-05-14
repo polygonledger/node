@@ -2,6 +2,10 @@ package main
 
 import (
 	"fmt"
+	"io/ioutil"
+	"log"
+	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/polygonledger/edn"
@@ -48,9 +52,9 @@ func BlockContent(mgr *chain.ChainManager) string {
 func AccountContent(mgr *chain.ChainManager) string {
 
 	content := ""
-	content += fmt.Sprintf("<h2>Accounts</h2>number of accounts: %d<br><br>", len(mgr.Accounts))
+	content += fmt.Sprintf("<h2>Accounts</h2>number of accounts: %d<br><br>", len(mgr.State.Accounts))
 
-	for k, v := range mgr.Accounts {
+	for k, v := range mgr.State.Accounts {
 		content += fmt.Sprintf("%s %d<br>", k, v)
 	}
 	return content
@@ -86,4 +90,49 @@ func LoadContent(mgr *chain.ChainManager) string {
 	//content += BlockContent(mgr)
 
 	return content
+}
+
+func runWeb(t *TCPNode) {
+	//webserver to access node state through browser
+	// HTTP
+	log.Printf("start webserver %d", t.Config.WebPort)
+
+	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		p := LoadContent(t.Mgr)
+		statusdata := StatusContent(t.Mgr, t)
+		//nlog.Print(p)
+		fmt.Fprintf(w, "<h1>Polygon chain</h1>Status%s<br><div>%s </div>", statusdata, p)
+	})
+
+	http.HandleFunc("/blocks", func(w http.ResponseWriter, r *http.Request) {
+		p := BlockContent(t.Mgr)
+		//nlog.Print(p)
+		fmt.Fprintf(w, "<div>%s</div>", p)
+	})
+
+	http.HandleFunc("/accounts", func(w http.ResponseWriter, r *http.Request) {
+		p := AccountContent(t.Mgr)
+		//nlog.Print(p)
+		fmt.Fprintf(w, "<div>%s</div>", p)
+	})
+
+	http.HandleFunc("/status", func(w http.ResponseWriter, r *http.Request) {
+
+		statusdata := StatusContent(t.Mgr, t)
+		w.Header().Set("Content-Type", "application/json")
+		w.Write(statusdata)
+
+		//w.WriteHeader(http.StatusCreated)
+		//json.NewEncoder(w).Encode(status)
+	})
+
+	http.HandleFunc("/log", func(w http.ResponseWriter, r *http.Request) {
+
+		dat, _ := ioutil.ReadFile("node.log")
+		fmt.Fprintf(w, "%s", dat)
+	})
+
+	//log.Fatal(http.ListenAndServe(":"+strconv.Itoa(webport), nil))
+	http.ListenAndServe(":"+strconv.Itoa(t.Config.WebPort), nil)
+
 }

@@ -15,10 +15,13 @@ import (
 	"github.com/polygonledger/node/crypto"
 )
 
-type ChainManager struct {
-	Tx_pool  []block.Tx
-	Blocks   []block.Block
+type AccountState struct {
 	Accounts map[string]int
+}
+type ChainManager struct {
+	Tx_pool []block.Tx
+	Blocks  []block.Block
+	State   AccountState
 }
 
 const ChainStorageFile = "data/chain.json"
@@ -42,7 +45,8 @@ func GenesisKeys() crypto.Keypair {
 }
 
 func CreateManager() ChainManager {
-	mgr := ChainManager{Tx_pool: []block.Tx{}, Blocks: []block.Block{}, Accounts: make(map[string]int)}
+	//
+	mgr := ChainManager{Tx_pool: []block.Tx{}, Blocks: []block.Block{}, State: AccountState{Accounts: make(map[string]int)}}
 	return mgr
 }
 
@@ -56,15 +60,15 @@ func (mgr *ChainManager) IsTreasury(account block.Account) bool {
 
 //init genesis account
 func (mgr *ChainManager) InitAccounts() {
-	mgr.Accounts = make(map[string]int)
+	mgr.State.Accounts = make(map[string]int)
 
-	vlog(fmt.Sprintf("init accounts %d", len(mgr.Accounts)))
+	vlog(fmt.Sprintf("init accounts %d", len(mgr.State.Accounts)))
 	//Genesis_Account := block.AccountFromString(Treasury_Address)
 	//set genesiss account, this is the amount that the genesis address receives
 	genesisAmount := 400
 	//tr := block.AccountFromString(Treasury_Address)
 	mgr.SetAccount(Treasury_Address, genesisAmount)
-	vlog(fmt.Sprintf("mgr.Accounts %v", mgr.Accounts))
+	vlog(fmt.Sprintf("mgr.Accounts %v", mgr.State.Accounts))
 }
 
 //valid cash transaction
@@ -77,7 +81,7 @@ func TxValid(mgr *ChainManager, tx block.Tx) bool {
 
 	//TODO check receiver has valid address format
 
-	sufficientBalance := mgr.Accounts[tx.Sender] >= tx.Amount
+	sufficientBalance := mgr.State.Accounts[tx.Sender] >= tx.Amount
 	if !sufficientBalance {
 		vlog("insufficientBalance")
 	} else {
@@ -139,10 +143,10 @@ func blockHash(block block.Block) block.Block {
 
 //move cash in the chain, we should know tx is checked to be valid by now
 func (mgr *ChainManager) moveCash(SenderAccount string, ReceiverAccount string, amount int) {
-	log.Printf("move cash %v %v %v %v %d", SenderAccount, ReceiverAccount, mgr.Accounts[SenderAccount], mgr.Accounts[ReceiverAccount], amount)
+	log.Printf("move cash %v %v %v %v %d", SenderAccount, ReceiverAccount, mgr.State.Accounts[SenderAccount], mgr.State.Accounts[ReceiverAccount], amount)
 
-	mgr.Accounts[SenderAccount] -= amount
-	mgr.Accounts[ReceiverAccount] += amount
+	mgr.State.Accounts[SenderAccount] -= amount
+	mgr.State.Accounts[ReceiverAccount] += amount
 }
 
 func (mgr *ChainManager) applyTx(tx block.Tx) {
@@ -157,20 +161,20 @@ func (mgr *ChainManager) applyTx(tx block.Tx) {
 }
 
 func (mgr *ChainManager) SetAccount(account string, balance int) {
-	mgr.Accounts[account] = balance
+	mgr.State.Accounts[account] = balance
 }
 
 func ShowAccount(mgr *ChainManager, account string) {
-	log.Printf("%s %d", account, mgr.Accounts[account])
+	log.Printf("%s %d", account, mgr.State.Accounts[account])
 }
 
 func (mgr *ChainManager) RandomAccount() string {
-	lenk := len(mgr.Accounts)
+	lenk := len(mgr.State.Accounts)
 	vlog(fmt.Sprintf("lenk %d", lenk))
 
 	//TODO
-	keys := make([]string, 0, len(mgr.Accounts))
-	for k := range mgr.Accounts {
+	keys := make([]string, 0, len(mgr.State.Accounts))
+	for k := range mgr.State.Accounts {
 		vlog(fmt.Sprintf("%v ", k))
 		keys = append(keys, k)
 	}

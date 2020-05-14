@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"io/ioutil"
+	"os"
 	"reflect"
 	"testing"
 
@@ -84,7 +85,7 @@ func TestTxStore(t *testing.T) {
 	fmt.Println(txmap)
 	fmt.Println(txtype)
 
-	//os.Remove(testtx)
+	os.Remove(testtx)
 
 }
 
