@@ -5,9 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"time"
-
-	"github.com/polygonledger/node/block"
-	"github.com/polygonledger/node/parser"
 )
 
 //messages. currently uses json and some hacks to make it somewhat flexible mechanism
@@ -162,93 +159,22 @@ func ReplyMessage() Message {
 	return Message{MessageType: REP}
 }
 
-type MessageBalance struct {
-	MessageType string
-	Command     string
-	Balance     int
-}
-
-type MessageTx struct {
-	MessageType string
-	Command     string
-	Tx          block.Tx
-}
-
-type MessageAccount struct {
-	MessageType string
-	Command     string
-	Account     block.Account
-}
+// type MessageTx struct {
+// 	MessageType string
+// 	Command     string
+// 	Tx          block.Tx
+// }
 
 //////////////////////
 
-func AccountMessage(account block.Account) MessageAccount {
-	msg := MessageAccount{MessageType: REP, Command: "REP_ACCOUNT", Account: account}
-	return msg
-}
-
-func EncodeMsg(msgType string, cmd string, data string) Message {
+func ConstructMsg(msgType string, cmd string, data string) Message {
 	m := Message{MessageType: msgType, Command: cmd, Data: []byte(data)}
 	return m
 }
 
-func EncodeMsgBytes(msgType string, cmd string, data []byte) Message {
+func ConstructMsgBytes(msgType string, cmd string, data []byte) Message {
 	m := Message{MessageType: msgType, Command: cmd, Data: data}
 	return m
-}
-
-func DecodeMsg(msg string) string {
-
-	return msg
-}
-
-func EncodeMsgMap(msgType string, cmd string) string {
-	m := map[string]string{msgType: cmd}
-	msg := parser.MakeMap(m)
-	return msg
-}
-
-func EncodeMsgMapS(msg Message) string {
-	m := map[string]string{msg.MessageType: msg.Command}
-	msgstring := parser.MakeMap(m)
-	return msgstring
-}
-
-func EncodeMsgMapData(msgType string, cmd string, data string) string {
-	m := map[string]string{msgType: cmd, "data": data}
-	msg := parser.MakeMap(m)
-	return msg
-}
-
-func ParseMessageMap(msgString string) Message {
-	//msgString = strings.Trim(msgString, string(DELIM))
-	//s := strings.Split(msgString, string(DELIM_HEAD))
-	//ERROR handling of malformed messages
-	//fmt.Println(msgString)
-	v, k := parser.ReadMap(msgString)
-
-	var msg Message
-	msg.MessageType = k[0]
-	msg.Command = v[0]
-	// dataJson := s[2] //data can empty but still we expect the delim to be there
-
-	// msg.Data = []byte(dataJson)
-	// //trace(msg)
-	return msg
-}
-
-func ParseMessageMapData(msgString string) Message {
-
-	v, k := parser.ReadMap(msgString)
-	// fmt.Println("values ", v)
-	// fmt.Println("keys ", k)
-
-	var msg Message
-	msg.MessageType = k[0]
-	msg.Command = v[0]
-
-	msg.Data = []byte(v[1])
-	return msg
 }
 
 func validCMD(cmd string) bool {

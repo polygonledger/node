@@ -20,19 +20,19 @@ func trace(msg string) {
 
 func EncodeReply(resp string) string {
 	//TODO header missing
-	msg := EncodeMsgMap(REP, resp)
+	msg := ConstructMsgMap(REP, resp)
 	return msg
 }
 
 func EncodeRequest(req_string string) string {
 	//TODO header missing
-	msg := EncodeMsgMap(REQ, req_string)
+	msg := ConstructMsgMap(REQ, req_string)
 	return msg
 }
 
 func EncodePub(resp string, name string) string {
 	//TODO header missing
-	msg := EncodeMsgMap(PUB, resp)
+	msg := ConstructMsgMap(PUB, resp)
 	return msg
 }
 
@@ -42,10 +42,10 @@ func EncodeHeartbeat(name string) string {
 	return msg
 }
 
-func EncodeMessageTx(txJson []byte) string {
-	//emptyData := ""
-	msgCmd := "TX"
-	//TODO check
-	msg := EncodeMsgMapData(REQ, msgCmd, string(txJson))
-	return msg
-}
+// func EncodeMessageTx(txJson []byte) string {
+// 	//emptyData := ""
+// 	msgCmd := "TX"
+// 	//TODO check
+// 	msg := ConstructMsgMapData(REQ, msgCmd, string(txJson))
+// 	return msg
+// }

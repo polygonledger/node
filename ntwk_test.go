@@ -41,7 +41,7 @@ func TestReaderin(t *testing.T) {
 
 func SimulateRequest(ntchan *netio.Ntchan) {
 
-	req_msg := netio.EncodeMsgMap(netio.REQ, netio.CMD_PING)
+	req_msg := netio.ConstructMsgMap(netio.REQ, netio.CMD_PING)
 	//fmt.Println("sim ", req_msg)
 	ntchan.Reader_queue <- req_msg
 	//log.Println(len(ntchan.Reader_queue))
@@ -71,8 +71,8 @@ func TestRequestIn(t *testing.T) {
 	}
 
 	req_in := <-ntchan.REQ_in
-	if req_in != netio.EncodeMsgMap(netio.REQ, netio.CMD_PING) {
-		t.Error("req not ?? ", req_in, netio.EncodeMsgMap(netio.REQ, netio.CMD_PING))
+	if req_in != netio.ConstructMsgMap(netio.REQ, netio.CMD_PING) {
+		t.Error("req not ?? ", req_in, netio.ConstructMsgMap(netio.REQ, netio.CMD_PING))
 	}
 
 	//req_in
@@ -86,7 +86,7 @@ func TestRequestOut(t *testing.T) {
 
 	ntchan := netio.ConnNtchanStub("")
 
-	//GGreq_out_msg := netio.EncodeMsgMap(netio.REQ, netio.CMD_PING)
+	//GGreq_out_msg := netio.ConstructMsgMap(netio.REQ, netio.CMD_PING)
 
 	select {
 	case msg := <-ntchan.REQ_out:
@@ -204,7 +204,7 @@ func TestReaderRequest(t *testing.T) {
 
 	go netio.ReadProcessor(ntchan)
 
-	req_msg := netio.EncodeMsgMap(netio.REQ, netio.CMD_PING)
+	req_msg := netio.ConstructMsgMap(netio.REQ, netio.CMD_PING)
 
 	ntchan.Reader_queue <- req_msg
 	time.Sleep(50 * time.Millisecond)
@@ -215,7 +215,7 @@ func TestReaderRequest(t *testing.T) {
 	}
 
 	req_in := <-ntchan.REQ_in
-	if req_in != netio.EncodeMsgMap(netio.REQ, netio.CMD_PING) {
+	if req_in != netio.ConstructMsgMap(netio.REQ, netio.CMD_PING) {
 		t.Error("req not equal")
 	}
 
@@ -229,7 +229,7 @@ func pinghandler(ntchan netio.Ntchan) {
 		if req_msg == "" {
 			//<-req_msg
 		}
-		rep_msg := netio.EncodeMsgMap(netio.REP, netio.CMD_PONG)
+		rep_msg := netio.ConstructMsgMap(netio.REP, netio.CMD_PONG)
 		ntchan.REP_out <- rep_msg
 		//log.Println("REP_out >> ", rep_msg)
 	}
@@ -243,7 +243,7 @@ func TestReaderPing(t *testing.T) {
 
 	go pinghandler(ntchan)
 
-	ntchan.REQ_in <- netio.EncodeMsgMap(netio.REQ, netio.CMD_PING)
+	ntchan.REQ_in <- netio.ConstructMsgMap(netio.REQ, netio.CMD_PING)
 
 	time.Sleep(50 * time.Millisecond)
 
@@ -252,7 +252,7 @@ func TestReaderPing(t *testing.T) {
 	}
 
 	x := <-ntchan.REP_out
-	if x != netio.EncodeMsgMap(netio.REP, netio.CMD_PONG) {
+	if x != netio.ConstructMsgMap(netio.REP, netio.CMD_PONG) {
 		t.Error("not poing")
 	}
 
@@ -267,7 +267,7 @@ func TestAllPingPoingIn(t *testing.T) {
 	go netio.WriteProcessor(ntchan)
 	go pinghandler(ntchan)
 
-	ntchan.Reader_queue <- netio.EncodeMsgMap(netio.REQ, netio.CMD_PING)
+	ntchan.Reader_queue <- netio.ConstructMsgMap(netio.REQ, netio.CMD_PING)
 
 	time.Sleep(50 * time.Millisecond)
 

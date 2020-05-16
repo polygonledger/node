@@ -21,7 +21,7 @@ func TestBasicCommand(t *testing.T) {
 	node.Loglevel = LOGLEVEL_OFF
 	node.Mgr = &mgr
 
-	// req_msg := netio.EncodeMsgMap(netio.REQ, netio.CMD_PING)
+	// req_msg := netio.ConstructMsgMap(netio.REQ, netio.CMD_PING)
 	// //ntchan.REQ_in <- msg
 	// reply_msg := HandlePing(msg)
 
@@ -38,7 +38,7 @@ func TestBasicCommand(t *testing.T) {
 }
 
 func TestPing(t *testing.T) {
-	reqstring := netio.EncodeMsgMap(netio.REQ, "PING")
+	reqstring := netio.ConstructMsgMap(netio.REQ, "PING")
 	req := netio.ParseMessageMap(reqstring)
 	if req.MessageType != "REQ" || req.Command != "PING" {
 		t.Error("req ", req)
@@ -51,7 +51,7 @@ func TestPing(t *testing.T) {
 
 // func TestPingRequest(t *testing.T) {
 
-// 	reqstring := netio.EncodeMsgMap(netio.REQ, "PING")
+// 	reqstring := netio.ConstructMsgMap(netio.REQ, "PING")
 // 	req := netio.ParseMessageMap(reqstring)
 
 // }
@@ -66,7 +66,7 @@ func TestAccountmsg(t *testing.T) {
 	mgr.InitAccounts()
 	node.Mgr = &mgr
 
-	req_msg := netio.EncodeMsgMap(netio.REQ, netio.CMD_ACCOUNTS)
+	req_msg := netio.ConstructMsgMap(netio.REQ, netio.CMD_ACCOUNTS)
 
 	msg := netio.ParseMessageMap(req_msg)
 
@@ -90,7 +90,7 @@ func TestBalance(t *testing.T) {
 	mgr.InitAccounts()
 	node.Mgr = &mgr
 
-	req_msg := netio.EncodeMsgMapData(netio.REQ, netio.CMD_BALANCE, "abc")
+	req_msg := netio.ConstructMsgMapData(netio.REQ, netio.CMD_BALANCE, "abc")
 	//fmt.Println(req_msg)
 
 	msg := netio.ParseMessageMap(req_msg)
@@ -113,7 +113,7 @@ func TestBalance(t *testing.T) {
 	mgr.SetAccount(ra, 10)
 
 	//log.Println(ra.AccountKey)
-	req_msg_string := netio.EncodeMsgMapData(netio.REQ, netio.CMD_BALANCE, ra)
+	req_msg_string := netio.ConstructMsgMapData(netio.REQ, netio.CMD_BALANCE, ra)
 	if req_msg_string != "{:REQ BALANCE :data P2e2bfb58c9db}" {
 		t.Error("req string")
 	}
@@ -141,7 +141,7 @@ func TestFaucetTx(t *testing.T) {
 	kp := crypto.PairFromSecret("test")
 	pubk := crypto.PubKeyToHex(kp.PubKey)
 	addr := crypto.Address(pubk)
-	req_msg_string := netio.EncodeMsgMapData(netio.REQ, netio.CMD_FAUCET, addr)
+	req_msg_string := netio.ConstructMsgMapData(netio.REQ, netio.CMD_FAUCET, addr)
 	req_msg := netio.ParseMessageMap(req_msg_string)
 
 	node, _ := NewNode()
@@ -161,7 +161,7 @@ func TestFaucetTx(t *testing.T) {
 
 	// time.Sleep(2000 * time.Millisecond)
 
-	// req_msg = netio.EncodeMEncodeMsgxx(netio.REQ, netio.CMD_BALANCE, addr)
+	// req_msg = netio.EncodeMConstructMsgxx(netio.REQ, netio.CMD_BALANCE, addr)
 	// msg = netio.ParseMessag(req_msg)
 
 	// log.Println(mgr.Accounts)
@@ -193,7 +193,7 @@ func TestFaucetTx(t *testing.T) {
 // 	kp := crypto.PairFromSecret("test")
 // 	pubk := crypto.PubKeyToHex(kp.PubKey)
 // 	addr := crypto.Address(pubk)
-// 	req_msg := netio.EncodeMsgxx(netio.REQ, netio.CMD_FAUCET, addr)
+// 	req_msg := netio.ConstructMsgxx(netio.REQ, netio.CMD_FAUCET, addr)
 // 	msg := netio.ParseMessag(req_msg)
 
 // 	reply_msg := HandleFaucet(node, msg)
@@ -202,7 +202,7 @@ func TestFaucetTx(t *testing.T) {
 // 	}
 // 	chain.MakeBlock(&mgr)
 // 	time.Sleep(100 * time.Millisecond)
-// 	req_msg = netio.EncodeMsgxx(netio.REQ, netio.CMD_BALANCE, addr)
+// 	req_msg = netio.ConstructMsgxx(netio.REQ, netio.CMD_BALANCE, addr)
 // 	msg = netio.ParseMessag(req_msg)
 // 	reply_msg = HandleBalance(node, msg)
 // 	msg = netio.ParseMessa(reply_msg)
@@ -250,7 +250,7 @@ func TestFaucetTx(t *testing.T) {
 // 	chain.MakeBlock(&mgr)
 // 	time.Sleep(100 * time.Millisecond)
 
-// 	req_msg = netio.EncodeMsgxx(netio.REQ, netio.CMD_BALANCE, addr2)
+// 	req_msg = netio.ConstructMsgxx(netio.REQ, netio.CMD_BALANCE, addr2)
 // 	msg = netio.ParseMessae(req_msg)
 // 	reply_msg = HandleBalance(node, msg)
 // 	msg = netio.ParseMessa(reply_msg)

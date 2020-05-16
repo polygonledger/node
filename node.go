@@ -26,6 +26,7 @@ var blocktime = 10000 * time.Millisecond
 var logfile_name = "node.log"
 
 const LOGLEVEL_OFF = 0
+const LOGLEVEL_ON = 1
 
 type TCPNode struct {
 	NodePort      int
@@ -51,7 +52,7 @@ func (t *TCPNode) GetPeers() []netio.Peer {
 
 func (t *TCPNode) log(s string) {
 	//fmt.Println(t.Loglevel)
-	if t.Loglevel != LOGLEVEL_OFF {
+	if t.Loglevel > LOGLEVEL_OFF {
 		//t.Logger.Println(s)
 		fmt.Println(s)
 	}
@@ -148,7 +149,7 @@ func initOutbound(mainPeerAddress string, node_port int, verbose bool) netio.Ntc
 }
 
 func ping(peer netio.Peer) bool {
-	req_msg := netio.EncodeMsgMap(netio.REQ, netio.CMD_PING)
+	req_msg := netio.ConstructMsgMap(netio.REQ, netio.CMD_PING)
 	peer.NTchan.REQ_out <- req_msg
 	time.Sleep(1000 * time.Millisecond)
 	reply := <-peer.NTchan.REP_in
@@ -161,7 +162,7 @@ func FetchBlocksPeer(config config.Configuration, peer netio.Peer) []block.Block
 
 	//log.Println("FetchBlocksPeer ", peer)
 	ping(peer)
-	req_msg := netio.EncodeMsgMap(netio.REQ, netio.CMD_GETBLOCKS)
+	req_msg := netio.ConstructMsgMap(netio.REQ, netio.CMD_GETBLOCKS)
 	//log.Println(req_msg)
 
 	peer.NTchan.REQ_out <- req_msg
@@ -224,6 +225,7 @@ func NewNode() (*TCPNode, error) {
 		//addr:          addr,
 		accepting:     false,
 		ConnectedChan: make(chan net.Conn),
+		Loglevel:      LOGLEVEL_ON,
 	}, nil
 }
 

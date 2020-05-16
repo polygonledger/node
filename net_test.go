@@ -151,7 +151,7 @@ func TestServer_Write(t *testing.T) {
 
 // 	read_msg, err := netio.MsgRead(conn)
 
-// 	expected_result := netio.EncodeMsg("Echo:" + reqs)
+// 	expected_result := netio.ConstructMsg("Echo:" + reqs)
 // 	if err != nil {
 // 		log.Println(err)
 // 	}

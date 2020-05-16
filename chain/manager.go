@@ -279,7 +279,7 @@ func (mgr *ChainManager) ReadChain() bool {
 	mgr.Blocks = newblocks
 	mgr.ApplyBlocks(newblocks)
 
-	log.Printf("read chain success from %s. block height %d", ChainStorageFile, len(mgr.Blocks))
+	vlog(fmt.Sprintf("read chain success from %s. block height %d", ChainStorageFile, len(mgr.Blocks)))
 	return true
 
 }

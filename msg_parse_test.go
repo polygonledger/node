@@ -48,34 +48,41 @@ func TestMessageBasicParseJsonData(t *testing.T) {
 
 }
 
-// jsonmsg, _ := json.Marshal(msg)
-// if string(jsonmsg) != `{"messagetype":"REQ","command":"CMD"}` {
-// 	t.Error("jsonmsg ", string(jsonmsg))
-// }
+func Equal(a, b []byte) bool {
+	if len(a) != len(b) {
+		return false
+	}
+	for i, v := range a {
+		if v != b[i] {
+			return false
+		}
+	}
+	return true
+}
 
-// var JSONMsgData = []byte(`{
-// 	"messagetype": "REQ",
-// 	"command": "CMD_ACCOUNT",
-// 	"data": {
-// 		 "account": "abc"
-// 	}}`)
+func TestMessageBalance(t *testing.T) {
 
-// var m netio.Message
-// json.Unmarshal(JSONMsgData, &m)
+	balJson, _ := json.Marshal(20)
+	msg := netio.Message{MessageType: netio.REP, Command: netio.CMD_BALANCE, Data: []byte(balJson)}
+	jsonmsg := netio.ToJSONMessage(msg)
 
-// 	fmt.Println(err)
-// }
-// fmt.Printf("JSON type is [%v] and [%v] \n", m.Type, e.ABC)
+	if string(jsonmsg) != `{"messagetype":"REP","command":"BALANCE","data":20}` {
+		t.Error("unmarshal ", string(jsonmsg))
+	}
 
-// if !netio.IsValidMsgType(msg.MessageType) {
-// 	t.Error("msg type invalid")
+	var msgu netio.Message
 
-// func TestMsgJson(t *testing.T) {
-// 	msg := netio.Message{MessageType: "REQ", Command: netio.CMD_PING}
-// 	msgJson, _ := json.Marshal(msg)
-// 	if string(msgJson) != `{"messagetype":"REQ","command":"PING"}` {
-// 		t.Error(string(msgJson))
-// 	}
+	json.Unmarshal([]byte(`{"messagetype":"REP","command":"BALANCE","data":20}`), &msgu)
+
+	if msgu.MessageType != "REP" || msgu.Command != netio.CMD_BALANCE {
+		t.Error(msgu)
+	}
+
+	if !Equal(msg.Data, []byte("20")) {
+		t.Error(msgu.Data)
+	}
+
+}
 
 // 	msgstring := `{"messagetype":"REP","command":"PONG"}`
 // 	var repmsg netio.Message
@@ -84,29 +91,6 @@ func TestMessageBasicParseJsonData(t *testing.T) {
 // 		t.Error(repmsg)
 // 	}
 // 	if repmsg.Command != "PONG" {
-// 		t.Error(repmsg)
-// 	}
-// }
-
-// func TestMsgJsonData(t *testing.T) {
-
-// 	msg := netio.Message{MessageType: "REQ", Command: netio.CMD_BALANCE, Data: []byte("abc")}
-// 	if !(bytes.Compare(msg.Data, []byte("abc")) == 0) {
-// 		i := 1
-// 		t.Error("data bytes not equal ", msg.Data[i], []byte("abc")[i])
-// 	}
-// 	msgJson, _ := json.Marshal(msg)
-// 	if string(msgJson) != `{messagetype:REQ","command":"BALANCE","data":"abc"}` {
-// 		t.Error("? ", string(msgJson), msgJson)
-// 	}
-
-// 	msgstring := `{"messagetype":"REQ","command":"BALANCE","data":"abc"}`
-// 	var repmsg netio.Message
-// 	json.Unmarshal([]byte(msgstring), &repmsg)
-// 	if repmsg.MessageType != "REQ" {
-// 		t.Error(repmsg)
-// 	}
-// 	if repmsg.Command != "BALANCE" {
 // 		t.Error(repmsg)
 // 	}
 // }
