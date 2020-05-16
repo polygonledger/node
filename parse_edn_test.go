@@ -7,7 +7,9 @@ import (
 	"reflect"
 	"testing"
 
+	"github.com/polygonledger/edn"
 	"github.com/polygonledger/node/crypto"
+	"github.com/polygonledger/node/netio"
 	"github.com/polygonledger/node/parser"
 )
 
@@ -86,6 +88,48 @@ func TestTxStore(t *testing.T) {
 	fmt.Println(txtype)
 
 	os.Remove(testtx)
+
+}
+
+// func TestMsgBasic(t *testing.T) {
+// 	msgstring := "{:REP X :data 0}"
+// 	msg := netio.ParseMessageMapData(msgstring)
+// 	if msg.MessageType != "REP" {
+// 		t.Error("parse msg MessageType", msg)
+// 	}
+// 	if msg.Command != "X" {
+// 		t.Error("parse msg ", msg.Command)
+// 	}
+// 	arr := []byte("0")
+// 	if !reflect.DeepEqual(msg.Data, arr) {
+// 		t.Error("parse msg data ", msg.Data)
+// 	}
+
+// }
+
+func TestAccmsg(t *testing.T) {
+
+	msg := netio.Message{MessageType: "REQ", Command: "Test", Data: []byte("000")}
+	b, _ := edn.Marshal(msg)
+	arr := []byte("{:messageType\"REQ\":command\"Test\":data #base64\"MDAw\"}")
+
+	if !reflect.DeepEqual(b, arr) {
+		t.Error("??", string(b))
+	}
+
+	//FIX
+	// msgstring := "{:REP ACCOUNTS :data {\"P06d058383389\"20}}"
+	// msg := netio.ParseMessageMapData(msgstring)
+	// if msg.MessageType != "REP" {
+	// 	t.Error("parse msg ", msg.MessageType)
+	// }
+	// if msg.Command != "ACCOUNTS" {
+	// 	t.Error("parse msg ", msg.Command)
+	// }
+	// tb := []byte("{\"P06d058383389\"20}")
+	// if !reflect.DeepEqual(msg.Data, tb) {
+	// 	t.Error("data ", msg.Data, tb)
+	// }
 
 }
 
