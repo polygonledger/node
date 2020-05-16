@@ -143,7 +143,7 @@ func blockHash(block block.Block) block.Block {
 
 //move cash in the chain, we should know tx is checked to be valid by now
 func (mgr *ChainManager) moveCash(SenderAccount string, ReceiverAccount string, amount int) {
-	log.Printf("move cash %v %v %v %v %d", SenderAccount, ReceiverAccount, mgr.State.Accounts[SenderAccount], mgr.State.Accounts[ReceiverAccount], amount)
+	//vlog(fmt.Srpintf("move cash %v %v %v %v %d", SenderAccount, ReceiverAccount, mgr.State.Accounts[SenderAccount], mgr.State.Accounts[ReceiverAccount], amount))
 
 	mgr.State.Accounts[SenderAccount] -= amount
 	mgr.State.Accounts[ReceiverAccount] += amount

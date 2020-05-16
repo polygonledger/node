@@ -44,7 +44,7 @@ type Ntchan struct {
 
 func vlog(ntchan Ntchan, s string) {
 	verbose := ntchan.verbose
-	fmt.Println(s)
+	//fmt.Println(s)
 	if verbose {
 		log.Println("vlog ", s)
 	}
@@ -236,7 +236,7 @@ func PublishTime(ntchan Ntchan) {
 	timeFormat := "2006-01-02T15:04:05"
 	limiter := time.Tick(1000 * time.Millisecond)
 	pubcount := 0
-	log.Println("PublishTime")
+	//log.Println("PublishTime")
 
 	for {
 		t := time.Now()

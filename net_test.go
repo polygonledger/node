@@ -13,7 +13,7 @@ import (
 const test_node_port = 8888
 
 func initserver() *TCPNode {
-	log.Println("initserver")
+	//log.Println("initserver")
 	// Start the new server
 
 	testsrv, err := NewNode()
@@ -23,7 +23,7 @@ func initserver() *TCPNode {
 		log.Println("error starting TCP server")
 		return testsrv
 	} else {
-		log.Println("start ", testsrv)
+		//log.Println("start ", testsrv)
 	}
 
 	// Run the server in Goroutine to stop tests from blocking
@@ -45,7 +45,7 @@ func testclient() netio.Ntchan {
 		//t.Error("could not connect to server: ", err)
 	}
 	//t.Error("...")
-	log.Println("connected")
+	//log.Println("connected")
 	ntchan := netio.ConnNtchan(conn, "client", addr, false)
 	//defer conn.Close()
 	return ntchan
@@ -53,7 +53,7 @@ func testclient() netio.Ntchan {
 }
 
 func TestServer_Run(t *testing.T) {
-	log.Println("TestServer_Run")
+	//log.Println("TestServer_Run")
 
 	testsrv := initserver()
 	defer testsrv.Close()
@@ -82,7 +82,7 @@ func TestServer_Run(t *testing.T) {
 }
 
 func TestServer_Write(t *testing.T) {
-	log.Println("TestServer_Write")
+	//log.Println("TestServer_Write")
 
 	testsrv := initserver()
 	defer testsrv.Close()

@@ -1,7 +1,6 @@
 package main
 
 import (
-	"log"
 	"strconv"
 	"testing"
 
@@ -12,7 +11,7 @@ import (
 
 func TestBasicCommand(t *testing.T) {
 
-	log.Println("TestBasicCommand")
+	//log.Println("TestBasicCommand")
 
 	mgr := chain.CreateManager()
 	mgr.InitAccounts()
@@ -82,8 +81,6 @@ func TestAccountmsg(t *testing.T) {
 }
 
 func TestBalance(t *testing.T) {
-
-	log.Println("TestBalance")
 
 	node, _ := NewNode()
 	//defer node.Close()

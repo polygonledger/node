@@ -17,7 +17,7 @@ import (
 func (t *TCPNode) handleConnectionMock(mgr *chain.ChainManager, ntchan netio.Ntchan) {
 	//tr := 100 * time.Millisecond
 	//defer ntchan.Conn.Close()
-	t.log(fmt.Sprintf("handleConnection"))
+	//t.log(fmt.Sprintf("handleConnection"))
 
 	//netio.NetConnectorSetup(ntchan)
 	netio.NetConnectorSetupEcho(ntchan)

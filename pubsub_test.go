@@ -22,7 +22,7 @@ func initserverpub() *TCPNode {
 		log.Println("error starting TCP server")
 		return testsrv
 	} else {
-		log.Println("start ", testsrv)
+		//log.Println("start ", testsrv)
 	}
 
 	go testsrv.Run()

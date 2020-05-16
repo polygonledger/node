@@ -50,10 +50,11 @@ func (t *TCPNode) GetPeers() []netio.Peer {
 }
 
 func (t *TCPNode) log(s string) {
-	// if t.Loglevel != LOGLEVEL_OFF {
-	// 	t.Logger.Println(s)
-	// }
-	fmt.Println(s)
+	//fmt.Println(t.Loglevel)
+	if t.Loglevel != LOGLEVEL_OFF {
+		//t.Logger.Println(s)
+		fmt.Println(s)
+	}
 }
 
 // start listening on tcp and handle connection through channels
@@ -197,7 +198,7 @@ func FetchAllBlocks(config config.Configuration, t *TCPNode) {
 func (t *TCPNode) handleConnection(mgr *chain.ChainManager, ntchan netio.Ntchan) {
 	//tr := 100 * time.Millisecond
 	//defer ntchan.Conn.Close()
-	t.log(fmt.Sprintf("handleConnection"))
+	//t.log(fmt.Sprintf("handleConnection"))
 
 	//netio.NetConnectorSetup(ntchan)
 	netio.NetConnectorSetup(ntchan)

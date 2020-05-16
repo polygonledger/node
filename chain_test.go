@@ -1,7 +1,6 @@
 package main
 
 import (
-	"log"
 	"math/rand"
 	"testing"
 
@@ -15,7 +14,6 @@ func TestChainsetup(t *testing.T) {
 
 	mgr := chain.CreateManager()
 	mgr.InitAccounts()
-	log.Println(mgr.State.Accounts)
 	//ra := mgr.RandomAccount()
 	//log.Println(ra)
 

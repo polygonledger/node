@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"io/ioutil"
 	"os"
 	"reflect"
@@ -80,12 +79,15 @@ func TestTxStore(t *testing.T) {
 
 	ioutil.WriteFile(testtx, []byte(v), 0644)
 
-	dat, _ := ioutil.ReadFile(testtx)
+	// dat, _ := ioutil.ReadFile(testtx)
 
-	txtype, sigmap, txmap := parser.ScanScript(string(dat))
-	fmt.Println(sigmap)
-	fmt.Println(txmap)
-	fmt.Println(txtype)
+	// txtype, sigmap, txmap := parser.ScanScript(string(dat))
+	// if txtype == nil {
+
+	// }
+	// fmt.Println(sigmap)
+	// fmt.Println(txmap)
+	// fmt.Println(txtype)
 
 	os.Remove(testtx)
 

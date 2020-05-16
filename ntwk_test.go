@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"log"
 	"testing"
 	"time"
 
@@ -18,7 +17,6 @@ func SimulateNetworkInput(ntchan *netio.Ntchan) {
 }
 
 func TestReaderin(t *testing.T) {
-	log.Println("TestReaderin")
 
 	ntchan := netio.ConnNtchanStub("")
 	go SimulateNetworkInput(&ntchan)
@@ -44,7 +42,7 @@ func TestReaderin(t *testing.T) {
 func SimulateRequest(ntchan *netio.Ntchan) {
 
 	req_msg := netio.EncodeMsgMap(netio.REQ, netio.CMD_PING)
-	fmt.Println("sim ", req_msg)
+	//fmt.Println("sim ", req_msg)
 	ntchan.Reader_queue <- req_msg
 	//log.Println(len(ntchan.Reader_queue))
 	time.Sleep(100 * time.Millisecond)
@@ -53,7 +51,6 @@ func SimulateRequest(ntchan *netio.Ntchan) {
 
 // in reader should bet forwarded to req_chan
 func TestRequestIn(t *testing.T) {
-	log.Println("TestRequestIn")
 	ntchan := netio.ConnNtchanStub("")
 
 	go netio.ReadProcessor(ntchan)
@@ -86,7 +83,6 @@ func TestRequestIn(t *testing.T) {
 }
 
 func TestRequestOut(t *testing.T) {
-	log.Println("TestRequestOut")
 
 	ntchan := netio.ConnNtchanStub("")
 
@@ -130,7 +126,6 @@ func TestRequestOut(t *testing.T) {
 }
 
 func TestReplyIn(t *testing.T) {
-	log.Println("TestReplyIn")
 
 	ntchan := netio.ConnNtchanStub("")
 
@@ -161,7 +156,6 @@ func basicPingReqProcessor(ntchan netio.Ntchan, t *testing.T) {
 }
 
 func TestPingAll(t *testing.T) {
-	log.Println("TestPing")
 
 	ntchan := netio.ConnNtchanStub("")
 
@@ -205,7 +199,6 @@ func TestPingAll(t *testing.T) {
 }
 
 func TestReaderRequest(t *testing.T) {
-	log.Println("TestReaderRequest")
 
 	ntchan := netio.ConnNtchanStub("")
 
@@ -243,7 +236,6 @@ func pinghandler(ntchan netio.Ntchan) {
 }
 
 func TestReaderPing(t *testing.T) {
-	log.Println("TestReaderPing")
 
 	ntchan := netio.ConnNtchanStub("")
 
@@ -268,7 +260,6 @@ func TestReaderPing(t *testing.T) {
 
 //test entire loop from reader to writer
 func TestAllPingPoingIn(t *testing.T) {
-	log.Println("TestAllPingPoingIn")
 
 	ntchan := netio.ConnNtchanStub("")
 
@@ -309,7 +300,7 @@ func ConnectWrite(ntchan1 netio.Ntchan, ntchan2 netio.Ntchan) {
 }
 
 func TestAllPingPongDuplex(t *testing.T) {
-	log.Println("TestAllPingPongDuplex")
+	//log.Println("TestAllPingPongDuplex")
 
 	ntchan1 := netio.ConnNtchanStub("")
 	ntchan2 := netio.ConnNtchanStub("")

@@ -20,7 +20,7 @@ import (
 )
 
 func NetWrite(ntchan Ntchan, content string) (int, error) {
-	fmt.Println("NetWrite ", content)
+	//fmt.Println("NetWrite ", content)
 
 	//since Netread READLINE uses \n add it here
 	NEWLINE := '\n'

@@ -224,7 +224,7 @@ func ParseMessageMap(msgString string) Message {
 	//msgString = strings.Trim(msgString, string(DELIM))
 	//s := strings.Split(msgString, string(DELIM_HEAD))
 	//ERROR handling of malformed messages
-	fmt.Println(msgString)
+	//fmt.Println(msgString)
 	v, k := parser.ReadMap(msgString)
 
 	var msg Message
