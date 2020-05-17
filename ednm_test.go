@@ -23,12 +23,12 @@ func TestMap(t *testing.T) {
 }
 
 func TestEncodeReq(t *testing.T) {
-	msgs := netio.ConstructMsgMap(netio.REQ, "PING")
+	msgs := netio.EdnConstructMsgMap(netio.REQ, "PING")
 	if msgs != "{:REQ PING}" {
 		t.Error("wrong encoding ", msgs)
 	}
 
-	msg := netio.ParseMessageMap(msgs)
+	msg := netio.EdnParseMessageMap(msgs)
 	if msg.MessageType != "REQ" {
 		t.Error("type")
 	}
@@ -58,9 +58,9 @@ func TestDecodeMap(t *testing.T) {
 		t.Error(k)
 	}
 
-	//req_msg_string := netio.ConstructMsgMapData(netio.REQ, netio.CMD_BALANCE, ra)
-	//req_msg_balance := netio.ParseMessageMapData(req_msg_string)
-	// msg := netio.ParseMessageMapData(s)
+	//req_msg_string := netio.EdnConstructMsgMapData(netio.REQ, netio.CMD_BALANCE, ra)
+	//req_msg_balance := netio.EdnParseMessageMapData(req_msg_string)
+	// msg := netio.EdnParseMessageMapData(s)
 
 	// //if x.Data != []byte("P2e2bfb58c9db") {
 	// if msg.Data == nil {

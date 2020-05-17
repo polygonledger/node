@@ -2,9 +2,6 @@ package netio
 
 import (
 	"encoding/json"
-	"errors"
-	"fmt"
-	"time"
 )
 
 //messages. currently uses json and some hacks to make it somewhat flexible mechanism
@@ -23,41 +20,6 @@ type Message struct {
 	//any data, can be empty. gets interpreted downstream to other structs
 	Data json.RawMessage
 	//timestamp
-}
-
-type MessageJSON struct {
-	//type of message i.e. the communications protocol
-	MessageType string `json:"messagetype"`
-	//Specific message command
-	Command string `json:"command"`
-	//any data, can be empty. gets interpreted downstream to other structs
-	Data json.RawMessage `json:"data,omitempty"`
-	//timestamp
-}
-
-//marshal to json, check command
-func NewJSONMessage(m Message) (MessageJSON, error) {
-	//fmt.Println("NewJSONMessage")
-	valid := validCMD(m.Command)
-	if valid {
-		//fmt.Println("?? ", m.Data)
-		//		if m.Data != nil {
-		return MessageJSON{
-			m.MessageType,
-			m.Command,
-			m.Data,
-		}, nil
-
-	} else {
-		fmt.Println("not valid cmd")
-	}
-	return MessageJSON{}, errors.New("not valid cmd")
-}
-
-func ToJSONMessage(m Message) string {
-	jsonmsgtype, _ := NewJSONMessage(m)
-	jsonmsg, _ := json.Marshal(jsonmsgtype)
-	return string(jsonmsg)
 }
 
 const (
@@ -123,26 +85,8 @@ var CMDS = []string{
 
 //generic message
 
-type TimeMessage struct {
-	Timestamp time.Time
-}
-
-func EmptyMsg() Message {
-	return Message{}
-}
-
 func IsValidMsgType(msgType string) bool {
 	switch msgType {
-	case
-		REQ,
-		REP:
-		return true
-	}
-	return false
-}
-
-func IsValidCmd(cmd string) bool {
-	switch cmd {
 	case
 		REQ,
 		REP:
@@ -165,8 +109,6 @@ func ReplyMessage() Message {
 // 	Tx          block.Tx
 // }
 
-//////////////////////
-
 func ConstructMsg(msgType string, cmd string, data string) Message {
 	m := Message{MessageType: msgType, Command: cmd, Data: []byte(data)}
 	return m
@@ -185,29 +127,3 @@ func validCMD(cmd string) bool {
 	}
 	return false
 }
-
-// func (m *Message) UnmarshalJSON(data []byte) error {
-// 	var res Message
-
-// 	// Assign value from json to Go struct
-// 	m.MessageType = res.MessageType
-// 	if validCMD(res.Command) {
-// 		fmt.Println("valid command")
-// 		m.Command = res.Command
-// 	} else {
-// 		fmt.Println("not valid command ", res.Command)
-// 	}
-
-// 	//test if Command is in accepted list
-
-// 	// if err != nil {
-// 	// 	return err
-// 	// }
-
-// 	//p.Password = password
-
-// 	// Parse millisecond to string
-// 	//p.CreatedAt = time.Unix(0, res.CreatedAt*int64(time.Millisecond)).UTC().Format(time.RFC3339)
-
-// 	return nil
-// }

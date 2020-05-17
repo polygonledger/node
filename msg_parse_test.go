@@ -82,6 +82,14 @@ func TestMessageBalance(t *testing.T) {
 		t.Error(msgu.Data)
 	}
 
+	xJson, _ := json.Marshal("test")
+	msg = netio.Message{MessageType: netio.REP, Command: netio.CMD_BALANCE, Data: []byte(xJson)}
+	jsonmsg = netio.ToJSONMessage(msg)
+
+	if string(jsonmsg) != `{"messagetype":"REP","command":"BALANCE","data":"test"}` {
+		t.Error("unmarshal ", string(jsonmsg))
+	}
+
 }
 
 // 	msgstring := `{"messagetype":"REP","command":"PONG"}`

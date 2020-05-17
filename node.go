@@ -149,7 +149,7 @@ func initOutbound(mainPeerAddress string, node_port int, verbose bool) netio.Ntc
 }
 
 func ping(peer netio.Peer) bool {
-	req_msg := netio.ConstructMsgMap(netio.REQ, netio.CMD_PING)
+	req_msg := netio.EdnConstructMsgMap(netio.REQ, netio.CMD_PING)
 	peer.NTchan.REQ_out <- req_msg
 	time.Sleep(1000 * time.Millisecond)
 	reply := <-peer.NTchan.REP_in
@@ -162,14 +162,14 @@ func FetchBlocksPeer(config config.Configuration, peer netio.Peer) []block.Block
 
 	//log.Println("FetchBlocksPeer ", peer)
 	ping(peer)
-	req_msg := netio.ConstructMsgMap(netio.REQ, netio.CMD_GETBLOCKS)
+	req_msg := netio.EdnConstructMsgMap(netio.REQ, netio.CMD_GETBLOCKS)
 	//log.Println(req_msg)
 
 	peer.NTchan.REQ_out <- req_msg
 	time.Sleep(1000 * time.Millisecond)
 	reply := <-peer.NTchan.REP_in
 	//log.Println("reply ", reply)
-	reply_msg := netio.ParseMessageMap(reply)
+	reply_msg := netio.EdnParseMessageMap(reply)
 	var blocks []block.Block
 	if err := json.Unmarshal(reply_msg.Data, &blocks); err != nil {
 		panic(err)

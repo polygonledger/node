@@ -95,7 +95,7 @@ func TestTxStore(t *testing.T) {
 
 // func TestMsgBasic(t *testing.T) {
 // 	msgstring := "{:REP X :data 0}"
-// 	msg := netio.ParseMessageMapData(msgstring)
+// 	msg := netio.EdnParseMessageMapData(msgstring)
 // 	if msg.MessageType != "REP" {
 // 		t.Error("parse msg MessageType", msg)
 // 	}
@@ -121,7 +121,7 @@ func TestAccmsg(t *testing.T) {
 
 	//FIX
 	// msgstring := "{:REP ACCOUNTS :data {\"P06d058383389\"20}}"
-	// msg := netio.ParseMessageMapData(msgstring)
+	// msg := netio.EdnParseMessageMapData(msgstring)
 	// if msg.MessageType != "REP" {
 	// 	t.Error("parse msg ", msg.MessageType)
 	// }

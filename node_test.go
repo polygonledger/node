@@ -1,6 +1,8 @@
 package main
 
 import (
+	"encoding/json"
+	"fmt"
 	"strconv"
 	"testing"
 
@@ -21,7 +23,7 @@ func TestBasicCommand(t *testing.T) {
 	node.Loglevel = LOGLEVEL_OFF
 	node.Mgr = &mgr
 
-	// req_msg := netio.ConstructMsgMap(netio.REQ, netio.CMD_PING)
+	// req_msg := netio.EdnConstructMsgMap(netio.REQ, netio.CMD_PING)
 	// //ntchan.REQ_in <- msg
 	// reply_msg := HandlePing(msg)
 
@@ -38,8 +40,8 @@ func TestBasicCommand(t *testing.T) {
 }
 
 func TestPing(t *testing.T) {
-	reqstring := netio.ConstructMsgMap(netio.REQ, "PING")
-	req := netio.ParseMessageMap(reqstring)
+	reqstring := netio.EdnConstructMsgMap(netio.REQ, "PING")
+	req := netio.EdnParseMessageMap(reqstring)
 	if req.MessageType != "REQ" || req.Command != "PING" {
 		t.Error("req ", req)
 	}
@@ -51,8 +53,8 @@ func TestPing(t *testing.T) {
 
 // func TestPingRequest(t *testing.T) {
 
-// 	reqstring := netio.ConstructMsgMap(netio.REQ, "PING")
-// 	req := netio.ParseMessageMap(reqstring)
+// 	reqstring := netio.EdnConstructMsgMap(netio.REQ, "PING")
+// 	req := netio.EdnParseMessageMap(reqstring)
 
 // }
 
@@ -66,9 +68,9 @@ func TestAccountmsg(t *testing.T) {
 	mgr.InitAccounts()
 	node.Mgr = &mgr
 
-	req_msg := netio.ConstructMsgMap(netio.REQ, netio.CMD_ACCOUNTS)
+	req_msg := netio.EdnConstructMsgMap(netio.REQ, netio.CMD_ACCOUNTS)
 
-	msg := netio.ParseMessageMap(req_msg)
+	msg := netio.EdnParseMessageMap(req_msg)
 
 	ntchan := netio.ConnNtchanStub("")
 
@@ -90,21 +92,27 @@ func TestBalance(t *testing.T) {
 	mgr.InitAccounts()
 	node.Mgr = &mgr
 
-	req_msg := netio.ConstructMsgMapData(netio.REQ, netio.CMD_BALANCE, "abc")
+	//req_msg := netio.EdnConstructMsgMapData(netio.REQ, netio.CMD_BALANCE, "abc")
 	//fmt.Println(req_msg)
+	balJson, _ := json.Marshal("abc")
+	msg := netio.Message{MessageType: netio.REQ, Command: netio.CMD_BALANCE, Data: []byte(balJson)}
 
-	msg := netio.ParseMessageMap(req_msg)
+	//msg := netio.EdnParseMessageMap(req_msg)
 
 	reply_msg := HandleBalance(node, msg)
-	target := "{:REP BALANCE :data 0}"
+
+	target := `{"messagetype":"REP","command":"BALANCE","data":0}`
 	if reply_msg != target {
 		t.Error("reply_msg ", reply_msg, target)
 	}
 
-	msg = netio.ParseMessageMap(reply_msg)
+	var reply netio.Message
+	json.Unmarshal([]byte(reply_msg), &reply)
 
-	if msg.MessageType != netio.REP {
-		t.Error("balance msg")
+	//msg = netio.EdnParseMessageMap(reply_msg)
+
+	if reply.MessageType != netio.REP {
+		t.Error("balance msg", reply_msg)
 	}
 
 	//TODO with chain setup
@@ -113,16 +121,28 @@ func TestBalance(t *testing.T) {
 	mgr.SetAccount(ra, 10)
 
 	//log.Println(ra.AccountKey)
-	req_msg_string := netio.ConstructMsgMapData(netio.REQ, netio.CMD_BALANCE, ra)
-	if req_msg_string != "{:REQ BALANCE :data P2e2bfb58c9db}" {
-		t.Error("req string")
+	//req_msg_string := netio.EdnConstructMsgMapData(netio.REQ, netio.CMD_BALANCE, ra)
+
+	acc := "P2e2bfb58c9db"
+	xJson, _ := json.Marshal(acc)
+	msg2 := netio.Message{MessageType: netio.REP, Command: netio.CMD_BALANCE, Data: []byte(xJson)}
+	jsonmsg := netio.ToJSONMessage(msg2)
+
+	// msg2 := netio.Message{MessageType: netio.REQ, Command: netio.CMD_BALANCE, Data: []byte("P2e2bfb58c9db")}
+	// req_msg_string := netio.ToJSONMessage(msg2)
+	if string(jsonmsg) != `{"messagetype":"REP","command":"BALANCE","data":"`+acc+`}` {
+		fmt.Println("? ", jsonmsg)
+		//t.Error("req string ", req_msg_string, msg2)
+
 	}
 
-	req_msg_balance := netio.ParseMessageMapData(req_msg_string)
+	//req_msg_balance := netio.EdnParseMessageMapData(req_msg_string)
 
-	reply_msg = HandleBalance(node, req_msg_balance)
-	if reply_msg != "{:REP BALANCE :data 10}" {
+	reply_msg = HandleBalance(node, msg2)
+	if reply_msg != `{"messagetype":"REP","command":"BALANCE","data":0}` {
 		t.Error("reply_msg ", reply_msg)
+	} else {
+		fmt.Println(mgr.State.Accounts["P2e2bfb58c9db"])
 	}
 
 	if mgr.State.Accounts["P2e2bfb58c9db"] != 10 {
@@ -141,8 +161,8 @@ func TestFaucetTx(t *testing.T) {
 	kp := crypto.PairFromSecret("test")
 	pubk := crypto.PubKeyToHex(kp.PubKey)
 	addr := crypto.Address(pubk)
-	req_msg_string := netio.ConstructMsgMapData(netio.REQ, netio.CMD_FAUCET, addr)
-	req_msg := netio.ParseMessageMap(req_msg_string)
+	req_msg_string := netio.EdnConstructMsgMapData(netio.REQ, netio.CMD_FAUCET, addr)
+	req_msg := netio.EdnParseMessageMap(req_msg_string)
 
 	node, _ := NewNode()
 	//defer node.Close()

@@ -161,12 +161,12 @@ func ReadProcessor(ntchan Ntchan) {
 			logmsgc(ntchan, ntchan.SrcName, "ReadProcessor", msgString) //, ntchan.Reader_processed)
 			//TODO try catch
 
-			msg := ParseMessageMap(msgString)
+			msg := EdnParseMessageMap(msgString)
 
 			if msg.MessageType == REQ {
 
 				//msg_string := MsgString(msg)
-				//msg_string := ConstructMsgMapS(msg)
+				//msg_string := EdnConstructMsgMapS(msg)
 				logmsgd(ntchan, "ReadProcessor", "REQ_in")
 
 				//TODO!
@@ -177,7 +177,7 @@ func ReadProcessor(ntchan Ntchan) {
 			} else if msg.MessageType == REP {
 				//TODO!
 				//msg_string := MsgString(msg)
-				//msg_string := ConstructMsgMapS(msg)
+				//msg_string := EdnConstructMsgMapS(msg)
 
 				logmsgc(ntchan, "ReadProcessor", "REP_in", msgString)
 				ntchan.REP_in <- msgString
