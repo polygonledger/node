@@ -40,23 +40,17 @@ func TestBasicCommand(t *testing.T) {
 }
 
 func TestPing(t *testing.T) {
-	reqstring := netio.EdnConstructMsgMap(netio.REQ, "PING")
-	req := netio.EdnParseMessageMap(reqstring)
-	if req.MessageType != "REQ" || req.Command != "PING" {
-		t.Error("req ", req)
+	req_msg := netio.Message{MessageType: netio.REQ, Command: netio.CMD_PING}
+	//jsonmsgtype, _ := netio.NewJSONMessage(req_msg)
+
+	if req_msg.MessageType != "REQ" || req_msg.Command != "PING" {
+		t.Error("req ", req_msg)
 	}
-	reply := HandlePing(req)
+	reply := HandlePing(req_msg)
 	if reply.MessageType != "REP" || reply.Command != "PONG" {
 		t.Error("reply type ", reply)
 	}
 }
-
-// func TestPingRequest(t *testing.T) {
-
-// 	reqstring := netio.EdnConstructMsgMap(netio.REQ, "PING")
-// 	req := netio.EdnParseMessageMap(reqstring)
-
-// }
 
 func TestAccountmsg(t *testing.T) {
 
@@ -68,16 +62,17 @@ func TestAccountmsg(t *testing.T) {
 	mgr.InitAccounts()
 	node.Mgr = &mgr
 
-	req_msg := netio.EdnConstructMsgMap(netio.REQ, netio.CMD_ACCOUNTS)
-
-	msg := netio.EdnParseMessageMap(req_msg)
+	req_msg := netio.Message{MessageType: netio.REQ, Command: netio.CMD_ACCOUNTS}
+	//msg := netio.EdnParseMessageMap(req_msg)
 
 	ntchan := netio.ConnNtchanStub("")
 
-	reply_msg := RequestReply(node, ntchan, msg)
+	reply_msg := RequestReply(node, ntchan, req_msg)
 
-	if reply_msg != "{:REP ACCOUNTS :data {\"P2e2bfb58c9db\"400}}" {
+	if reply_msg != `{"messagetype":"REP","command":"ACCOUNTS","data":{"P2e2bfb58c9db":400}}` {
 		t.Error(reply_msg)
+	} else {
+		fmt.Println(reply_msg)
 	}
 
 }

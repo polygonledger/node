@@ -101,7 +101,7 @@ func TxValid(mgr *ChainManager, tx block.Tx) bool {
 }
 
 func HandleTx(mgr *ChainManager, tx block.Tx) string {
-	//hash of timestamp is same, check lenght of bytes used??
+	//hash of timestamp is same, check lenght of bytes used?
 	//timestamp := time.Now().Unix()
 
 	//TODO check timestamp

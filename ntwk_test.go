@@ -41,9 +41,10 @@ func TestReaderin(t *testing.T) {
 
 func SimulateRequest(ntchan *netio.Ntchan) {
 
-	req_msg := netio.EdnConstructMsgMap(netio.REQ, netio.CMD_PING)
+	msg := netio.Message{MessageType: netio.REQ, Command: netio.CMD_PING}
+	jsonmsg := netio.ToJSONMessage(msg)
 	//fmt.Println("sim ", req_msg)
-	ntchan.Reader_queue <- req_msg
+	ntchan.Reader_queue <- jsonmsg
 	//log.Println(len(ntchan.Reader_queue))
 	time.Sleep(100 * time.Millisecond)
 
@@ -51,6 +52,7 @@ func SimulateRequest(ntchan *netio.Ntchan) {
 
 // in reader should bet forwarded to req_chan
 func TestRequestIn(t *testing.T) {
+	fmt.Println("TestRequestIn")
 	ntchan := netio.ConnNtchanStub("")
 
 	go netio.ReadProcessor(ntchan)
@@ -60,19 +62,27 @@ func TestRequestIn(t *testing.T) {
 	}
 
 	//put 1 request in reader
+	fmt.Println("SimulateRequest")
 	go SimulateRequest(&ntchan)
 
 	//wait
 	time.Sleep(100 * time.Millisecond)
 
 	//check if reader empty
+	fmt.Println("isempty?")
 	if !isEmpty(ntchan.Reader_queue, 1*time.Second) {
 		t.Error("Reader_queue not empty")
 	}
 
+	fmt.Println("wait for req")
 	req_in := <-ntchan.REQ_in
-	if req_in != netio.EdnConstructMsgMap(netio.REQ, netio.CMD_PING) {
-		t.Error("req not ?? ", req_in, netio.EdnConstructMsgMap(netio.REQ, netio.CMD_PING))
+	msg := netio.Message{MessageType: netio.REQ, Command: netio.CMD_PING}
+	jsonmsg := netio.ToJSONMessage(msg)
+
+	if req_in != jsonmsg {
+		t.Error("req not>> ", req_in, jsonmsg)
+	} else {
+		fmt.Println("ok")
 	}
 
 	//req_in
@@ -86,7 +96,7 @@ func TestRequestOut(t *testing.T) {
 
 	ntchan := netio.ConnNtchanStub("")
 
-	//GGreq_out_msg := netio.EdnConstructMsgMap(netio.REQ, netio.CMD_PING)
+	//req_out_msg := netio.EdnConstructMsgMap(netio.REQ, netio.CMD_PING)
 
 	select {
 	case msg := <-ntchan.REQ_out:
@@ -204,7 +214,9 @@ func TestReaderRequest(t *testing.T) {
 
 	go netio.ReadProcessor(ntchan)
 
-	req_msg := netio.EdnConstructMsgMap(netio.REQ, netio.CMD_PING)
+	//req_msg := netio.EdnConstructMsgMap(netio.REQ, netio.CMD_PING)
+	msg := netio.Message{MessageType: netio.REQ, Command: netio.CMD_PING}
+	req_msg := netio.ToJSONMessage(msg)
 
 	ntchan.Reader_queue <- req_msg
 	time.Sleep(50 * time.Millisecond)
@@ -215,7 +227,7 @@ func TestReaderRequest(t *testing.T) {
 	}
 
 	req_in := <-ntchan.REQ_in
-	if req_in != netio.EdnConstructMsgMap(netio.REQ, netio.CMD_PING) {
+	if req_in != req_msg {
 		t.Error("req not equal")
 	}
 
@@ -324,6 +336,7 @@ func TestAllPingPongDuplex(t *testing.T) {
 
 }
 
+//timed test
 // start := time.Now()
 // maxt := 300 * time.Millisecond
 // tt := time.Now()

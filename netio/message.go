@@ -30,6 +30,7 @@ const (
 	//HANDSHAKE
 )
 
+//TODO define "namespace/grammar/protocol file"
 const (
 	CMD_ACCOUNTS       = "ACCOUNTS"
 	CMD_BALANCE        = "BALANCE" //get balance of account
@@ -103,12 +104,6 @@ func ReplyMessage() Message {
 	return Message{MessageType: REP}
 }
 
-// type MessageTx struct {
-// 	MessageType string
-// 	Command     string
-// 	Tx          block.Tx
-// }
-
 func ConstructMsg(msgType string, cmd string, data string) Message {
 	m := Message{MessageType: msgType, Command: cmd, Data: []byte(data)}
 	return m
@@ -126,4 +121,10 @@ func validCMD(cmd string) bool {
 		}
 	}
 	return false
+}
+
+func FromJSON(msg_string string) Message {
+	var msgu Message
+	json.Unmarshal([]byte(msg_string), &msgu)
+	return msgu
 }

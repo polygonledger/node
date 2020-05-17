@@ -21,7 +21,6 @@ func NewJSONMessage(m Message) (MessageJSON, error) {
 	//fmt.Println("NewJSONMessage")
 	valid := validCMD(m.Command)
 	if valid {
-		//fmt.Println("?? ", m.Data)
 		//		if m.Data != nil {
 		return MessageJSON{
 			m.MessageType,

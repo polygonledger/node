@@ -1,10 +1,11 @@
 package main
 
-//mock node
+//mock node, no TCP network but just channels
 
 import (
 	"fmt"
 	"log"
+	"net"
 	"os"
 	"os/signal"
 	"strconv"
@@ -13,6 +14,15 @@ import (
 	"github.com/polygonledger/node/config"
 	"github.com/polygonledger/node/netio"
 )
+
+func NewNodeMock() (*TCPNode, error) {
+	return &TCPNode{
+		//addr:          addr,
+		accepting:     false,
+		ConnectedChan: make(chan net.Conn),
+		Loglevel:      LOGLEVEL_ON,
+	}, nil
+}
 
 func (t *TCPNode) handleConnectionMock(mgr *chain.ChainManager, ntchan netio.Ntchan) {
 	//tr := 100 * time.Millisecond

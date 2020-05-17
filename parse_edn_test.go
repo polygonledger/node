@@ -116,7 +116,7 @@ func TestAccmsg(t *testing.T) {
 	arr := []byte("{:messageType\"REQ\":command\"Test\":data #base64\"MDAw\"}")
 
 	if !reflect.DeepEqual(b, arr) {
-		t.Error("??", string(b))
+		t.Error("> ", string(b))
 	}
 
 	//FIX

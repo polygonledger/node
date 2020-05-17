@@ -161,7 +161,8 @@ func ReadProcessor(ntchan Ntchan) {
 			logmsgc(ntchan, ntchan.SrcName, "ReadProcessor", msgString) //, ntchan.Reader_processed)
 			//TODO try catch
 
-			msg := EdnParseMessageMap(msgString)
+			//msg := EdnParseMessageMap(msgString)
+			msg := FromJSON(msgString)
 
 			if msg.MessageType == REQ {
 

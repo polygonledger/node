@@ -1,26 +1,29 @@
 package main
 
 import (
+	"encoding/json"
 	"testing"
+
+	"github.com/polygonledger/node/netio"
 )
 
 func TestMsgJson(t *testing.T) {
 
-	// msg := netio.Message{MessageType: "REQ", Command: netio.CMD_PING}
-	// msgJson, _ := json.Marshal(msg)
-	// if string(msgJson) != `{"messagetype":"REQ","command":"PING"}` {
-	// 	t.Error(string(msgJson))
-	// }
+	msg := netio.Message{MessageType: "REQ", Command: netio.CMD_PING}
+	jsonmsg := netio.ToJSONMessage(msg)
+	if jsonmsg != `{"messagetype":"REQ","command":"PING"}` {
+		t.Error(string(jsonmsg))
+	}
 
-	// msgstring := `{"messagetype":"REP","command":"PONG"}`
-	// var repmsg netio.Message
-	// json.Unmarshal([]byte(msgstring), &repmsg)
-	// if repmsg.MessageType != "REP" {
-	// 	t.Error(repmsg)
-	// }
-	// if repmsg.Command != "PONG" {
-	// 	t.Error(repmsg)
-	// }
+	msgstring := `{"messagetype":"REP","command":"PONG"}`
+	var repmsg netio.Message
+	json.Unmarshal([]byte(msgstring), &repmsg)
+	if repmsg.MessageType != "REP" {
+		t.Error(repmsg)
+	}
+	if repmsg.Command != "PONG" {
+		t.Error(repmsg)
+	}
 }
 
 func TestMsgJsonData(t *testing.T) {

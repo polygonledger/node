@@ -15,8 +15,6 @@ func TestMessageBasicParseJson(t *testing.T) {
 	if err != nil {
 		panic(err)
 	}
-	//fmt.Println(string(b))
-
 	if string(jsonmsg) != `{"messagetype":"REQ","command":"ACCOUNTS"}` {
 		t.Error("unmarshal")
 	}
@@ -71,7 +69,6 @@ func TestMessageBalance(t *testing.T) {
 	}
 
 	var msgu netio.Message
-
 	json.Unmarshal([]byte(`{"messagetype":"REP","command":"BALANCE","data":20}`), &msgu)
 
 	if msgu.MessageType != "REP" || msgu.Command != netio.CMD_BALANCE {
