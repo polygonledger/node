@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"math/rand"
-	"strconv"
 	"time"
 
 	"github.com/polygonledger/node/block"
@@ -192,15 +191,16 @@ func RequestReply(t *TCPNode, ntchan netio.Ntchan, msg netio.Message) string {
 		reply_msg = netio.EdnConstructMsgMapData(netio.REP, netio.CMD_RANDOM_ACCOUNT, string(txJson))
 
 	case netio.CMD_STATUS:
-		//TODO!
-		statusdata := string(StatusContent(t.Mgr, t))
-		reply_msg = netio.EdnConstructMsgMapData(netio.REP, netio.CMD_STATUS, statusdata)
+		status := StatusContent(t.Mgr, t)
+		data, _ := json.Marshal(status)
+		reply := netio.Message{MessageType: netio.REP, Command: netio.CMD_STATUS, Data: data}
+		reply_msg = netio.ToJSONMessage(reply)
 
 	case netio.CMD_NUMCONN:
 		pn := len(t.GetPeers())
-		data := strconv.Itoa(pn)
-		//TODO!
-		reply_msg = netio.EdnConstructMsgMapData(netio.REP, netio.CMD_NUMCONN, data)
+		nJson, _ := json.Marshal(pn)
+		msg := netio.Message{MessageType: netio.REP, Command: netio.CMD_NUMCONN, Data: []byte(nJson)}
+		reply_msg = netio.ToJSONMessage(msg)
 
 	//TODO separate handle process
 	//PUBSUB

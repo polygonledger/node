@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"log"
@@ -8,11 +9,10 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/polygonledger/edn"
 	"github.com/polygonledger/node/chain"
 )
 
-func StatusContent(mgr *chain.ChainManager, t *TCPNode) []byte {
+func StatusContent(mgr *chain.ChainManager, t *TCPNode) Status {
 
 	servertime := time.Now()
 	uptimedur := time.Now().Sub(t.Starttime)
@@ -20,8 +20,7 @@ func StatusContent(mgr *chain.ChainManager, t *TCPNode) []byte {
 	lastblocktime := t.Mgr.LastBlock().Timestamp
 	timebehind := int64(servertime.Sub(lastblocktime) / time.Second)
 	status := Status{Blockheight: len(mgr.Blocks), Starttime: t.Starttime, Uptime: uptime, Servertime: servertime, LastBlocktime: lastblocktime, Timebehind: timebehind}
-	jData, _ := edn.Marshal(status)
-	return jData
+	return status
 }
 
 func BlockContent(mgr *chain.ChainManager) string {
@@ -100,8 +99,9 @@ func runWeb(t *TCPNode) {
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		p := LoadContent(t.Mgr)
 		statusdata := StatusContent(t.Mgr, t)
+		sd, _ := json.Marshal(statusdata)
 		//nlog.Print(p)
-		fmt.Fprintf(w, "<h1>Polygon chain</h1>Status%s<br><div>%s </div>", statusdata, p)
+		fmt.Fprintf(w, "<h1>Polygon chain</h1>Status%s<br><div>%s </div>", sd, p)
 	})
 
 	http.HandleFunc("/blocks", func(w http.ResponseWriter, r *http.Request) {
@@ -118,9 +118,11 @@ func runWeb(t *TCPNode) {
 
 	http.HandleFunc("/status", func(w http.ResponseWriter, r *http.Request) {
 
-		statusdata := StatusContent(t.Mgr, t)
+		status := StatusContent(t.Mgr, t)
+		data, _ := json.Marshal(status)
+
 		w.Header().Set("Content-Type", "application/json")
-		w.Write(statusdata)
+		w.Write(data)
 
 		//w.WriteHeader(http.StatusCreated)
 		//json.NewEncoder(w).Encode(status)
