@@ -51,7 +51,7 @@ func HandleBlockheight(t *TCPNode, msg netio.Message) netio.Message {
 //Standard Tx handler
 //InteractiveTx also possible
 //client requests tranaction <=> server response with challenge <=> client proves
-func HandleTx(t *TCPNode, msg netio.Message) string {
+func HandleTx(t *TCPNode, msg netio.Message) netio.Message {
 	dataBytes := msg.Data
 
 	var tx block.Tx
@@ -61,8 +61,7 @@ func HandleTx(t *TCPNode, msg netio.Message) string {
 	}
 	t.log(fmt.Sprintf("tx %v ", tx))
 
-	resp := chain.HandleTx(t.Mgr, tx)
-	reply := netio.EdnConstructMsgMapData(netio.REP, netio.CMD_TX, resp)
+	reply := chain.HandleTx(t.Mgr, tx)
 	return reply
 }
 
@@ -91,7 +90,7 @@ func HandleBalance(t *TCPNode, msg netio.Message) string {
 	return reply_msg_json
 }
 
-func HandleFaucet(t *TCPNode, msg netio.Message) string {
+func HandleFaucet(t *TCPNode, msg netio.Message) netio.Message {
 	//t.log(fmt.Sprintf("HandleFaucet"))
 
 	// dataBytes := msg.Data
@@ -115,10 +114,10 @@ func HandleFaucet(t *TCPNode, msg netio.Message) string {
 	tx := block.Tx{Nonce: randNonce, Amount: amount, Sender: addr, Receiver: a}
 
 	tx = crypto.SignTxAdd(tx, keypair)
-	reply_string := chain.HandleTx(t.Mgr, tx)
+	reply := chain.HandleTx(t.Mgr, tx)
 	//t.log(fmt.Sprintf("resp > %s", reply_string))
 
-	reply := netio.EdnConstructMsgMapData(netio.REP, netio.CMD_FAUCET, reply_string)
+	//reply := netio.EdnConstructMsgMapData(netio.REP, netio.CMD_FAUCET, reply_string)
 	return reply
 }
 
@@ -155,7 +154,8 @@ func RequestReply(t *TCPNode, ntchan netio.Ntchan, msg netio.Message) string {
 
 	case netio.CMD_FAUCET:
 		//send money to specified address
-		reply_msg = HandleFaucet(t, msg)
+		reply := HandleFaucet(t, msg)
+		reply_msg = netio.ToJSONMessage(reply)
 
 	case netio.CMD_BLOCKHEIGHT:
 		reply := HandleBlockheight(t, msg)
@@ -181,7 +181,9 @@ func RequestReply(t *TCPNode, ntchan netio.Ntchan, msg netio.Message) string {
 
 	case netio.CMD_TX:
 		t.log("Handle tx")
-		reply_msg = HandleTx(t, msg)
+		reply := HandleTx(t, msg)
+		//reply_msg = netio.EdnConstructMsgMapData(netio.REP, netio.CMD_TX, reply_msg)
+		reply_msg = netio.ToJSONMessage(reply)
 
 	case netio.CMD_RANDOM_ACCOUNT:
 		t.log("Handle random account")

@@ -10,6 +10,31 @@ const (
 	CONCESSION_REG = "CONCESSION_REG"
 )
 
+type TxSigmap struct {
+	SenderPubkey string `json:"senderPubkey"`
+	Signature    string `json:"signature"`
+}
+
+type Tx struct {
+	TxType   string `json:"txType"`
+	Amount   int    `json:"amount"`
+	Sender   string `json:"sender"`
+	Receiver string `json:"receiver"`
+	TxSige   TxSig  `json:"txsig"`
+	Nonce    int    `json:"nonce"`
+	//TODO replace with txsig
+	SenderPubkey string `json:"senderPubkey"`
+	Signature    string `json:"signature"`
+	//Id           [32]byte `edn:"id"`           //gets assigned when verified in a block
+
+	//fee
+	//txtype
+	//timestamp
+
+	//confirmations
+	//height
+}
+
 // type TxE struct {
 // 	TxType string `edn:"TxType"`
 // 	//Transfer   string `edn:"Transfer"`
@@ -23,7 +48,7 @@ const (
 // 	//Nonce        int    `edn:"Nonce"`
 // }
 
-type TxSigmap struct {
+type TxSigmapEdn struct {
 	SenderPubkey string `edn:"senderPubkey"`
 	Signature    string `edn:"signature"`
 }
@@ -34,8 +59,7 @@ type TxSigmap struct {
 // 	Sigmap   TxSigmap `edn:"Sigmap"`
 // }
 
-//OLD
-type Tx struct {
+type TxEdn struct {
 	TxType   string `edn:"TxType"`
 	Amount   int    `edn:"Amount"`
 	Sender   string `edn:"Sender"`   //[32]byte

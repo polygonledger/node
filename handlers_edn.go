@@ -14,8 +14,6 @@ import (
 	"github.com/polygonledger/node/netio"
 )
 
-//--- handlers ---
-
 //alternative
 // m := map[string]interface{}{
 // 	"handlef": f,
@@ -52,7 +50,7 @@ func HandleBlockheightEdn(t *TCPNode, msg netio.Message) string {
 //Standard Tx handler
 //InteractiveTx also possible
 //client requests tranaction <=> server response with challenge <=> client proves
-func HandleTxEdn(t *TCPNode, msg netio.Message) string {
+func HandleTxEdn(t *TCPNode, msg netio.Message) netio.Message {
 	dataBytes := msg.Data
 
 	var tx block.Tx
@@ -62,8 +60,8 @@ func HandleTxEdn(t *TCPNode, msg netio.Message) string {
 	}
 	t.log(fmt.Sprintf("tx %v ", tx))
 
-	resp := chain.HandleTx(t.Mgr, tx)
-	reply := netio.EdnConstructMsgMapData(netio.REP, netio.CMD_TX, resp)
+	reply := chain.HandleTx(t.Mgr, tx)
+	//reply := netio.EdnConstructMsgMapData(netio.REP, netio.CMD_TX, resp)
 	return reply
 }
 
@@ -90,7 +88,7 @@ func HandleBalanceEdn(t *TCPNode, msg netio.Message) string {
 	return reply_msg
 }
 
-func HandleFaucetEdn(t *TCPNode, msg netio.Message) string {
+func HandleFaucetEdn(t *TCPNode, msg netio.Message) netio.Message {
 	//t.log(fmt.Sprintf("HandleFaucet"))
 
 	// dataBytes := msg.Data
@@ -114,10 +112,10 @@ func HandleFaucetEdn(t *TCPNode, msg netio.Message) string {
 	tx := block.Tx{Nonce: randNonce, Amount: amount, Sender: addr, Receiver: a}
 
 	tx = crypto.SignTxAdd(tx, keypair)
-	reply_string := chain.HandleTx(t.Mgr, tx)
+	reply := chain.HandleTx(t.Mgr, tx)
 	//t.log(fmt.Sprintf("resp > %s", reply_string))
 
-	reply := netio.EdnConstructMsgMapData(netio.REP, netio.CMD_FAUCET, reply_string)
+	//reply := netio.EdnConstructMsgMapData(netio.REP, netio.CMD_FAUCET, reply_string)
 	return reply
 }
 
@@ -146,9 +144,10 @@ func RequestReplyEdn(t *TCPNode, ntchan netio.Ntchan, msg netio.Message) string 
 	case netio.CMD_BALANCE:
 		reply_msg = HandleBalance(t, msg)
 
-	case netio.CMD_FAUCET:
-		//send money to specified address
-		reply_msg = HandleFaucet(t, msg)
+	// case netio.CMD_FAUCET:
+	// 	//send money to specified address
+	// 	reply = HandleFaucet(t, msg)
+	// 	reply_msg = netio.EdnConstructMsgMapS(reply)
 
 	case netio.CMD_BLOCKHEIGHT:
 		//reply_msg = HandleBlockheight(t, msg)
@@ -173,7 +172,9 @@ func RequestReplyEdn(t *TCPNode, ntchan netio.Ntchan, msg netio.Message) string 
 
 	case netio.CMD_TX:
 		t.log("Handle tx")
-		reply_msg = HandleTx(t, msg)
+		msg = HandleTx(t, msg)
+		data, _ := json.Marshal(msg.Data)
+		reply_msg = netio.EdnConstructMsgMapData(netio.REP, netio.CMD_GETBLOCKS, string(data))
 
 	case netio.CMD_RANDOM_ACCOUNT:
 		t.log("Handle random account")
@@ -226,7 +227,7 @@ func RequestReplyEdn(t *TCPNode, ntchan netio.Ntchan, msg netio.Message) string 
 func RequestHandlerTelEdn(t *TCPNode, ntchan netio.Ntchan) {
 	for {
 		msg_string := <-ntchan.REQ_in
-		t.log(fmt.Sprintf("?? handle request %s ", msg_string))
+		t.log(fmt.Sprintf("handle request %s ", msg_string))
 
 		msg := netio.EdnParseMessageMap(msg_string)
 

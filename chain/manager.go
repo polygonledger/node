@@ -13,6 +13,7 @@ import (
 
 	"github.com/polygonledger/node/block"
 	"github.com/polygonledger/node/crypto"
+	"github.com/polygonledger/node/netio"
 )
 
 type AccountState struct {
@@ -100,7 +101,7 @@ func TxValid(mgr *ChainManager, tx block.Tx) bool {
 	return bTxValid
 }
 
-func HandleTx(mgr *ChainManager, tx block.Tx) string {
+func HandleTx(mgr *ChainManager, tx block.Tx) netio.Message {
 	//hash of timestamp is same, check lenght of bytes used?
 	//timestamp := time.Now().Unix()
 
@@ -112,10 +113,15 @@ func HandleTx(mgr *ChainManager, tx block.Tx) string {
 		//tx.Id = crypto.TxHash(tx)
 		mgr.Tx_pool = append(mgr.Tx_pool, tx)
 		vlog(fmt.Sprintf("append tx to pool %v", mgr.Tx_pool))
-		return "ok"
+		//msg := Message{messageType: netio.REP, command: netio.CMD_TX}
+		status := "ok"
+		msg := netio.Message{MessageType: netio.REP, Command: netio.CMD_TX, Data: []byte(status)}
+		return msg
 	} else {
 		vlog("invalid tx")
-		return "error"
+		status := "error"
+		msg := netio.Message{MessageType: netio.REP, Command: netio.CMD_TX, Data: []byte(status)}
+		return msg
 	}
 
 	//log.Printf("tx_pool_size: \n%d", tx_pool_size)
