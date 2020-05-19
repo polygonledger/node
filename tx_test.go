@@ -90,7 +90,7 @@ func TestTxFile(t *testing.T) {
 
 	tx := block.Tx{Nonce: 1, Amount: 10, Sender: addr, Receiver: addr_recv}
 
-	signature := crypto.SignTx(tx, keypair)
+	signature := crypto.SignTx(tx, keypair.PrivKey)
 	sighex := hex.EncodeToString(signature.Serialize())
 
 	tx.Signature = sighex

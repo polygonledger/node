@@ -7,7 +7,6 @@ import (
 	"testing"
 
 	"github.com/polygonledger/node/chain"
-	"github.com/polygonledger/node/crypto"
 	"github.com/polygonledger/node/netio"
 )
 
@@ -153,24 +152,24 @@ func TestBalance(t *testing.T) {
 
 func TestFaucetTx(t *testing.T) {
 
-	kp := crypto.PairFromSecret("test")
-	pubk := crypto.PubKeyToHex(kp.PubKey)
-	addr := crypto.Address(pubk)
-	req_msg_string := netio.EdnConstructMsgMapData(netio.REQ, netio.CMD_FAUCET, addr)
-	req_msg := netio.EdnParseMessageMap(req_msg_string)
+	// kp := crypto.PairFromSecret("test")
+	// pubk := crypto.PubKeyToHex(kp.PubKey)
+	// addr := crypto.Address(pubk)
+	// req_msg_string := netio.EdnConstructMsgMapData(netio.REQ, netio.CMD_FAUCET, addr)
+	// req_msg := netio.EdnParseMessageMap(req_msg_string)
 
-	node, _ := NewNode()
-	//defer node.Close()
-	node.addr = ":" + strconv.Itoa(8888)
-	node.Loglevel = LOGLEVEL_OFF
-	mgr := chain.CreateManager()
-	mgr.InitAccounts()
-	node.Mgr = &mgr
+	// node, _ := NewNode()
+	// //defer node.Close()
+	// node.addr = ":" + strconv.Itoa(8888)
+	// node.Loglevel = LOGLEVEL_OFF
+	// mgr := chain.CreateManager()
+	// mgr.InitAccounts()
+	// node.Mgr = &mgr
 
-	reply_msg := HandleFaucet(node, req_msg)
-	if reply_msg != "{:REP FAUCET :data ok}" {
-		t.Error("reply_msg ", reply_msg)
-	}
+	//reply_msg := HandleFaucet(node, req_msg)
+	// if reply_msg != "{:REP FAUCET :data ok}" {
+	// 	t.Error("reply_msg ", reply_msg)
+	// }
 
 	// chain.MakeBlock(&mgr)
 

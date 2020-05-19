@@ -19,6 +19,17 @@ type Keypair struct {
 	PubKey  btcec.PublicKey
 }
 
+type KeypairAll struct {
+	PrivKey btcec.PrivateKey `json:"privkey"`
+	PubKey  btcec.PublicKey  `json:"pubkey"`
+	Address string           `json:"address"`
+}
+
+type KeypairPub struct {
+	PubKey  btcec.PublicKey `json:"pubkey"`
+	Address string          `json:"address"`
+}
+
 //TODO only from pubkey type
 func Address(pubkey string) string {
 	return "P" + GetSHAHash(pubkey)[:12]
@@ -112,9 +123,10 @@ func TxHash(tx block.Tx) [32]byte {
 	return hash
 }
 
-func SignMsgHash(keypair Keypair, message string) btcec.Signature {
+func SignMsgHash(privkey btcec.PrivateKey, message string) btcec.Signature {
 	messageHash := chainhash.DoubleHashB([]byte(message))
-	signature, err := keypair.PrivKey.Sign(messageHash)
+	//fmt.Println("messageHash ", messageHash)
+	signature, err := privkey.Sign(messageHash)
 	if err != nil {
 		fmt.Println("err ", err)
 		//return
@@ -122,14 +134,14 @@ func SignMsgHash(keypair Keypair, message string) btcec.Signature {
 	return *signature
 }
 
-func SignTx(tx block.Tx, keypair Keypair) btcec.Signature {
+func SignTx(tx block.Tx, privkey btcec.PrivateKey) btcec.Signature {
 	//TODO sign tx not just id
 	txJson, _ := json.Marshal(tx)
 	//log.Println(string(txJson))
 	//message := fmt.Sprintf("%d", tx.Id)
 
 	messageHash := chainhash.DoubleHashB([]byte(txJson))
-	signature, err := keypair.PrivKey.Sign(messageHash)
+	signature, err := privkey.Sign(messageHash)
 	if err != nil {
 		fmt.Println("err ", err)
 		//return
@@ -141,7 +153,7 @@ func SignTx(tx block.Tx, keypair Keypair) btcec.Signature {
 //sign tx and add signature and pubkey
 func SignTxAdd(tx block.Tx, keypair Keypair) block.Tx {
 
-	signature := SignTx(tx, keypair)
+	signature := SignTx(tx, keypair.PrivKey)
 	sighex := hex.EncodeToString(signature.Serialize())
 
 	tx.Signature = sighex

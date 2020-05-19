@@ -15,7 +15,7 @@ func TestBasicSign(t *testing.T) {
 	keypair := crypto.PairFromSecret("test")
 	message := "test"
 
-	signature := crypto.SignMsgHash(keypair, message)
+	signature := crypto.SignMsgHash(keypair.PrivKey, message)
 	verified := crypto.VerifyMessageSign(signature, keypair, message)
 	if !verified {
 		t.Error("msg failed")
@@ -119,7 +119,7 @@ func TestSignTx(t *testing.T) {
 	r := s //TODO
 	tx = block.Tx{Nonce: 0, Amount: 0, Sender: s, Receiver: r}
 
-	signature := crypto.SignTx(tx, keypair)
+	signature := crypto.SignTx(tx, keypair.PrivKey)
 	sighex := hex.EncodeToString(signature.Serialize())
 
 	if sighex == "" {

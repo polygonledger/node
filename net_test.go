@@ -130,33 +130,3 @@ func TestServer_Write(t *testing.T) {
 	//}
 
 }
-
-// func TestServer_Request(t *testing.T) {
-
-// 	addr := ":" + strconv.Itoa(test_node_port)
-// 	conn, err := net.Dial("tcp", addr)
-// 	if err != nil {
-// 		t.Error("could not connect to server: ", err)
-// 	}
-// 	defer conn.Close()
-
-// 	reqs := "hello world"
-
-// 	n, err := netio.NetWrite(conn, reqs)
-// 	if err != nil {
-// 		t.Error("could not write payload to server:", err)
-// 	} else {
-// 		log.Println("bytes written ", n)
-// 	}
-
-// 	read_msg, err := netio.MsgRead(conn)
-
-// 	expected_result := netio.ConstructMsg("Echo:" + reqs)
-// 	if err != nil {
-// 		log.Println(err)
-// 	}
-// 	if read_msg != expected_result {
-// 		t.Error("response did match expected output ", read_msg, expected_result)
-// 	}
-
-// }

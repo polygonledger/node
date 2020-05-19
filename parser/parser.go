@@ -396,7 +396,7 @@ func verifyTx(txmap string, sighex string, pubhex string) bool {
 }
 
 func SignMap(keypair crypto.Keypair, msg string) string {
-	txsig := crypto.SignMsgHash(keypair, msg)
+	txsig := crypto.SignMsgHash(keypair.PrivKey, msg)
 	txsighex := hex.EncodeToString(txsig.Serialize())
 	pubkey_string := crypto.PubKeyToHex(keypair.PubKey)
 	sigmap := CreateSigmap(pubkey_string, txsighex)

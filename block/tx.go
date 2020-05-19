@@ -20,8 +20,8 @@ type Tx struct {
 	Amount   int    `json:"amount"`
 	Sender   string `json:"sender"`
 	Receiver string `json:"receiver"`
-	TxSige   TxSig  `json:"txsig"`
-	Nonce    int    `json:"nonce"`
+	//TxSig   TxSig  `json:"txsig"`
+	Nonce int `json:"nonce"`
 	//TODO replace with txsig
 	SenderPubkey string `json:"senderPubkey"`
 	Signature    string `json:"signature"`
