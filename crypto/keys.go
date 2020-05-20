@@ -8,19 +8,20 @@ import (
 
 // --- utils ---
 
-func ReadKeys(keysfile string) KeypairAll {
+func ReadKeys(keysfile string) Keypair {
 
 	log.Println("read keys from ", keysfile)
 	dat, _ := ioutil.ReadFile(keysfile)
-	s := string(dat)
+	//s := string(dat)
 	// vs, _ := parser.ReadMapP(s)
 	// privHex := parser.StringUnWrap(vs[0])
 	// pubkeyHex := parser.StringUnWrap(vs[1])
 	//log.Println("pub ", pubkeyHex)
 
-	var kpa KeypairAll
-	json.Unmarshal([]byte(s), &kpa)
-	return kpa
+	var kpa KeypairH
+	json.Unmarshal([]byte(dat), &kpa)
+	kh := Keypair{PrivKey: PrivKeyFromHex(kpa.PrivKey), PubKey: PubKeyFromHex(kpa.PubKey)}
+	return kh
 }
 
 // func CreateKeypairFormat(privkey string, pubkey_string string, address string) string {
@@ -40,9 +41,11 @@ func WriteKeys(kp Keypair, keysfile string) {
 	pubkeyHex := PubKeyToHex(kp.PubKey)
 	privHex := PrivKeyToHex(kp.PrivKey)
 	address := Address(pubkeyHex)
-	kpa := KeypairAll{PubKey: PubKeyFromHex(pubkeyHex), PrivKey: PrivKeyFromHex(privHex), Address: address}
+	//kpa := KeypairAll{PubKey: PubKeyFromHex(pubkeyHex), PrivKey: PrivKeyFromHex(privHex), Address: address}
 	//s := CreateKeypairFormat(privHex, pubkeyHex, address)
-	s, _ := json.Marshal(kpa)
+	kh := KeypairH{PrivKey: privHex, PubKey: pubkeyHex, Address: address}
+	//s, _ := json.Marshal(kpa)
+	s, _ := json.Marshal(kh)
 	ioutil.WriteFile(keysfile, []byte(s), 0644)
 }
 

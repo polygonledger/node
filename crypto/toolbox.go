@@ -15,8 +15,14 @@ import (
 )
 
 type Keypair struct {
-	PrivKey btcec.PrivateKey
-	PubKey  btcec.PublicKey
+	PrivKey btcec.PrivateKey `json:"privkey"`
+	PubKey  btcec.PublicKey  `json:"pubkey"`
+}
+
+type KeypairH struct {
+	PrivKey string `json:"privkey"`
+	PubKey  string `json:"pubkey"`
+	Address string `json:"address"`
 }
 
 type KeypairAll struct {
