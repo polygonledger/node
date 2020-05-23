@@ -29,10 +29,10 @@ type Ntchan struct {
 	REQ_out chan string
 	REP_in  chan string
 
-	PUB_time_out  chan string
-	SUB_time_out  chan string
-	PUB_time_quit chan int
-	verbose       bool
+	PUB_out chan string
+	SUB_out chan string
+	//PUB_time_quit chan int
+	verbose bool
 	// SUB_request_out   chan string
 	// SUB_request_in    chan string
 	// UNSUB_request_out chan string
@@ -68,8 +68,8 @@ func ConnNtchan(conn net.Conn, SrcName string, DestName string, verbose bool) Nt
 	ntchan.REP_in = make(chan string)
 	ntchan.REP_out = make(chan string)
 	ntchan.REQ_out = make(chan string)
-	ntchan.PUB_time_out = make(chan string)
-	ntchan.PUB_time_quit = make(chan int)
+	ntchan.PUB_out = make(chan string)
+	//ntchan.PUB_time_quit = make(chan int)
 	// ntchan.Reader_processed = 0
 	// ntchan.Writer_processed = 0
 	ntchan.Conn = conn
@@ -88,8 +88,8 @@ func ConnNtchanStub(name string) Ntchan {
 	ntchan.REP_in = make(chan string)
 	ntchan.REP_out = make(chan string)
 	ntchan.REQ_out = make(chan string)
-	ntchan.PUB_time_out = make(chan string)
-	ntchan.PUB_time_quit = make(chan int)
+	ntchan.PUB_out = make(chan string)
+	//ntchan.PUB_time_quit = make(chan int)
 	//ntchan.Reader_processed = 0
 	//ntchan.Writer_processed = 0
 
@@ -186,6 +186,9 @@ func ReadProcessor(ntchan Ntchan) {
 				// x := <-ntchan.REP_in
 				// vlog(ntchan, "x "+x)
 			}
+			//  else if msg.MessageType == SUB {
+
+			// }
 
 			//ntchan.Reader_processed++
 			//log.Println(" ", ntchan.Reader_processed, ntchan)
@@ -209,6 +212,8 @@ func WriteProcessor(ntchan Ntchan) {
 			logmsgc(ntchan, "Writeprocessor", "REQ_out ", msg)
 			ntchan.Writer_queue <- msg
 
+		case msg := <-ntchan.PUB_out:
+			ntchan.Writer_queue <- msg
 			//PUB?
 		}
 	}
@@ -243,7 +248,7 @@ func PublishTime(ntchan Ntchan) {
 		t := time.Now()
 		tf := t.Format(timeFormat)
 		vlog(ntchan, "pub "+tf)
-		ntchan.PUB_time_out <- tf
+		ntchan.PUB_out <- tf
 		<-limiter
 		pubcount++
 	}
@@ -255,14 +260,14 @@ func PubWriterLoop(ntchan Ntchan) {
 
 	for {
 		select {
-		case msg := <-ntchan.PUB_time_out:
+		case msg := <-ntchan.PUB_out:
 			vlog(ntchan, "sub "+msg)
 			ntchan.Writer_queue <- msg
-		case <-ntchan.PUB_time_quit:
-			fmt.Println("stop pub")
-			return
-			// default:
-			// 	fmt.Println("no message received")
+			// case <-ntchan.PUB_time_quit:
+			// 	fmt.Println("stop pub")
+			// 	return
+			// 	// default:
+			// 	// 	fmt.Println("no message received")
 		}
 		time.Sleep(50 * time.Millisecond)
 

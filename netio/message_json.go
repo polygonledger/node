@@ -14,6 +14,7 @@ type MessageJSON struct {
 	//any data, can be empty. gets interpreted downstream to other structs
 	Data json.RawMessage `json:"data,omitempty"`
 	//timestamp
+	//Layer string `json:"layer,omitempty"`
 }
 
 //marshal to json, check command

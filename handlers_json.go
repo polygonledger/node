@@ -90,6 +90,12 @@ func HandleBalance(t *TCPNode, msg netio.Message) string {
 	return reply_msg_json
 }
 
+func HandlePeers(t *TCPNode, msg netio.Message) netio.Message {
+	peersJson, _ := json.Marshal(t.Peers)
+	reply_msg := netio.Message{MessageType: netio.REP, Command: netio.CMD_GETPEERS, Data: []byte(peersJson)}
+	return reply_msg
+}
+
 func HandleFaucet(t *TCPNode, msg netio.Message) netio.Message {
 	//t.log(fmt.Sprintf("HandleFaucet"))
 
@@ -148,6 +154,10 @@ func RequestReply(t *TCPNode, ntchan netio.Ntchan, msg netio.Message) string {
 		nJson, _ := json.Marshal(t.Mgr.State.Accounts)
 		msg := netio.Message{MessageType: netio.REP, Command: netio.CMD_ACCOUNTS, Data: []byte(nJson)}
 		reply_msg = netio.ToJSONMessage(msg)
+
+	case netio.CMD_GETPEERS:
+		reply := HandlePeers(t, msg)
+		reply_msg = netio.ToJSONMessage(reply)
 
 	case netio.CMD_BALANCE:
 		reply_msg = HandleBalance(t, msg)
@@ -219,7 +229,7 @@ func RequestReply(t *TCPNode, ntchan netio.Ntchan, msg netio.Message) string {
 
 		go func() {
 			//time.Sleep(5000 * time.Millisecond)
-			close(ntchan.PUB_time_quit)
+			close(ntchan.PUB_out)
 		}()
 
 		//TODO reply unsub ok

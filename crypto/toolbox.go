@@ -196,3 +196,15 @@ func VerifyTxSig(tx block.Tx) bool {
 func FaucetTx() {
 
 }
+
+func CreateSignedTx(tx block.Tx, kp Keypair) block.Tx {
+
+	txjson, _ := json.Marshal(tx)
+	signature := SignMsgHash(kp.PrivKey, string(txjson))
+	pubkey_string := PubKeyToHex(kp.PubKey)
+	tx.SenderPubkey = pubkey_string
+	sighex := hex.EncodeToString(signature.Serialize())
+	tx.Signature = sighex
+	signedtx := tx
+	return signedtx
+}

@@ -20,13 +20,14 @@ type Message struct {
 	//any data, can be empty. gets interpreted downstream to other structs
 	Data json.RawMessage
 	//timestamp
+	//Layer string
 }
 
 const (
 	REQ = "REQ"
 	REP = "REP"
 	PUB = "PUB"
-	//SUB
+	SUB = "SUB"
 	//HANDSHAKE
 )
 
@@ -64,6 +65,7 @@ var CMDS = []string{
 	CMD_NUMACCOUNTS,
 	CMD_ACCOUNTS,
 	CMD_BALANCE,
+	CMD_GETPEERS,
 	CMD_BLOCKHEIGHT,
 	CMD_FAUCET,
 	CMD_GETTXPOOL,

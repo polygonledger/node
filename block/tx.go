@@ -15,16 +15,20 @@ type TxSigmap struct {
 	Signature    string `json:"signature"`
 }
 
+// type TxEnv struct {
+
+// }
+
+//TODO! distinguish between tx and signed tx with extra struct
 type Tx struct {
 	TxType   string `json:"txType"`
 	Amount   int    `json:"amount"`
 	Sender   string `json:"sender"`
 	Receiver string `json:"receiver"`
-	//TxSig   TxSig  `json:"txsig"`
-	Nonce int `json:"nonce"`
+	Nonce    int    `json:"nonce"`
 	//TODO replace with txsig
-	SenderPubkey string `json:"senderPubkey"`
-	Signature    string `json:"signature"`
+	SenderPubkey string `json:"senderPubkey,omitempty"`
+	Signature    string `json:"signature,omitempty"`
 	//Id           [32]byte `edn:"id"`           //gets assigned when verified in a block
 
 	//fee
@@ -34,12 +38,6 @@ type Tx struct {
 	//confirmations
 	//height
 }
-
-// type TxE struct {
-// 	TxType string `edn:"TxType"`
-// 	//Transfer   string `edn:"Transfer"`
-// 	//Sigmap
-// }
 
 // type SimpleTx struct {
 // 	Amount   int    `edn:"amount"`

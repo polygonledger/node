@@ -1,13 +1,12 @@
 package netio
 
 type Peer struct {
-	Address  string `json:"Address"`
-	Name     string
-	NodePort int
-	NTchan   Ntchan
+	Address  string `json:"Address,omitempty"`
+	Name     string `json:"Name,omitempty"`
+	NodePort int    `json:"NodePort,omitempty"`
+	NTchan   Ntchan `json:"-"`
 
 	//----------------
-	//Name     string //can set name
 	//Domain string
 }
 

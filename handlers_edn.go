@@ -207,7 +207,7 @@ func RequestReplyEdn(t *TCPNode, ntchan netio.Ntchan, msg netio.Message) string 
 
 		go func() {
 			//time.Sleep(5000 * time.Millisecond)
-			close(ntchan.PUB_time_quit)
+			close(ntchan.PUB_out)
 		}()
 
 		//TODO reply unsub ok

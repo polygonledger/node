@@ -89,6 +89,19 @@ func TestMessageBalance(t *testing.T) {
 
 }
 
+func TestMessagePeers(t *testing.T) {
+	p := netio.Peer{Address: "test", Name: "test", NodePort: 80}
+	if p.Address != "test" {
+		t.Error(p)
+	}
+	peer_json, _ := json.Marshal(p)
+	sj := string(peer_json)
+	if sj != `{"Address":"test","Name":"test","NodePort":80}` {
+		t.Error("peer json ", sj, len(sj))
+	}
+
+}
+
 // 	msgstring := `{"messagetype":"REP","command":"PONG"}`
 // 	var repmsg netio.Message
 // 	json.Unmarshal([]byte(msgstring), &repmsg)
