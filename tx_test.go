@@ -10,6 +10,7 @@ import (
 	"github.com/polygonledger/node/block"
 	"github.com/polygonledger/node/chain"
 	"github.com/polygonledger/node/crypto"
+	"github.com/polygonledger/node/netio"
 )
 
 //basic block functions
@@ -140,4 +141,14 @@ func TestTxSign(t *testing.T) {
 }
 
 func TestTxSignHandleMsg(t *testing.T) {
+
+	kp := crypto.PairFromSecret("test")
+	tx := block.Tx{TxType: "STX", Amount: 10, Sender: "Pa033f6528cc1", Receiver: "P7ba453f23337", Nonce: 0}
+	signedtx := crypto.CreateSignedTx(tx, kp)
+	signedtxjson, _ := json.Marshal(signedtx)
+	txmsg := netio.Message{MessageType: netio.REQ, Command: netio.CMD_TX, Data: signedtxjson}
+	txmsg_json, _ := json.Marshal(txmsg)
+	if string(txmsg_json) != `{"MessageType":"REQ","Command":"TX","Data":{"txType":"STX","amount":10,"sender":"Pa033f6528cc1","receiver":"P7ba453f23337","nonce":0,"senderPubkey":"03dab2d148f103cd4761df382d993942808c1866a166f27cafba3289e228384a31","signature":"30450221009d3e5b449ad4870752e917906e379b82bcee234efb9fb8475541e2ca2066a431022053e7b5fa4316caefc5a0a039bdbb934e3f210d83f32097b614aae8ccb0bd6188"}}` {
+		t.Error("tx msg", string(txmsg_json))
+	}
 }

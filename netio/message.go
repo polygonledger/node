@@ -20,7 +20,7 @@ type Message struct {
 	//any data, can be empty. gets interpreted downstream to other structs
 	Data json.RawMessage
 	//timestamp
-	//Layer string
+	Layer string
 }
 
 const (
@@ -52,6 +52,9 @@ const (
 	CMD_PONG           = "PONG"
 	CMD_RANDOM_ACCOUNT = "RANACC" //get some random account
 	CMD_TX             = "TX"     //send transaction
+	//app layer. this is a hack right now
+	CMD_CHAT  = "CHAT"
+	CMD_ERROR = "ERROR"
 	//CMD_HANDSHAKE_HELLO  = "HELLO"
 	//CMD_HANDSHAKE_STABLE = "STABLE"
 	//CMD_LOGIN            = "LOGIN"
@@ -78,6 +81,8 @@ var CMDS = []string{
 	CMD_LOGOFF,
 	CMD_HEARTBEAT,
 	CMD_TX,
+	CMD_CHAT,
+	CMD_ERROR,
 	// CMD_FAUCET,
 
 }

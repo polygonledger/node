@@ -240,8 +240,20 @@ func RequestReply(t *TCPNode, ntchan netio.Ntchan, msg netio.Message) string {
 		time.Sleep(500 * time.Millisecond)
 		ntchan.Conn.Close()
 
+		// app layer
+	case netio.CMD_CHAT:
+		xjson, _ := json.Marshal("hello chat world")
+		msg := netio.Message{MessageType: netio.REP, Command: netio.CMD_CHAT, Data: []byte(xjson)}
+		reply_msg = netio.ToJSONMessage(msg)
+		ntchan.Writer_queue <- reply_msg
+		ntchan.Conn.Close()
+
 	default:
-		fmt.Println("Error: not found command")
+		errormsg := "Error: not found command"
+		fmt.Println(errormsg)
+		xjson, _ := json.Marshal("")
+		msg := netio.Message{MessageType: netio.REP, Command: netio.CMD_ERROR, Data: []byte(xjson)}
+		reply_msg = netio.ToJSONMessage(msg)
 	}
 
 	return reply_msg
