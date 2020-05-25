@@ -41,6 +41,8 @@ type TCPNode struct {
 	Logger        *log.Logger
 	Loglevel      int
 	Config        config.Configuration
+	//
+	ChatSubscribers []netio.Ntchan
 }
 
 func (t *TCPNode) GetPeers() []netio.Peer {

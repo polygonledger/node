@@ -219,9 +219,14 @@ func RequestReply(t *TCPNode, ntchan netio.Ntchan, msg netio.Message) string {
 	case netio.CMD_SUB:
 		t.log(fmt.Sprintf("subscribe to topic %v", msg.Data))
 
+		t.ChatSubscribers = append(t.ChatSubscribers, ntchan)
+		t.log(fmt.Sprintf("subscribers %v", t.ChatSubscribers))
+
+		/////////////////////
+		//EXAMPLE publishtime
 		//quitpub := make(chan int)
-		go netio.PublishTime(ntchan)
-		go netio.PubWriterLoop(ntchan)
+		//go netio.PublishTime(ntchan)
+		// go netio.PubWriterLoop(ntchan)
 		//TODO reply sub ok
 
 	case netio.CMD_SUBUN:
@@ -240,13 +245,22 @@ func RequestReply(t *TCPNode, ntchan netio.Ntchan, msg netio.Message) string {
 		time.Sleep(500 * time.Millisecond)
 		ntchan.Conn.Close()
 
-		// app layer
+	// app layer
 	case netio.CMD_CHAT:
 		xjson, _ := json.Marshal("hello chat world")
 		msg := netio.Message{MessageType: netio.REP, Command: netio.CMD_CHAT, Data: []byte(xjson)}
 		reply_msg = netio.ToJSONMessage(msg)
-		ntchan.Writer_queue <- reply_msg
-		ntchan.Conn.Close()
+
+		//TODO this should be in publoop
+		for _, subs := range t.ChatSubscribers {
+			pub_msg_string := fmt.Sprintf("%v said: publish chat world", ntchan)
+
+			xjson, _ := json.Marshal(pub_msg_string)
+			othermsg := netio.Message{MessageType: netio.PUB, Command: netio.CMD_CHAT, Data: []byte(xjson)}
+			xmsg := netio.ToJSONMessage(othermsg)
+			fmt.Println("send to ", subs, xmsg)
+			subs.REQ_out <- xmsg
+		}
 
 	default:
 		errormsg := "Error: not found command"
