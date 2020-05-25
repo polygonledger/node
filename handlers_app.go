@@ -21,21 +21,28 @@ import (
 
 func HandleChat(t *TCPNode, ntchan netio.Ntchan, req_msg netio.Message) string {
 
-	xjson, _ := json.Marshal("hello chat world")
-	msg := netio.Message{MessageType: netio.REP, Command: netio.CMD_CHAT, Data: []byte(xjson)}
-	reply_msg := netio.ToJSONMessage(msg)
-
+	countout := 0
 	//TODO this should be in pub chan not REQ out
 	//don't publish to author
 	for _, subs := range t.ChatSubscribers {
-		pub_msg_string := fmt.Sprintf("%v said: publish chat world", ntchan)
+		if subs == ntchan {
+			fmt.Println("dont publish to self")
+		} else {
+			pub_msg_string := fmt.Sprintf("%v said: %v", ntchan, string(req_msg.Data))
 
-		xjson, _ := json.Marshal(pub_msg_string)
-		othermsg := netio.Message{MessageType: netio.PUB, Command: netio.CMD_CHAT, Data: []byte(xjson)}
-		xmsg := netio.ToJSONMessage(othermsg)
-		fmt.Println("send to ", subs, xmsg)
-		subs.REQ_out <- xmsg
+			xjson, _ := json.Marshal(pub_msg_string)
+			othermsg := netio.Message{MessageType: netio.PUB, Command: netio.CMD_CHAT, Data: []byte(xjson)}
+			xmsg := netio.ToJSONMessage(othermsg)
+			fmt.Println("send to ", subs, xmsg)
+			subs.REQ_out <- xmsg
+			countout++
+		}
 	}
+
+	msgstring := fmt.Sprintf("message received. delievered to %v", countout)
+	xjson, _ := json.Marshal(msgstring)
+	msg := netio.Message{MessageType: netio.REP, Command: netio.CMD_CHAT, Data: []byte(xjson)}
+	reply_msg := netio.ToJSONMessage(msg)
 
 	return reply_msg
 }
