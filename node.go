@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"math/rand"
 	"net"
 	"os"
 	"os/signal"
@@ -117,10 +118,14 @@ func (t *TCPNode) HandleConnectTCP() {
 		Verbose := true
 		ntchan := netio.ConnNtchan(newpeerConn, "server", strRemoteAddr, Verbose)
 
-		p := netio.Peer{Address: strRemoteAddr, NodePort: t.NodePort, NTchan: ntchan}
+		rand.Seed(time.Now().UnixNano())
+		ran := rand.Intn(100)
+		ranname := fmt.Sprintf("ranPeer%v", ran)
+		p := netio.Peer{Address: strRemoteAddr, NodePort: t.NodePort, NTchan: ntchan, Name: ranname}
+		t.log(fmt.Sprintf("new peer %v : %v", p.Name, p))
 		t.Peers = append(t.Peers, p)
 
-		go t.handleConnection(t.Mgr, ntchan)
+		go t.handleConnection(t.Mgr, p)
 
 		//conn.Close()
 
@@ -198,15 +203,16 @@ func FetchAllBlocks(config config.Configuration, t *TCPNode) {
 
 }
 
-func (t *TCPNode) handleConnection(mgr *chain.ChainManager, ntchan netio.Ntchan) {
+//func (t *TCPNode) handleConnection(mgr *chain.ChainManager, ntchan netio.Ntchan) {
+func (t *TCPNode) handleConnection(mgr *chain.ChainManager, peer netio.Peer) {
 	//tr := 100 * time.Millisecond
 	//defer ntchan.Conn.Close()
 	//t.log(fmt.Sprintf("handleConnection"))
 
 	//netio.NetConnectorSetup(ntchan)
-	netio.NetConnectorSetup(ntchan)
+	netio.NetConnectorSetup(peer.NTchan)
 
-	go RequestHandlerTel(t, ntchan)
+	go RequestHandlerTel(t, peer)
 
 	//go netio.WriteLoop(ntchan, 100*time.Millisecond)
 

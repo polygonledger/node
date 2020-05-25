@@ -224,18 +224,18 @@ func RequestReplyEdn(t *TCPNode, ntchan netio.Ntchan, msg netio.Message) string 
 }
 
 //handle requests in telnet style. messages are edn based
-func RequestHandlerTelEdn(t *TCPNode, ntchan netio.Ntchan) {
+func RequestHandlerTelEdn(t *TCPNode, peer netio.Peer) {
 	for {
-		msg_string := <-ntchan.REQ_in
+		msg_string := <-peer.NTchan.REQ_in
 		t.log(fmt.Sprintf("handle request %s ", msg_string))
 
 		msg := netio.EdnParseMessageMap(msg_string)
 
-		reply_msg := RequestReply(t, ntchan, msg)
+		reply_msg := RequestReply(t, peer, msg)
 		//TODO parse out, i.e not return just a string
 
 		t.log(fmt.Sprintf("reply_msg %s", reply_msg))
-		ntchan.Writer_queue <- reply_msg
+		peer.NTchan.Writer_queue <- reply_msg
 
 	}
 }

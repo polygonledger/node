@@ -127,8 +127,19 @@ func HandleFaucet(t *TCPNode, msg netio.Message) netio.Message {
 	return reply
 }
 
-func RequestReply(t *TCPNode, ntchan netio.Ntchan, msg netio.Message) string {
+func HandleRegistername(t *TCPNode, ntchan netio.Ntchan, msg netio.Message) netio.Message {
+	fmt.Println("HandleRegistername")
+	//TODO!
+	//ntchan.Name = "test"
+	data, _ := json.Marshal("ok")
+	reply_msg := netio.Message{MessageType: netio.REP, Command: netio.CMD_REGISTERNAME, Data: []byte(data)}
+	//fmt.Println("name ", ntchan.Name)
+	return reply_msg
+}
 
+func RequestReply(t *TCPNode, peer netio.Peer, msg netio.Message) string {
+
+	ntchan := peer.NTchan
 	var reply_msg string
 	//var reply_msg netio.Message
 
@@ -142,7 +153,6 @@ func RequestReply(t *TCPNode, ntchan netio.Ntchan, msg netio.Message) string {
 		reply_msg = netio.ToJSONMessage(reply)
 
 	case netio.CMD_NUMACCOUNTS:
-
 		numacc := len(t.Mgr.State.Accounts)
 		t.log(fmt.Sprintf("numacc %v", numacc))
 		nJson, _ := json.Marshal(numacc)
@@ -214,15 +224,21 @@ func RequestReply(t *TCPNode, ntchan netio.Ntchan, msg netio.Message) string {
 		msg := netio.Message{MessageType: netio.REP, Command: netio.CMD_NUMCONN, Data: []byte(nJson)}
 		reply_msg = netio.ToJSONMessage(msg)
 
-	//TODO separate handle process
+	case netio.CMD_REGISTERNAME:
+		reply := HandleRegistername(t, ntchan, msg)
+		reply_msg = netio.ToJSONMessage(reply)
+
+	//TODO separate handle netchan
 	//PUBSUB
 	case netio.CMD_SUB:
 		t.log(fmt.Sprintf("subscribe to topic %v", msg.Data))
 
+		//TODO not only chat topic
 		t.ChatSubscribers = append(t.ChatSubscribers, ntchan)
 		t.log(fmt.Sprintf("subscribers %v", t.ChatSubscribers))
 
 		/////////////////////
+		//TODO time topic
 		//EXAMPLE publishtime
 		//quitpub := make(chan int)
 		//go netio.PublishTime(ntchan)
@@ -247,7 +263,7 @@ func RequestReply(t *TCPNode, ntchan netio.Ntchan, msg netio.Message) string {
 
 	// app layer
 	case netio.CMD_CHAT:
-		reply_msg = HandleChat(t, ntchan, msg)
+		reply_msg = HandleChat(t, peer, msg)
 
 	default:
 		errormsg := "Error: not found command"
@@ -261,22 +277,28 @@ func RequestReply(t *TCPNode, ntchan netio.Ntchan, msg netio.Message) string {
 }
 
 //handle requests in telnet style. messages are edn based
-func RequestHandlerTel(t *TCPNode, ntchan netio.Ntchan) {
+func RequestHandlerTel(t *TCPNode, peer netio.Peer) {
 	for {
-		msg_string := <-ntchan.REQ_in
-		t.log(fmt.Sprintf(">> handle request %s ", msg_string))
+		msg_string := <-peer.NTchan.REQ_in
+		t.log(fmt.Sprintf(">> handle request %s %s", msg_string, peer.Name))
+		//t.log(fmt.Sprintf(">> name %s", ntchan.Name))
+
+		for _, x := range t.Peers {
+			j, _ := json.Marshal(x)
+			fmt.Println("peer ", x, string(j))
+		}
 
 		//msg := netio.EdnParseMessageMap(msg_string)
 		msg := netio.FromJSON(msg_string)
 		//json.Unmarshal([]byte(msg_string), &msg)
 		t.log(fmt.Sprintf(">> handle request msg %s ", msg))
 
-		reply_msg := RequestReply(t, ntchan, msg)
+		reply_msg := RequestReply(t, peer, msg)
 
 		//TODO parse out, i.e not return just a string
 
 		t.log(fmt.Sprintf("reply_msg %s", reply_msg))
-		ntchan.Writer_queue <- reply_msg
+		peer.NTchan.Writer_queue <- reply_msg
 
 	}
 }

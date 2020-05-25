@@ -19,16 +19,19 @@ import (
 	"github.com/polygonledger/node/netio"
 )
 
-func HandleChat(t *TCPNode, ntchan netio.Ntchan, req_msg netio.Message) string {
+//{"MESSAGETYPE":"REQ","COMMAND":"SUBTO"}
+//{"MESSAGETYPE":"REQ","COMMAND":"CHAT","DATA":"TEST"}
+
+func HandleChat(t *TCPNode, peer netio.Peer, req_msg netio.Message) string {
 
 	countout := 0
 	//TODO this should be in pub chan not REQ out
 	//don't publish to author
 	for _, subs := range t.ChatSubscribers {
-		if subs == ntchan {
+		if subs == peer.NTchan {
 			fmt.Println("dont publish to self")
 		} else {
-			pub_msg_string := fmt.Sprintf("%v said: %v", ntchan, string(req_msg.Data))
+			pub_msg_string := fmt.Sprintf("%v said: %v", peer.Name, string(req_msg.Data))
 
 			xjson, _ := json.Marshal(pub_msg_string)
 			othermsg := netio.Message{MessageType: netio.PUB, Command: netio.CMD_CHAT, Data: []byte(xjson)}

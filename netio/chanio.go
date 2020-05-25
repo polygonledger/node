@@ -16,8 +16,9 @@ import (
 
 type Ntchan struct {
 	//TODO is only single connection
-	Conn     net.Conn
-	SrcName  string
+	Conn net.Conn
+	//Name     string
+	SrcName  string //TODO doc
 	DestName string
 	//TODO message type
 	Reader_queue chan string
