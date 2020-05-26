@@ -27,7 +27,7 @@ create keys
 
 ## testing
 
-```go test```
+```go test ./...```
 
 ## contributions
 

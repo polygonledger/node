@@ -2,6 +2,7 @@ github.com/aead/siphash v1.0.1/go.mod h1:Nywa3cDsYNNK3gaciGTWPwHt0wlpNV15vwmswBA
 github.com/aws/aws-sdk-go v1.29.16 h1:Gbtod7Y4W/Ai7wPtesdvgGVTkFN8JxAaGouRLlcQfQs=
 github.com/aws/aws-sdk-go v1.29.16/go.mod h1:1KvfttTE3SPKMpo8g2c6jL3ZKfXtFvKscTgahTma5Xg=
 github.com/awslabs/aws-sdk-go v1.30.29 h1:UgRt47D3XMdL2GGr+BMUvoGVQzmrRaUSJ+DhUV8vW5g=
+github.com/awslabs/aws-sdk-go v1.31.4 h1:aXYbOWVS3qy1N2Jyn+JCvNCqy1nNlp5kDnq99U8fD7I=
 github.com/btcsuite/btcd v0.20.1-beta h1:Ik4hyJqN8Jfyv3S4AGBOmyouMsYE3EdYODkMbQjwPGw=
 github.com/btcsuite/btcd v0.20.1-beta/go.mod h1:wVuoA8VJLEcwgqHBwHmzLRazpKxTv13Px/pDuV7OomQ=
 github.com/btcsuite/btclog v0.0.0-20170628155309-84c8d2346e9f/go.mod h1:TdznJufoqS23FtqVCzL0ZqgP5MqXbb4fg/WgDys70nA=

@@ -1,11 +1,11 @@
-package main
+package xutils
 
 import (
 	"time"
 )
 
 //check if a channel is empty
-func isEmpty(c chan string, d time.Duration) bool {
+func IsEmpty(c chan string, d time.Duration) bool {
 	select {
 	case <-c:
 		//log.Println("got ", ret)

@@ -1,14 +1,15 @@
-package main
+package netio
 
 import (
 	"fmt"
 	"testing"
 	"time"
 
-	"github.com/polygonledger/node/netio"
+	"github.com/polygonledger/node/xutils"
 )
 
-func SimulateNetworkInput(ntchan *netio.Ntchan) {
+func SimulateNetworkInput(ntchan *Ntchan) {
+
 	for {
 		ntchan.Reader_queue <- "test"
 		//log.Println(len(ntchan.Reader_queue))
@@ -18,7 +19,7 @@ func SimulateNetworkInput(ntchan *netio.Ntchan) {
 
 func TestReaderin(t *testing.T) {
 
-	ntchan := netio.ConnNtchanStub("")
+	ntchan := ConnNtchanStub("")
 	go SimulateNetworkInput(&ntchan)
 	time.Sleep(300 * time.Millisecond)
 	start := time.Now()
@@ -39,10 +40,10 @@ func TestReaderin(t *testing.T) {
 	}
 }
 
-func SimulateRequest(ntchan *netio.Ntchan) {
+func SimulateRequest(ntchan *Ntchan) {
 
-	msg := netio.Message{MessageType: netio.REQ, Command: netio.CMD_PING}
-	jsonmsg := netio.ToJSONMessage(msg)
+	msg := Message{MessageType: REQ, Command: CMD_PING}
+	jsonmsg := ToJSONMessage(msg)
 	//fmt.Println("sim ", req_msg)
 	ntchan.Reader_queue <- jsonmsg
 	//log.Println(len(ntchan.Reader_queue))
@@ -53,11 +54,11 @@ func SimulateRequest(ntchan *netio.Ntchan) {
 // in reader should bet forwarded to req_chan
 func TestRequestIn(t *testing.T) {
 	fmt.Println("TestRequestIn")
-	ntchan := netio.ConnNtchanStub("")
+	ntchan := ConnNtchanStub("")
 
-	go netio.ReadProcessor(ntchan)
+	go ReadProcessor(ntchan)
 
-	if !isEmpty(ntchan.Reader_queue, 1*time.Second) {
+	if !xutils.IsEmpty(ntchan.Reader_queue, 1*time.Second) {
 		t.Error("channel full")
 	}
 
@@ -70,14 +71,14 @@ func TestRequestIn(t *testing.T) {
 
 	//check if reader empty
 	fmt.Println("isempty?")
-	if !isEmpty(ntchan.Reader_queue, 1*time.Second) {
+	if !xutils.IsEmpty(ntchan.Reader_queue, 1*time.Second) {
 		t.Error("Reader_queue not empty")
 	}
 
 	fmt.Println("wait for req")
 	req_in := <-ntchan.REQ_in
-	msg := netio.Message{MessageType: netio.REQ, Command: netio.CMD_PING}
-	jsonmsg := netio.ToJSONMessage(msg)
+	msg := Message{MessageType: REQ, Command: CMD_PING}
+	jsonmsg := ToJSONMessage(msg)
 
 	if req_in != jsonmsg {
 		t.Error("req not>> ", req_in, jsonmsg)
@@ -86,7 +87,7 @@ func TestRequestIn(t *testing.T) {
 	}
 
 	//req_in
-	if !isEmpty(ntchan.REQ_in, 1*time.Second) {
+	if !xutils.IsEmpty(ntchan.REQ_in, 1*time.Second) {
 		t.Error("req channel empty")
 	}
 
@@ -94,9 +95,9 @@ func TestRequestIn(t *testing.T) {
 
 func TestRequestOut(t *testing.T) {
 
-	ntchan := netio.ConnNtchanStub("")
+	ntchan := ConnNtchanStub("")
 
-	//req_out_msg := netio.EdnConstructMsgMap(netio.REQ, netio.CMD_PING)
+	//req_out_msg := EdnConstructMsgMap(REQ, CMD_PING)
 
 	select {
 	case msg := <-ntchan.REQ_out:
@@ -137,7 +138,7 @@ func TestRequestOut(t *testing.T) {
 
 func TestReplyIn(t *testing.T) {
 
-	ntchan := netio.ConnNtchanStub("")
+	ntchan := ConnNtchanStub("")
 
 	go func() {
 		ntchan.REP_in <- "test"
@@ -156,7 +157,7 @@ func TestReplyIn(t *testing.T) {
 
 }
 
-func basicPingReqProcessor(ntchan netio.Ntchan, t *testing.T) {
+func basicPingReqProcessor(ntchan Ntchan, t *testing.T) {
 
 	x := <-ntchan.REQ_in
 	if x != "ping" {
@@ -167,7 +168,7 @@ func basicPingReqProcessor(ntchan netio.Ntchan, t *testing.T) {
 
 func TestPingAll(t *testing.T) {
 
-	ntchan := netio.ConnNtchanStub("")
+	ntchan := ConnNtchanStub("")
 
 	//REQ in
 	//reply request ping with pong
@@ -210,19 +211,19 @@ func TestPingAll(t *testing.T) {
 
 func TestReaderRequest(t *testing.T) {
 
-	ntchan := netio.ConnNtchanStub("")
+	ntchan := ConnNtchanStub("")
 
-	go netio.ReadProcessor(ntchan)
+	go ReadProcessor(ntchan)
 
-	//req_msg := netio.EdnConstructMsgMap(netio.REQ, netio.CMD_PING)
-	msg := netio.Message{MessageType: netio.REQ, Command: netio.CMD_PING}
-	req_msg := netio.ToJSONMessage(msg)
+	//req_msg := EdnConstructMsgMap(REQ, CMD_PING)
+	msg := Message{MessageType: REQ, Command: CMD_PING}
+	req_msg := ToJSONMessage(msg)
 
 	ntchan.Reader_queue <- req_msg
 	time.Sleep(50 * time.Millisecond)
 
 	//reader queue should be empty
-	if !isEmpty(ntchan.Reader_queue, 1*time.Second) {
+	if !xutils.IsEmpty(ntchan.Reader_queue, 1*time.Second) {
 		t.Error("reader not processed")
 	}
 
@@ -233,7 +234,7 @@ func TestReaderRequest(t *testing.T) {
 
 }
 
-func pinghandler(ntchan netio.Ntchan) {
+func pinghandler(ntchan Ntchan) {
 	for {
 		//REQUEST
 		req_msg := <-ntchan.REQ_in
@@ -241,7 +242,7 @@ func pinghandler(ntchan netio.Ntchan) {
 		if req_msg == "" {
 			//<-req_msg
 		}
-		rep_msg := netio.EdnConstructMsgMap(netio.REP, netio.CMD_PONG)
+		rep_msg := EdnConstructMsgMap(REP, CMD_PONG)
 		ntchan.REP_out <- rep_msg
 		//log.Println("REP_out >> ", rep_msg)
 	}
@@ -249,22 +250,22 @@ func pinghandler(ntchan netio.Ntchan) {
 
 func TestReaderPing(t *testing.T) {
 
-	ntchan := netio.ConnNtchanStub("")
+	ntchan := ConnNtchanStub("")
 
-	go netio.ReadProcessor(ntchan)
+	go ReadProcessor(ntchan)
 
 	go pinghandler(ntchan)
 
-	ntchan.REQ_in <- netio.EdnConstructMsgMap(netio.REQ, netio.CMD_PING)
+	ntchan.REQ_in <- EdnConstructMsgMap(REQ, CMD_PING)
 
 	time.Sleep(50 * time.Millisecond)
 
-	if !isEmpty(ntchan.REQ_in, 1*time.Second) {
+	if !xutils.IsEmpty(ntchan.REQ_in, 1*time.Second) {
 		t.Error("REQ_in not processed")
 	}
 
 	x := <-ntchan.REP_out
-	if x != netio.EdnConstructMsgMap(netio.REP, netio.CMD_PONG) {
+	if x != EdnConstructMsgMap(REP, CMD_PONG) {
 		t.Error("not poing")
 	}
 
@@ -273,17 +274,17 @@ func TestReaderPing(t *testing.T) {
 //test entire loop from reader to writer
 func TestAllPingPoingIn(t *testing.T) {
 
-	ntchan := netio.ConnNtchanStub("")
+	ntchan := ConnNtchanStub("")
 
-	go netio.ReadProcessor(ntchan)
-	go netio.WriteProcessor(ntchan)
+	go ReadProcessor(ntchan)
+	go WriteProcessor(ntchan)
 	go pinghandler(ntchan)
 
-	ntchan.Reader_queue <- netio.EdnConstructMsgMap(netio.REQ, netio.CMD_PING)
+	ntchan.Reader_queue <- EdnConstructMsgMap(REQ, CMD_PING)
 
 	time.Sleep(50 * time.Millisecond)
 
-	if !isEmpty(ntchan.REQ_in, 1*time.Second) {
+	if !xutils.IsEmpty(ntchan.REQ_in, 1*time.Second) {
 		t.Error("REQ_in not processed")
 	}
 
@@ -301,7 +302,7 @@ func TestAllPingPoingIn(t *testing.T) {
 
 //connect to ntchans to each other
 //this simulates a real network connection
-func ConnectWrite(ntchan1 netio.Ntchan, ntchan2 netio.Ntchan) {
+func ConnectWrite(ntchan1 Ntchan, ntchan2 Ntchan) {
 	for {
 		xout := <-ntchan1.Writer_queue
 		ntchan2.Reader_queue <- xout
@@ -314,17 +315,17 @@ func ConnectWrite(ntchan1 netio.Ntchan, ntchan2 netio.Ntchan) {
 func TestAllPingPongDuplex(t *testing.T) {
 	//log.Println("TestAllPingPongDuplex")
 
-	ntchan1 := netio.ConnNtchanStub("")
-	ntchan2 := netio.ConnNtchanStub("")
+	ntchan1 := ConnNtchanStub("")
+	ntchan2 := ConnNtchanStub("")
 
-	go netio.ReadProcessor(ntchan1)
-	go netio.WriteProcessor(ntchan1)
+	go ReadProcessor(ntchan1)
+	go WriteProcessor(ntchan1)
 	go ConnectWrite(ntchan1, ntchan2)
 
 	ntchan1.Writer_queue <- "test"
 	time.Sleep(600 * time.Millisecond)
 
-	if !isEmpty(ntchan1.Writer_queue, 300*time.Millisecond) {
+	if !xutils.IsEmpty(ntchan1.Writer_queue, 300*time.Millisecond) {
 		t.Error("writer not empty")
 	}
 

@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/polygonledger/node/netio"
+	"github.com/polygonledger/node/xutils"
 )
 
 const test_node_port_pub = 8888
@@ -60,7 +61,7 @@ func TestServer_Pub(t *testing.T) {
 
 	time.Sleep(100 * time.Millisecond)
 
-	if isEmpty(ntchan.Writer_queue, 1*time.Millisecond) {
+	if xutils.IsEmpty(ntchan.Writer_queue, 1*time.Millisecond) {
 		t.Error("Writer_queue empty")
 	}
 

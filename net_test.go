@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/polygonledger/node/netio"
+	"github.com/polygonledger/node/xutils"
 )
 
 const test_node_port = 8888
@@ -100,7 +101,7 @@ func TestServer_Write(t *testing.T) {
 
 	firstpeer := peers[0]
 
-	if !isEmpty(firstpeer.NTchan.Writer_queue, 1*time.Second) {
+	if !xutils.IsEmpty(firstpeer.NTchan.Writer_queue, 1*time.Second) {
 		t.Error("fail")
 	}
 
