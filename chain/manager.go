@@ -186,7 +186,6 @@ func (mgr *ChainManager) RandomAccount() string {
 	}
 
 	rand.Seed(time.Now().UnixNano())
-
 	ran := rand.Intn(lenk)
 	vlog(fmt.Sprintf("%v %v", ran, keys))
 

@@ -20,7 +20,7 @@ type Message struct {
 	//any data, can be empty. gets interpreted downstream to other structs
 	Data json.RawMessage
 	//timestamp
-	Layer string
+	//Layer string
 }
 
 const (

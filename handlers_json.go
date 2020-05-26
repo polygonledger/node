@@ -256,7 +256,9 @@ func RequestReply(t *TCPNode, peer netio.Peer, msg netio.Message) string {
 		//TODO reply unsub ok
 
 	case netio.CMD_LOGOFF:
-		reply_msg = "{:REP BYE}"
+		data, _ := json.Marshal("BYE")
+		msg := netio.Message{MessageType: netio.REP, Command: netio.CMD_LOGOFF, Data: []byte(data)}
+		reply_msg = netio.ToJSONMessage(msg)
 		ntchan.Writer_queue <- reply_msg
 		time.Sleep(500 * time.Millisecond)
 		ntchan.Conn.Close()
