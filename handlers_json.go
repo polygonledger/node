@@ -127,17 +127,21 @@ func HandleFaucet(t *TCPNode, msg netio.Message) netio.Message {
 	return reply
 }
 
-func HandleRegistername(t *TCPNode, ntchan netio.Ntchan, msg netio.Message) netio.Message {
+func HandleRegistername(t *TCPNode, peer *netio.Peer, msg netio.Message) netio.Message {
 	fmt.Println("HandleRegistername")
 	//TODO!
-	//ntchan.Name = "test"
 	data, _ := json.Marshal("ok")
+	//set name
+	newname := string(msg.Data)
+	fmt.Println("set peer name to ", newname)
+	peer.Name = newname
+	fmt.Println("new name ", peer.Name)
 	reply_msg := netio.Message{MessageType: netio.REP, Command: netio.CMD_REGISTERNAME, Data: []byte(data)}
 	//fmt.Println("name ", ntchan.Name)
 	return reply_msg
 }
 
-func RequestReply(t *TCPNode, peer netio.Peer, msg netio.Message) string {
+func RequestReply(t *TCPNode, peer *netio.Peer, msg netio.Message) string {
 
 	ntchan := peer.NTchan
 	var reply_msg string
@@ -225,7 +229,7 @@ func RequestReply(t *TCPNode, peer netio.Peer, msg netio.Message) string {
 		reply_msg = netio.ToJSONMessage(msg)
 
 	case netio.CMD_REGISTERNAME:
-		reply := HandleRegistername(t, ntchan, msg)
+		reply := HandleRegistername(t, peer, msg)
 		reply_msg = netio.ToJSONMessage(reply)
 
 	//TODO separate handle netchan
@@ -265,7 +269,7 @@ func RequestReply(t *TCPNode, peer netio.Peer, msg netio.Message) string {
 
 	// app layer
 	case netio.CMD_CHAT:
-		reply_msg = HandleChat(t, peer, msg)
+		reply_msg = HandleChat(t, *peer, msg)
 
 	default:
 		errormsg := "Error: not found command"
@@ -282,7 +286,7 @@ func RequestReply(t *TCPNode, peer netio.Peer, msg netio.Message) string {
 func RequestHandlerTel(t *TCPNode, peer netio.Peer) {
 	for {
 		msg_string := <-peer.NTchan.REQ_in
-		t.log(fmt.Sprintf(">> handle request %s %s", msg_string, peer.Name))
+		t.log(fmt.Sprintf("> RequestHandlerTel request %s %s", msg_string, peer.Name))
 		//t.log(fmt.Sprintf(">> name %s", ntchan.Name))
 
 		for _, x := range t.Peers {
@@ -295,7 +299,7 @@ func RequestHandlerTel(t *TCPNode, peer netio.Peer) {
 		//json.Unmarshal([]byte(msg_string), &msg)
 		t.log(fmt.Sprintf(">> handle request msg %s ", msg))
 
-		reply_msg := RequestReply(t, peer, msg)
+		reply_msg := RequestReply(t, &peer, msg)
 
 		//TODO parse out, i.e not return just a string
 

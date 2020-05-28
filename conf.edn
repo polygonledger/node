@@ -4,4 +4,4 @@
  :WebPort 8080
  :DelgateEnabled true
  :CreateGenesis true
- :Verbose false}
+ :Verbose true}

@@ -50,9 +50,12 @@ func NetRead(ntchan Ntchan, delim byte) (string, error) {
 	//log.Println("NetRead ", ntchan.SrcName, ntchan.DestName)
 	reader := bufio.NewReader(ntchan.Conn)
 
+	//TODO handle invalid json!
+
 	var buffer bytes.Buffer
 	for {
 		//READLINE uses \n
+		fmt.Println("NetRead")
 		ba, isPrefix, err := reader.ReadLine()
 		if err != nil {
 			if err == io.EOF {
@@ -64,6 +67,8 @@ func NetRead(ntchan Ntchan, delim byte) (string, error) {
 		if !isPrefix {
 			break
 		}
+
+		fmt.Println("buffer ", buffer)
 	}
 	return buffer.String(), nil
 }

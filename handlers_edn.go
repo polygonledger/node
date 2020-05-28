@@ -231,7 +231,7 @@ func RequestHandlerTelEdn(t *TCPNode, peer netio.Peer) {
 
 		msg := netio.EdnParseMessageMap(msg_string)
 
-		reply_msg := RequestReply(t, peer, msg)
+		reply_msg := RequestReply(t, &peer, msg)
 		//TODO parse out, i.e not return just a string
 
 		t.log(fmt.Sprintf("reply_msg %s", reply_msg))

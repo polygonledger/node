@@ -55,7 +55,7 @@ const (
 	//app layer. this is a hack right now
 	CMD_CHAT         = "CHAT"
 	CMD_ERROR        = "ERROR"
-	CMD_REGISTERNAME = "REGISTERNAME"
+	CMD_REGISTERNAME = "REGNAME"
 	//CMD_HANDSHAKE_HELLO  = "HELLO"
 	//CMD_HANDSHAKE_STABLE = "STABLE"
 	//CMD_LOGIN            = "LOGIN"

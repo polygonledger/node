@@ -328,6 +328,7 @@ func (t *TCPNode) initSyncChain(config config.Configuration) {
 func runAll(config config.Configuration) {
 
 	log.Println("runNodeAll with config ", config)
+	log.Println("verbose ", config.Verbose)
 
 	node, err := NewNode()
 	node.Config = config
