@@ -68,7 +68,7 @@ func TestAccountmsg(t *testing.T) {
 
 	p := netio.Peer{NTchan: ntchan}
 
-	reply_msg := RequestReply(node, p, req_msg)
+	reply_msg := RequestReply(node, &p, req_msg)
 
 	if reply_msg != `{"messagetype":"REP","command":"ACCOUNTS","data":{"P2e2bfb58c9db":400}}` {
 		t.Error(reply_msg)

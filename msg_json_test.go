@@ -102,6 +102,12 @@ func TestMessagePeers(t *testing.T) {
 
 }
 
+func TestMessageChat(t *testing.T) {
+
+	///msg_string := `{"messagetype":"REQ","command":"CHAT","data":"hello chat"}`
+
+}
+
 // 	msgstring := `{"messagetype":"REP","command":"PONG"}`
 // 	var repmsg netio.Message
 // 	json.Unmarshal([]byte(msgstring), &repmsg)

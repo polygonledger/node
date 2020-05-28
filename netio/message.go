@@ -2,6 +2,7 @@ package netio
 
 import (
 	"encoding/json"
+	"fmt"
 )
 
 //messages. currently uses json and some hacks to make it somewhat flexible mechanism
@@ -134,6 +135,7 @@ func validCMD(cmd string) bool {
 
 func FromJSON(msg_string string) Message {
 	var msgu Message
-	json.Unmarshal([]byte(msg_string), &msgu)
+	err := json.Unmarshal([]byte(msg_string), &msgu)
+	fmt.Println("error decoding json ", err)
 	return msgu
 }

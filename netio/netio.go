@@ -57,6 +57,7 @@ func NetRead(ntchan Ntchan, delim byte) (string, error) {
 		//READLINE uses \n
 		fmt.Println("NetRead")
 		ba, isPrefix, err := reader.ReadLine()
+		fmt.Println("ba ", string(ba))
 		if err != nil {
 			if err == io.EOF {
 				break
