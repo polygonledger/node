@@ -26,6 +26,31 @@ func TestMessageBasicParseJson(t *testing.T) {
 
 }
 
+func TestMessagePing(t *testing.T) {
+
+	msg := netio.Message{MessageType: netio.REQ, Command: netio.CMD_PING} //, Data: []byte("test")}
+	jsonmsg := netio.ToJSONMessage(msg)
+
+	if jsonmsg != `{"messagetype":"REQ","command":"PING"}` {
+		t.Error(jsonmsg)
+	}
+
+	//msg2 := netio.Message{MessageType: netio.REQ, Command: netio.CMD_PING, Data: []byte("test")}
+	msg2 := netio.Message{MessageType: netio.REQ, Command: netio.CMD_PING, Data: []byte(`{"test":"test"}`)}
+	jsonmsg2 := netio.ToJSONMessage(msg2)
+
+	if jsonmsg2 != `{"messagetype":"REQ","command":"PING","data":{"test":"test"}}` {
+		t.Error(jsonmsg2)
+	}
+
+	msg3 := netio.Message{MessageType: netio.REQ, Command: netio.CMD_PING, Data: []byte("20")}
+	jsonmsg3 := netio.ToJSONMessage(msg3)
+
+	if string(jsonmsg3) != `{"messagetype":"REQ","command":"PING","data":20}` {
+		t.Error(jsonmsg3)
+	}
+}
+
 func TestMessageBasicParseJsonData(t *testing.T) {
 
 	msg := netio.Message{MessageType: netio.REQ, Command: netio.CMD_ACCOUNTS, Data: []byte(`{"test":"test"}`)}
@@ -104,8 +129,35 @@ func TestMessagePeers(t *testing.T) {
 
 func TestMessageChat(t *testing.T) {
 
-	///msg_string := `{"messagetype":"REQ","command":"CHAT","data":"hello chat"}`
+	msg := netio.Message{MessageType: netio.REQ, Command: netio.CMD_CHAT} //, Data: []byte("test")}
+	jsonmsg := netio.ToJSONMessage(msg)
 
+	if jsonmsg != `{"messagetype":"REQ","command":"CHAT"}` {
+		t.Error(jsonmsg)
+	}
+
+	//msg2 := netio.Message{MessageType: netio.REQ, Command: netio.CMD_PING, Data: []byte("test")}
+	msg2 := netio.Message{MessageType: netio.REQ, Command: netio.CMD_CHAT, Data: []byte(`{"test":"test"}`)}
+	jsonmsg2 := netio.ToJSONMessage(msg2)
+
+	if jsonmsg2 != `{"messagetype":"REQ","command":"CHAT","data":{"test":"test"}}` {
+		t.Error(jsonmsg2)
+	}
+
+	msg3 := netio.Message{MessageType: netio.REQ, Command: netio.CMD_CHAT, Data: []byte("20")}
+	jsonmsg3 := netio.ToJSONMessage(msg3)
+
+	if string(jsonmsg3) != `{"messagetype":"REQ","command":"CHAT","data":20}` {
+		t.Error(jsonmsg3)
+	}
+
+	//TODO! fails
+	// msg4 := netio.Message{MessageType: netio.REQ, Command: netio.CMD_CHAT, Data: []byte("test")}
+	// jsonmsg4 := netio.ToJSONMessage(msg4)
+
+	// if string(jsonmsg4) != `{"messagetype":"REQ","command":"CHAT","data":"test"}` {
+	// 	t.Error(jsonmsg4)
+	// }
 }
 
 // 	msgstring := `{"messagetype":"REP","command":"PONG"}`

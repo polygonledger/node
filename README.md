@@ -29,6 +29,12 @@ create keys
 
 ```go test ./...```
 
+## architecture
+
+* netio
+* transaction multiplexing
+* immutable datastructures on the language level
+
 ## contributions
 
 contributions, such as pull requests, bug reports and comments are very welcome

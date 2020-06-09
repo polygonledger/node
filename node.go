@@ -66,7 +66,7 @@ func (t *TCPNode) Run() (err error) {
 	t.Starttime = time.Now()
 
 	t.log("node listen on " + t.addr)
-	t.server, err = net.Listen("tcp", t.addr)
+	t.server, err = net. Listen("tcp", t.addr)
 	if err != nil {
 		//return errors.Wrapf(err, "Unable to listen on port %s\n", t.addr)
 	}

@@ -86,6 +86,7 @@ var CMDS = []string{
 	CMD_CHAT,
 	CMD_ERROR,
 	CMD_REGISTERNAME,
+	CMD_CHAT,
 	// CMD_FAUCET,
 
 }

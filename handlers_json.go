@@ -232,6 +232,7 @@ func RequestReply(t *TCPNode, peer *netio.Peer, msg netio.Message) string {
 		reply := HandleRegistername(t, peer, msg)
 		reply_msg = netio.ToJSONMessage(reply)
 
+	//-----------------------
 	//TODO separate handle netchan
 	//PUBSUB
 	case netio.CMD_SUB:
